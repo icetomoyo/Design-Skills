@@ -1,2 +1,2 @@
-# Design-Skill
-Design-Skill
+# Design-Skills
+Design-Skills
