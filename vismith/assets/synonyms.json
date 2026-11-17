@@ -1,0 +1,125 @@
+{
+  "//": "查询同义扩展表：命中任一词即视为命中键（小写匹配）。追加条目时保持精简，避免过度召回。",
+  "contrast": [
+    "对比度",
+    "对比",
+    "contrast ratio",
+    "wcag"
+  ],
+  "spacing": [
+    "间距",
+    "留白",
+    "空间",
+    "padding",
+    "margin",
+    "gap"
+  ],
+  "typography": [
+    "字体",
+    "字号",
+    "排版",
+    "type",
+    "font",
+    "字阶"
+  ],
+  "dashboard": [
+    "仪表盘",
+    "看板",
+    "监控页",
+    "saas dashboard"
+  ],
+  "admin": [
+    "后台",
+    "管理端",
+    "中后台",
+    "admin console",
+    "cms"
+  ],
+  "marketing": [
+    "营销",
+    "落地页",
+    "官网",
+    "landing",
+    "landing page",
+    "品牌页"
+  ],
+  "form": [
+    "表单",
+    "输入",
+    "校验",
+    "forms",
+    "input"
+  ],
+  "table": [
+    "表格",
+    "列表",
+    "数据表",
+    "data table",
+    "grid"
+  ],
+  "a11y": [
+    "可访问性",
+    "无障碍",
+    "accessibility",
+    "aria",
+    "键盘"
+  ],
+  "focus": [
+    "焦点",
+    "focus visible",
+    "focus ring",
+    "键盘导航"
+  ],
+  "motion": [
+    "动效",
+    "动画",
+    "过渡",
+    "animation",
+    "transition"
+  ],
+  "density": [
+    "密度",
+    "信息密度",
+    "紧凑",
+    "compact"
+  ],
+  "empty": [
+    "空状态",
+    "加载",
+    "错误状态",
+    "skeleton",
+    "loading"
+  ],
+  "rtl": [
+    "right-to-left",
+    "阿拉伯",
+    "从右到左"
+  ],
+  "anti-slop": [
+    "模板化",
+    "ai味",
+    "slop",
+    "去ai化",
+    "廉价感"
+  ],
+  "color": [
+    "颜色",
+    "配色",
+    "色彩",
+    "palette"
+  ],
+  "layout": [
+    "布局",
+    "层次",
+    "网格",
+    "grid",
+    "hierarchy"
+  ],
+  "chart": [
+    "图表",
+    "可视化",
+    "数据可视化",
+    "visualization",
+    "data viz"
+  ]
+}

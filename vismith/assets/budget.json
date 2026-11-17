@@ -1,0 +1,7 @@
+{
+  "//": "ADR-13 token 预算（字节）。budget.mjs 校验超限即失败；修改预算须记入 decisions。",
+  "SKILL.md": 8192,
+  "references/*.md": 6144,
+  "assets/knowledge/*.md": 3072,
+  "assets/synonyms.json": 4096
+}

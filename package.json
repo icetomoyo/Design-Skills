@@ -1,0 +1,11 @@
+{
+  "name": "design-skills",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Vismith - design-aware, self-verifying frontend skill for coding agents",
+  "license": "Apache-2.0",
+  "scripts": {
+    "test": "node --test tests/lib.test.mjs tests/cli.test.mjs tests/audit.test.mjs",
+    "budget": "node vismith/scripts/budget.mjs"
+  }
+}
