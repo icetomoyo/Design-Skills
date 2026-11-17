@@ -23,7 +23,8 @@ async function main() {
       }
       let entries = [];
       try { entries = await fs.readdir(dir); } catch { entries = []; }
-      files = entries.filter((f) => f.endsWith(ext)).map((f) => path.join(dir, f));
+      // SOURCES.md 为来源登记表（非 LLM 面向、不进上下文），不计入条目预算
+      files = entries.filter((f) => f.endsWith(ext) && f !== 'SOURCES.md').map((f) => path.join(dir, f));
     } else {
       files = [path.join(SKILL_ROOT, pattern)];
     }

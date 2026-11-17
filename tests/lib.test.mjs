@@ -14,6 +14,12 @@ test('frontmatter: 解析合法扁平条目（数组/引号/注释）', () => {
   assert.ok(body.trimStart().startsWith('正文内容'), 'body 应在闭合符后保留原文，实际: ' + JSON.stringify(body.slice(0, 20)));
 });
 
+test('frontmatter: 值中无空格 # 不被当注释剥离；有空格 # 才是注释', () => {
+  const { data } = parseFrontmatter('---\nsource: upstream:hallmark#04977e1 (MIT)\nnote: val  # real comment\n---\nx', 'h.md');
+  assert.equal(data.source, 'upstream:hallmark#04977e1 (MIT)');
+  assert.equal(data.note, 'val');
+});
+
 test('frontmatter: 拒绝嵌套映射', () => {
   assert.throws(() => parseFrontmatter('---\na: { x: 1 }\n---\nb', 'n.md'), FrontmatterError);
 });

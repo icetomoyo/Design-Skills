@@ -9,7 +9,7 @@ function stripInlineComment(s) {
     const c = s[i];
     if (q) { if (c === q) q = null; continue; }
     if (c === '"' || c === "'") { q = c; continue; }
-    if (c === '#') return s.slice(0, i);
+    if (c === '#' && (i === 0 || /\s/.test(s[i - 1]))) return s.slice(0, i);
   }
   return s;
 }
