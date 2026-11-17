@@ -1,0 +1,108 @@
+﻿{
+  "tool": "vismith-checks",
+  "version": 1,
+  "generated_at": "2026-11-17T00:44:00.944Z",
+  "target": [
+    "eval/results/e1/S5-seedA/project"
+  ],
+  "contract_present": true,
+  "files_scanned": 3,
+  "summary": {
+    "error": 2,
+    "warning": 4,
+    "info": 1
+  },
+  "findings": [
+    {
+      "id": "CHK-05",
+      "severity": "error",
+      "confidence": "heuristic",
+      "rule": "focus-visible",
+      "evidence": {
+        "file": "eval\\results\\e1\\S5-seedA\\project\\src\\pages\\Dashboard.jsx",
+        "line": 38,
+        "detail": "瀛樺湪浜や簰鍏冪礌浣嗗叏閮ㄦ壂鎻忔枃浠朵腑鏈 :focus-visible / focus ring 鏂规"
+      },
+      "fix_hint": "涓哄彲鑱氱劍鍏冪礌娣诲姞鍙鐒︾偣鏍峰紡锛坱ailwind: focus-visible:ring-2锛?,
+      "verify": "閲嶈窇 checks.mjs锛孋HK-05 閫氳繃"
+    },
+    {
+      "id": "CHK-06",
+      "severity": "error",
+      "confidence": "certain",
+      "rule": "img-alt",
+      "evidence": {
+        "file": "eval\\results\\e1\\S5-seedA\\project\\src\\pages\\Dashboard.jsx",
+        "line": 44,
+        "detail": "img 缂哄皯 alt 灞炴€?
+      },
+      "fix_hint": "琛ュ厖 alt锛堣楗版€у浘鍍忕敤 alt=\"\"锛?,
+      "verify": "閲嶈窇 checks.mjs"
+    },
+    {
+      "id": "CHK-02",
+      "severity": "warning",
+      "confidence": "certain",
+      "rule": "magic-spacing",
+      "evidence": {
+        "file": "eval\\results\\e1\\S5-seedA\\project\\src\\pages\\Dashboard.jsx",
+        "line": 8,
+        "detail": "2 澶勯棿璺濅笉鍦?contract spacing.scale锛堝 17px, 13px锛?
+      },
+      "fix_hint": "浣跨敤 scale 鍐呮。浣嶏紱纭渶鏂版。浣嶅厛鍏ュ绾?,
+      "verify": "閲嶈窇 checks.mjs锛孋HK-02 magic-spacing 娓呴浂"
+    },
+    {
+      "id": "CHK-02",
+      "severity": "warning",
+      "confidence": "certain",
+      "rule": "hardcoded-color",
+      "evidence": {
+        "file": "eval\\results\\e1\\S5-seedA\\project\\src\\pages\\Dashboard.jsx",
+        "line": 14,
+        "detail": "4 澶勭‖缂栫爜棰滆壊锛堥涓綅浜庢琛岋級"
+      },
+      "fix_hint": "鏀圭敤 contract tokens / 涓婚鍙橀噺锛涗緥澶栬鍏?.vismith/exceptions.md",
+      "verify": "閲嶈窇 checks.mjs锛孋HK-02 璁℃暟涓嬮檷鎴栧凡璞佸厤"
+    },
+    {
+      "id": "CHK-02",
+      "severity": "warning",
+      "confidence": "certain",
+      "rule": "hardcoded-color",
+      "evidence": {
+        "file": "eval\\results\\e1\\S5-seedA\\project\\src\\pages\\Settings.jsx",
+        "line": 14,
+        "detail": "1 澶勭‖缂栫爜棰滆壊锛堥涓綅浜庢琛岋級"
+      },
+      "fix_hint": "鏀圭敤 contract tokens / 涓婚鍙橀噺锛涗緥澶栬鍏?.vismith/exceptions.md",
+      "verify": "閲嶈窇 checks.mjs锛孋HK-02 璁℃暟涓嬮檷鎴栧凡璞佸厤"
+    },
+    {
+      "id": "CHK-03",
+      "severity": "warning",
+      "confidence": "heuristic",
+      "rule": "spacing-baseline",
+      "evidence": {
+        "file": "eval\\results\\e1\\S5-seedA\\project\\src\\pages\\Dashboard.jsx",
+        "line": 8,
+        "detail": "2 澶勯棿璺濋潪 4px 鍊嶆暟锛堝 17px, 13px锛?
+      },
+      "fix_hint": "瀵归綈 spacing scale锛涚‘鏈夋剰涓轰箣璁板叆 exceptions",
+      "verify": "閲嶈窇 checks.mjs锛孋HK-03 閫氳繃"
+    },
+    {
+      "id": "CHK-01",
+      "severity": "info",
+      "confidence": "certain",
+      "rule": "contrast",
+      "evidence": {
+        "file": ".vismith/contract.json",
+        "line": 0,
+        "detail": "contract 棰滆壊閰嶅鍏?3 缁勶紝鍏ㄩ儴 >= 4.5:1"
+      },
+      "fix_hint": "",
+      "verify": ""
+    }
+  ]
+}

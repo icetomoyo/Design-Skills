@@ -1,0 +1,177 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "saas-dashboard",
+    "audience": "订阅制客户支持工单平台的运营/值班主管",
+    "scenarios": [
+      "运营总览：日常盯盘（现在怎么样、哪里要我看、我能做什么）",
+      "未分配工单分派：从 Top 8 待办进入处理"
+    ]
+  },
+  "brand": {
+    "personality": [
+      "克制",
+      "可信",
+      "高效"
+    ],
+    "references": []
+  },
+  "style": {
+    "direction": "紧凑数据型总览：单个中性 ramp（slate）承载全部表面；accent（primary 蓝）只用于主操作、选中态与主图主线；状态色只承载语义（更好/更坏/警示），不用于装饰",
+    "do_not": [
+      "玻璃拟态",
+      "大面积渐变与渐变文字",
+      "彩色 glow / 大 blur 彩影",
+      "emoji 作图标或状态",
+      "全大写+宽字距标签"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#2563EB",
+      "success": "#047857",
+      "danger": "#B91C1C",
+      "warning": "#B45309",
+      "neutrals": [
+        "#0F172A",
+        "#334155",
+        "#475569",
+        "#64748B"
+      ],
+      "borders": [
+        "#E2E8F0"
+      ],
+      "surfaces": [
+        "#FFFFFF",
+        "#F8FAFC",
+        "#F1F5F9"
+      ],
+      "surface": "#FFFFFF",
+      "text_on_primary": "#FFFFFF"
+    },
+    "typography": {
+      "body": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "display": "system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "scale": [
+        12,
+        14,
+        16,
+        20,
+        24,
+        30
+      ]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [
+        4,
+        8,
+        12,
+        16,
+        24,
+        32,
+        48
+      ]
+    },
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 12
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(15,23,42,.08)"
+    }
+  },
+  "components": {
+    "button": {
+      "height": 32,
+      "radius": "md",
+      "rules": [
+        "每屏主操作唯一（本页：新建工单）",
+        "必须带 focus-visible ring",
+        "动词短语文案"
+      ]
+    },
+    "table": {
+      "density": "compact",
+      "rules": [
+        "数字右对齐并使用 tabular-nums",
+        "禁用斑马纹，用 hairline 分行",
+        "行高 32-40"
+      ]
+    },
+    "kpi_card": {
+      "rules": [
+        "同高；只放标签+数字+单位+变化（vs 昨日）",
+        "变化永远带方向符号与基准说明，红绿必须叠加符号"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280
+    },
+    "density": "compact"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "所有 KPI 数字必须带对比基准（vs 昨日）与方向符号；无基准的数字视为装饰，不得出现"
+    },
+    {
+      "id": "INV-002",
+      "type": "functional",
+      "description": "未分配工单列表为空（或搜索无匹配）时必须显示原因说明与出口入口（分派规则/清除筛选）"
+    },
+    {
+      "id": "INV-003",
+      "type": "visual",
+      "description": "主图（14 天趋势）占内容宽度 ≥2/3；第二数据块必须是列表，不得是第二张同权重图表"
+    },
+    {
+      "id": "INV-004",
+      "type": "behavior",
+      "description": "所有交互元素（按钮/链接/搜索/图表取数点）键盘可达且有可见焦点；图表数值同时以可见数据表提供"
+    },
+    {
+      "id": "INV-005",
+      "type": "functional",
+      "description": "页面数据为演示 mock，必须在界面上明示“演示数据”，不得出现无来源的规模性声明（如 Trusted by N+）"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "技术栈固定 React + Tailwind（Vite 构建），不换栈",
+      "不引入新字体文件，使用系统字体栈",
+      "不引入图表库：14/30 天趋势用内联 SVG（点数 <1000）",
+      "mock 数量级对齐真实工单平台：日工单 200-900"
+    ],
+    "pages": {
+      "operations-overview": {
+        "skeleton": "侧栏 + 顶栏 + 内容区（KPI 行 -> 趋势主图 -> 未分配 Top8 列表）",
+        "spacing": "4px 基线，仅用 Tailwind 默认阶梯（1/2/3/4/6/8/12）"
+      }
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-17",
+    "updated": "2026-11-17",
+    "decisions": ".vismith/decisions.log.md"
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "//": "Vismith SKILL.md description 语义筛查用例（PRD 验收：正例>=8 反例>=4）。方法=会话内子代理判断（description semantic screening），非 SDK 独立执行、非真实触发率（skill-creator evaluation.md 纪律）。",
+  "description_under_test": "Design-aware, self-verifying frontend UI skill：为前端 UI 生成/精修/重设计/审查建立项目级 Design Contract（.vismith/contract.json），检索带 scope 元数据的设计知识，跑确定性质量检查（对比度/间距/可访问性），维护项目设计记忆。适用：新页面生成、既有界面精修与重设计、UI 质量与可访问性审查、建立设计规范。不适用：非 UI 的后端/工具链任务。",
+  "cases": [
+    {
+      "id": "p1",
+      "query": "帮我做一个 SaaS 后台的仪表盘页面，要有设计感",
+      "expect": "use"
+    },
+    {
+      "id": "p2",
+      "query": "这个 admin 页面文字对比度好像不够，帮我检查并修一下",
+      "expect": "use"
+    },
+    {
+      "id": "p3",
+      "query": "给我们产品官网重新设计一版 landing page",
+      "expect": "use"
+    },
+    {
+      "id": "p4",
+      "query": "项目里建一个统一的设计规范，让各页面风格保持一致",
+      "expect": "use"
+    },
+    {
+      "id": "p5",
+      "query": "优化这个表单页面的可访问性和易用性",
+      "expect": "use"
+    },
+    {
+      "id": "p6",
+      "query": "审查一下这个页面 UI 有没有不符合 WCAG 的地方",
+      "expect": "use"
+    },
+    {
+      "id": "p7",
+      "query": "帮我精修这个数据表格页，别动布局和功能",
+      "expect": "use"
+    },
+    {
+      "id": "p8",
+      "query": "前端页面视觉太模板化，怎么去掉 AI 味",
+      "expect": "use"
+    },
+    {
+      "id": "n1",
+      "query": "写一个后端分页接口，返回 JSON，加缓存",
+      "expect": "not_use"
+    },
+    {
+      "id": "n2",
+      "query": "帮我修这个 React 组件里 useState 闭包过期导致的 bug",
+      "expect": "not_use"
+    },
+    {
+      "id": "n3",
+      "query": "把这个 class 组件重构成 hooks，行为保持不变",
+      "expect": "not_use"
+    },
+    {
+      "id": "n4",
+      "query": "设计一个数据库 ER 图，电商订单模块",
+      "expect": "not_use"
+    },
+    {
+      "id": "n5",
+      "query": "帮我选型：中后台用 Vue 还是 React",
+      "expect": "not_use"
+    },
+    {
+      "id": "n6",
+      "query": "给这段落地页文案做个英文翻译",
+      "expect": "not_use"
+    }
+  ]
+}

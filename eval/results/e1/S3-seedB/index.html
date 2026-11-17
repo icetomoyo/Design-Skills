@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>LiteSync — two-way sync for local SQLite databases</title>
+  <meta name="description" content="LiteSync attaches to the SQLite database your app already ships. Offline writes queue and merge deterministically; the schema and your queries stay unchanged.">
+  <meta name="color-scheme" content="light">
+  <link rel="stylesheet" href="tokens.css">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body id="top">
+  <a class="skip-link" href="#main">Skip to content</a>
+
+  <!-- Top navigation — INV-001: preserved in every later refine/redesign -->
+  <header class="site-header">
+    <div class="container nav-row">
+      <a class="brand" href="#top" aria-label="LiteSync home">
+        <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+          <path class="mark-ring" d="M7 9 A7 7 0 0 1 17 9" fill="none"></path>
+          <path class="mark-arrow" d="M17 5 L20 9 L14 9 Z"></path>
+          <path class="mark-ring" d="M17 15 A7 7 0 0 1 7 15" fill="none"></path>
+          <path class="mark-arrow" d="M7 19 L4 15 L10 15 Z"></path>
+        </svg>
+        <span>LiteSync</span>
+      </a>
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#how-it-works">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="https://github.com/litesync/litesync/tree/main/docs">Docs</a>
+        <a href="https://github.com/litesync/litesync">GitHub</a>
+      </nav>
+      <a class="btn btn-primary btn-nav" href="https://github.com/litesync/litesync#quickstart">Get started</a>
+    </div>
+  </header>
+
+  <main id="main">
+    <!-- Hero: one claim, one primary CTA, one secondary action, left-aligned -->
+    <section class="hero">
+      <div class="container hero-grid">
+        <div>
+          <h1>LiteSync keeps your app&rsquo;s SQLite file in sync on every device &mdash; offline writes included</h1>
+          <p class="lede">It attaches to the SQLite database you already ship. Writes queue while a device is offline, then merge deterministically when peers reconnect &mdash; your schema and queries stay as they are.</p>
+          <div class="cta-row">
+            <a class="btn btn-primary" href="https://github.com/litesync/litesync#quickstart">Start the 5-minute quickstart</a>
+            <a class="btn btn-quiet" href="https://github.com/litesync/litesync">Read the source on GitHub</a>
+          </div>
+          <p class="trust-line">
+            <span>MIT license</span>
+            <span class="trust-sep" aria-hidden="true">/</span>
+            <a href="https://github.com/litesync/litesync">Source on GitHub</a>
+            <span class="trust-sep" aria-hidden="true">/</span>
+            <span>No cloud account required to try it</span>
+          </p>
+        </div>
+        <figure class="feature-media" aria-label="Terminal session: LiteSync attaches to app.db, pushes 42 local changes, pulls 7 remote changes, resolves 3 overlapping rows deterministically, and reports synced with zero pending changes.">
+          <div class="terminal">
+            <div class="terminal-bar">
+              <span class="terminal-dot" aria-hidden="true"></span>
+              <span class="terminal-dot" aria-hidden="true"></span>
+              <span class="terminal-dot" aria-hidden="true"></span>
+              <span class="terminal-title">litesync &mdash; app.db</span>
+            </div>
+            <pre class="terminal-body"><code><span class="t-cmd">$ litesync attach app.db --peer wss://relay.example.com</span>
+attached: app.db
+schema unchanged, 2 bookkeeping tables added
+
+<span class="t-cmd">$ litesync session start</span>
+local &rarr; relay   42 changes  (notes, orders)
+relay  &rarr; local    7 changes  (notes)
+merge: 3 overlapping rows resolved by logical clock
+
+<span class="t-cmd">$ litesync status</span>
+<span class="t-note">state: synced   lag: 0 ms   pending: 0</span></code></pre>
+          </div>
+        </figure>
+      </div>
+    </section>
+
+    <!-- Three argument sections -->
+    <section class="section" id="how-it-works">
+      <div class="container">
+        <div class="section-head">
+          <h2>How LiteSync works</h2>
+          <p>Three claims, each checkable against the source: offline merges are deterministic, your schema survives untouched, and the sync state is plain SQL.</p>
+        </div>
+
+        <div class="feature">
+          <div>
+            <h2>Offline for a week? The writes still merge.</h2>
+            <p>Every change is a row-level delta stamped with a logical clock. When two peers meet, deltas merge by rule &mdash; same inputs, same result, on every device. Conflicts resolve deterministically, not in favor of whoever synced last.</p>
+          </div>
+          <div class="feature-media">
+            <figure role="img" aria-label="Diagram: a laptop offline for six days and a phone each hold local deltas; both converge through a deterministic merge into one identical state on every peer.">
+              <svg viewBox="0 0 520 300" focusable="false">
+                <rect class="dg-box" x="16" y="40" width="150" height="110" rx="8"></rect>
+                <text class="dg-text-strong" x="32" y="68">Laptop</text>
+                <text class="dg-mono" x="32" y="94">offline 6 days</text>
+                <text class="dg-mono" x="32" y="116">notes&nbsp;&nbsp;12 edits</text>
+                <text class="dg-mono" x="32" y="138">orders&nbsp;&nbsp;3 edits</text>
+
+                <rect class="dg-box" x="354" y="40" width="150" height="110" rx="8"></rect>
+                <text class="dg-text-strong" x="370" y="68">Phone</text>
+                <text class="dg-mono" x="370" y="94">online</text>
+                <text class="dg-mono" x="370" y="116">notes&nbsp;&nbsp;7 edits</text>
+                <text class="dg-mono" x="370" y="138">orders&nbsp;&nbsp;0 edits</text>
+
+                <line class="dg-line" x1="166" y1="95" x2="196" y2="118"></line>
+                <polygon class="dg-arrow" points="196,118 187,116 192,110"></polygon>
+                <line class="dg-line" x1="354" y1="95" x2="324" y2="118"></line>
+                <polygon class="dg-arrow" points="324,118 333,116 328,110"></polygon>
+
+                <rect class="dg-box-strong" x="196" y="96" width="128" height="56" rx="8"></rect>
+                <text class="dg-text-strong" x="216" y="120">merge</text>
+                <text class="dg-mono" x="216" y="140">deterministic</text>
+
+                <line class="dg-line" x1="260" y1="152" x2="260" y2="212"></line>
+                <polygon class="dg-arrow" points="260,216 256,208 264,208"></polygon>
+
+                <rect class="dg-box-ink" x="146" y="216" width="228" height="56" rx="8"></rect>
+                <text class="dg-text-on-ink" x="170" y="238">identical state</text>
+                <text class="dg-text-on-ink" x="170" y="256">on every peer</text>
+              </svg>
+              <figcaption>Row-level deltas with logical clocks; merge order never changes the outcome.</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="feature feature-reverse">
+          <div>
+            <h2>It attaches to your database, not around it.</h2>
+            <p>LiteSync loads as a SQLite extension beside your existing file and keeps its bookkeeping in namespaced tables. The schema you designed, the triggers you tuned and the SELECTs you optimized keep running unchanged.</p>
+          </div>
+          <div class="feature-media">
+            <figure role="img" aria-label="Schema comparison: the notes table is identical before and after attaching LiteSync; LiteSync only adds its own litesync_delta table.">
+              <div class="code-panel">
+                <pre><code><span class="c-dim">-- your schema stays as written</span>
+<span class="c-key">CREATE TABLE</span> notes (
+  id         INTEGER PRIMARY KEY,
+  body       TEXT,
+  updated_at INTEGER
+);
+
+<span class="c-dim">-- LiteSync adds its bookkeeping, namespaced</span>
+<span class="c-key">CREATE TABLE</span> litesync_delta (
+  table_name TEXT,
+  row_pk     BLOB,
+  lamport    INTEGER,
+  payload    BLOB
+);</code></pre>
+              </div>
+              <figcaption>Attaching adds two tables; nothing in your schema is rewritten.</figcaption>
+            </figure>
+          </div>
+        </div>
+
+        <div class="feature">
+          <div>
+            <h2>The sync queue is a table you can SELECT.</h2>
+            <p>Pending deltas live in a regular SQLite table with a documented layout. Inspect it, join it against your own data, back it up with the tools you already use &mdash; nothing is sealed inside a binary blob.</p>
+          </div>
+          <div class="feature-media">
+            <figure role="img" aria-label="A query against litesync_delta returning pending change counts per table, followed by the result: notes 3, orders 1.">
+              <div class="code-panel">
+                <pre><code><span class="c-key">SELECT</span> table_name, count(*) <span class="c-key">AS</span> pending
+<span class="c-key">FROM</span> litesync_delta
+<span class="c-key">WHERE</span> applied_at <span class="c-key">IS NULL</span>
+<span class="c-key">GROUP BY</span> table_name;</code></pre>
+                <table class="result-table">
+                  <caption>Queue contents, mid-sync &mdash; ordinary SQL, ordinary tooling</caption>
+                  <thead>
+                    <tr><th scope="col">table_name</th><th scope="col" class="num">pending</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr><td>notes</td><td class="num">3</td></tr>
+                    <tr><td>orders</td><td class="num">1</td></tr>
+                  </tbody>
+                </table>
+              </div>
+              <figcaption>No hidden state: the queue is queryable while a session runs.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pricing: below the fold, quiet actions only -->
+    <section class="section section-tint" id="pricing">
+      <div class="container">
+        <div class="section-head">
+          <h2>Pricing</h2>
+          <p>The sync engine is open source and stays that way. Paid plans cover the managed relay and support, not the database.</p>
+        </div>
+        <div class="pricing-grid">
+          <article class="plan">
+            <h3>Core</h3>
+            <p class="plan-note">The full engine, MIT-licensed.</p>
+            <p class="plan-price">$0 <small>forever</small></p>
+            <ul>
+              <li>Unlimited devices and databases</li>
+              <li>Deterministic merge and conflict rules</li>
+              <li>Community support on GitHub</li>
+            </ul>
+            <a class="btn btn-quiet" href="https://github.com/litesync/litesync">Clone the repo</a>
+          </article>
+          <article class="plan plan-recommended">
+            <h3>Team</h3>
+            <p class="plan-note">Most teams start here.</p>
+            <p class="plan-price">$12 <small>per developer / month</small></p>
+            <ul>
+              <li>Managed relay, EU or US region</li>
+              <li>30-day delta history with rollback</li>
+              <li>Next-business-day email support</li>
+            </ul>
+            <a class="btn btn-quiet" href="#pricing">Start a 30-day trial</a>
+          </article>
+          <article class="plan">
+            <h3>Enterprise</h3>
+            <p class="plan-note">Self-hosted relay under a support contract.</p>
+            <p class="plan-price">Custom <small>annual</small></p>
+            <ul>
+              <li>99.9% uptime SLA, named engineer</li>
+              <li>Audit-log export and SSO</li>
+              <li>Migration and onboarding help</li>
+            </ul>
+            <a class="btn btn-quiet" href="mailto:hello@litesync.dev">Talk to us</a>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div class="footer-brand">
+          <a class="brand" href="#top" aria-label="LiteSync home">
+            <svg class="brand-mark" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+              <path class="mark-ring" d="M7 9 A7 7 0 0 1 17 9" fill="none"></path>
+              <path class="mark-arrow" d="M17 5 L20 9 L14 9 Z"></path>
+              <path class="mark-ring" d="M17 15 A7 7 0 0 1 7 15" fill="none"></path>
+              <path class="mark-arrow" d="M7 19 L4 15 L10 15 Z"></path>
+            </svg>
+            <span>LiteSync</span>
+          </a>
+          <p>A local-first sync engine for SQLite. Open source under the MIT license.</p>
+        </div>
+        <div class="footer-col">
+          <h3>Project</h3>
+          <ul>
+            <li><a href="https://github.com/litesync/litesync">GitHub repository</a></li>
+            <li><a href="https://github.com/litesync/litesync/releases">Releases</a></li>
+            <li><a href="https://github.com/litesync/litesync/blob/main/LICENSE">License (MIT)</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>Docs</h3>
+          <ul>
+            <li><a href="https://github.com/litesync/litesync#quickstart">Quickstart</a></li>
+            <li><a href="https://github.com/litesync/litesync/tree/main/docs">Merge rules</a></li>
+            <li><a href="https://github.com/litesync/litesync/tree/main/docs">SQL reference</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h3>Contact</h3>
+          <ul>
+            <li><a href="https://github.com/litesync/litesync/security">Security policy</a></li>
+            <li><a href="https://github.com/litesync/litesync/issues">Issue tracker</a></li>
+            <li><a href="mailto:hello@litesync.dev">Email the maintainers</a></li>
+          </ul>
+        </div>
+      </div>
+      <p class="footer-legal">
+        <span>&copy; 2026 The LiteSync contributors</span>
+        <span>Works with SQLite 3.35 and later</span>
+      </p>
+    </div>
+  </footer>
+</body>
+</html>

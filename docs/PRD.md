@@ -186,7 +186,8 @@
 | 词法检索召回不足 | 已知局限 | v0.2 扩容后 | 同义词表维护；预留嵌入接口（默认关闭） |
 | Windows 兼容 | 风险 | 全程 | 只用跨平台 Node API；CI 双平台 [CI 待建] |
 | 知识库内容腐烂 | 风险 | v0.2 起 | 条目标注 principle/trend，trend 类定期复审 |
-| 评审遗留债务（v0.2） | 债务 | 双轴评审 2026-11-17（ Standards/Spec 报告 + 修复验证） | 未清项：lib/cli.mjs 抽取与 makeFinding 工厂（结构性重构）、扩展名过滤统一、检索 ndcg@k fixtures、trigger-eval 正反例、示例项目目录、E1 评测执行（eval/ 仍为占位） |
+| 评审遗留债务（v0.2） | 债务 | 双轴评审 2026-11-17（ Standards/Spec 报告 + 修复验证） | 未清项：lib/cli.mjs 抽取与 makeFinding 工厂（结构性重构）、扩展名过滤统一、检索 ndcg@k fixtures。已清：trigger 正反例（eval/trigger/，14/14）、E1 已执行（eval/results/E1-2026-11-17.md，含 4 项 v0.2 改进发现：extract 刻度去重/CHK 类名盲区/四态默认/错误态触达标准） |
+| E1 改进发现（v0.2） | 债务 | E1 报告 §5 | ①extract 与 Tailwind 默认刻度去重 ②CHK-02/04 扫 Tailwind 类名（text-lg/off-token 色类逃逸） ③数据页四态默认入 generate 协议 ④载入/错误态真实可触达标准 |
 
 ## 附录 A：contract 草案（下为 YAML 示意；v0.1 落地为 .vismith/contract.json，字段一致，见 HLD §3.2）
 
