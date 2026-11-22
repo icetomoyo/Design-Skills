@@ -1,0 +1,440 @@
+/* WALSmith 落地页 — 结构与组件样式
+   纪律：本文件不出现裸色值/裸字号/裸间距；一切经 tokens.css 的 var()。
+   深度来自表面阶梯 + hairline；钴蓝只用于主 CTA、链接、焦点与少量语义强调。 */
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--canvas);
+  color: var(--ink-700);
+  font-family: var(--font-body);
+  font-size: var(--fs-16);
+  line-height: 1.6;
+}
+
+.container {
+  max-width: var(--container);
+  margin-inline: auto;
+  padding-inline: var(--sp-24);
+}
+
+/* ---- 焦点（键盘可见，全站统一） ---- */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.skip {
+  position: fixed;
+  top: var(--sp-8);
+  left: var(--sp-8);
+  z-index: 10;
+  padding: var(--sp-8) var(--sp-12);
+  background: var(--surface);
+  color: var(--ink-900);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius-sm);
+  text-decoration: none;
+}
+.skip:not(:focus) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---- 分节节奏：80-128px（band 内衬 48，相邻 band 内容间距 48+48=96；定价/页脚交界 112-128） ---- */
+.band { padding-block: var(--sp-48); }
+
+/* ---- 顶栏（INV-001：导航与 CTA 必须保留） ---- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--surface);
+  border-bottom: 1px solid var(--hairline);
+}
+.topbar-inner {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-32);
+  min-height: var(--topbar-h);
+}
+.wordmark {
+  font-size: var(--fs-18);
+  font-weight: 600;
+  color: var(--ink-900);
+  text-decoration: none;
+  letter-spacing: -0.01em;
+}
+.nav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-4) var(--sp-24);
+  margin-inline: auto;
+}
+.nav a {
+  font-size: var(--fs-14);
+  color: var(--ink-700);
+  text-decoration: none;
+  padding-block: var(--sp-4);
+  transition: color var(--dur) var(--ease);
+}
+.nav a:hover { color: var(--ink-900); }
+
+/* ---- 按钮：实心主 CTA 全页唯一；其余描边 ---- */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding-inline: var(--sp-16);
+  border-radius: var(--radius-md);
+  border: 1px solid transparent;
+  font-family: inherit;
+  font-size: var(--fs-16);
+  font-weight: 500;
+  text-decoration: none;
+  transition: background-color var(--dur) var(--ease), border-color var(--dur) var(--ease), color var(--dur) var(--ease);
+}
+.btn-primary {
+  background: var(--accent);
+  color: var(--surface);
+}
+.btn-primary:hover { background: var(--accent-strong); }
+.btn-outline {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: transparent;
+}
+.btn-outline:hover {
+  border-color: var(--accent-strong);
+  color: var(--accent-strong);
+}
+
+.link-quiet {
+  font-size: var(--fs-16);
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: var(--sp-4);
+}
+.link-quiet:hover { color: var(--accent-strong); }
+
+/* ---- Hero：非对称分栏（文案 + 终端产品视觉） ---- */
+.hero-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+  gap: var(--sp-64);
+  align-items: center;
+  padding-block: var(--sp-48);
+}
+.hero h1 {
+  margin: 0 0 var(--sp-16);
+  font-size: var(--fs-56);
+  line-height: 1.12;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--ink-900);
+}
+.lede {
+  margin: 0 0 var(--sp-24);
+  font-size: var(--fs-18);
+  line-height: 1.7;
+  max-width: 44ch;
+  color: var(--ink-700);
+}
+.cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-16);
+  margin-bottom: var(--sp-16);
+}
+.trust {
+  margin: 0;
+  font-size: var(--fs-14);
+  color: var(--ink-500);
+}
+
+/* ---- 终端/代码卡（唯一签名元素） ---- */
+.code-card {
+  margin: 0;
+  background: var(--code-surface);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  overflow: hidden;
+}
+.term-bar {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-8);
+  padding: var(--sp-8) var(--sp-16);
+  border-bottom: 1px solid var(--code-muted);
+}
+.dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--code-muted);
+}
+.term-title {
+  margin-inline: auto;
+  font-size: var(--fs-12);
+  color: var(--code-muted);
+  font-family: var(--font-mono);
+}
+.code-card pre {
+  margin: 0;
+  padding: var(--sp-20);
+  overflow-x: auto;
+  font-family: var(--font-mono);
+  font-size: var(--fs-14);
+  line-height: 1.8;
+  color: var(--code-text);
+  font-variant-numeric: tabular-nums;
+}
+.c-prompt, .c-out, .c-comment { color: var(--code-muted); }
+.code-card figcaption {
+  padding: var(--sp-12) var(--sp-20);
+  border-top: 1px solid var(--code-muted);
+  font-size: var(--fs-12);
+  color: var(--code-muted);
+}
+
+/* ---- 功能节：一节一论点一视觉，左右交替 ---- */
+.feature-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--sp-64);
+  align-items: center;
+}
+.feature:nth-of-type(even) .f-visual { order: -1; }
+.feature h2 {
+  margin: 0 0 var(--sp-16);
+  font-size: var(--fs-40);
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.f-copy > p { margin: 0 0 var(--sp-16); max-width: 52ch; }
+.f-copy ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-12);
+}
+.f-copy li {
+  font-size: var(--fs-16);
+  color: var(--ink-700);
+  padding-inline-start: var(--sp-16);
+  position: relative;
+}
+.f-copy li::before {
+  content: "–";
+  position: absolute;
+  inset-inline-start: 0;
+  color: var(--ink-500);
+}
+.visual-note {
+  margin: var(--sp-12) 0 0;
+  font-size: var(--fs-12);
+  color: var(--ink-500);
+}
+
+/* 数据路径图（纯 CSS 盒子，无图片） */
+.diagram {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--sp-12);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-24);
+  box-shadow: var(--shadow-card);
+}
+.box {
+  font-size: var(--fs-14);
+  font-weight: 500;
+  color: var(--ink-700);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-md);
+  padding: var(--sp-12) var(--sp-16);
+}
+.box-accent { border-color: var(--accent); color: var(--ink-900); }
+.arrow { color: var(--ink-500); font-size: var(--fs-16); }
+
+/* 增量对比条 */
+.stats {
+  display: grid;
+  gap: var(--sp-16);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-24);
+  box-shadow: var(--shadow-card);
+}
+.stat-row {
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr) 72px;
+  align-items: center;
+  gap: var(--sp-12);
+}
+.stat-label { font-size: var(--fs-14); color: var(--ink-700); }
+.track {
+  display: block;
+  height: 12px;
+  border-radius: var(--radius-sm);
+  background: var(--canvas);
+  border: 1px solid var(--hairline);
+  overflow: hidden;
+}
+.fill { display: block; height: 12px; }
+.fill-muted { width: 100%; background: var(--ink-500); }
+.fill-accent { width: 2%; min-width: 4px; background: var(--accent); }
+.stat-value {
+  font-size: var(--fs-16);
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* ---- 定价（首屏以下；文本对比度全部 >= 4.5:1） ---- */
+.band-surface {
+  background: var(--surface);
+  border-block: 1px solid var(--hairline);
+  padding-block: var(--sp-64);
+}
+.pricing h2 {
+  margin: 0 0 var(--sp-8);
+  font-size: var(--fs-40);
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.pricing-intro {
+  margin: 0 0 var(--sp-32);
+  font-size: var(--fs-18);
+  color: var(--ink-700);
+}
+.plan-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--sp-24);
+}
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-16);
+  background: var(--surface);
+  border: 1px solid var(--hairline);
+  border-radius: var(--radius-lg);
+  padding: var(--sp-24);
+}
+.plan-featured { border-color: var(--accent); }
+.plan h3 {
+  margin: 0;
+  font-size: var(--fs-20);
+  font-weight: 600;
+  color: var(--ink-900);
+}
+.price {
+  margin: 0;
+  font-size: var(--fs-32);
+  font-weight: 600;
+  color: var(--ink-900);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.2;
+}
+.price .unit {
+  font-size: var(--fs-14);
+  font-weight: 400;
+  color: var(--ink-500);
+}
+.plan ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-8);
+  flex: 1;
+}
+.plan li { font-size: var(--fs-14); color: var(--ink-700); }
+.plan .btn { width: 100%; }
+.pricing-note {
+  margin: var(--sp-24) 0 0;
+  font-size: var(--fs-14);
+  color: var(--ink-500);
+}
+
+/* ---- 页脚 ---- */
+.footer {
+  background: var(--footer-surface);
+  color: var(--footer-text);
+  padding-block: var(--sp-48) var(--sp-32);
+}
+.footer-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+  gap: var(--sp-32);
+}
+.footer-word {
+  margin: 0 0 var(--sp-4);
+  font-size: var(--fs-18);
+  font-weight: 600;
+  color: var(--footer-text);
+}
+.footer-tag { margin: 0; font-size: var(--fs-14); color: var(--footer-link); }
+.footer ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: var(--sp-8);
+}
+.footer a {
+  font-size: var(--fs-14);
+  color: var(--footer-link);
+  text-decoration: none;
+  transition: color var(--dur) var(--ease);
+}
+.footer a:hover { color: var(--footer-text); }
+.footer-bottom {
+  margin-top: var(--sp-32);
+  padding-top: var(--sp-16);
+  border-top: 1px solid var(--code-muted);
+}
+.footer-bottom p {
+  margin: 0;
+  font-size: var(--fs-12);
+  color: var(--footer-link);
+}
+
+/* ---- 响应式 ---- */
+@media (max-width: 1024px) {
+  .hero h1 { font-size: var(--fs-40); }
+  .feature h2, .pricing h2 { font-size: var(--fs-32); }
+  .hero-grid, .feature-grid { gap: var(--sp-48); }
+}
+@media (max-width: 768px) {
+  .topbar-inner { flex-wrap: wrap; gap: var(--sp-8) var(--sp-16); padding-block: var(--sp-8); }
+  .nav { margin-inline: 0; order: 3; flex-basis: 100%; }
+  .topbar-inner .btn { margin-inline-start: auto; }
+  .hero-grid, .feature-grid { grid-template-columns: minmax(0, 1fr); gap: var(--sp-32); }
+  .feature:nth-of-type(even) .f-visual { order: 0; }
+  .plan-grid { grid-template-columns: minmax(0, 1fr); }
+  .footer-grid { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .hero h1 { font-size: var(--fs-32); }
+}
+
+/* ---- 动效降级 ---- */
+@media (prefers-reduced-motion: reduce) {
+  * { transition-duration: 0.01ms !important; }
+}

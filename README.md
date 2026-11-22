@@ -66,4 +66,4 @@
 
 已实现：路由、契约（init/extract/validate/show）、检索、10 条检查（含 Floor/Reflex 分级豁免）、记忆协议、token 预算、测试套件。
 未实现（路线图见 PRD §9）：ui-ux-pro-max 知识库改编扩容、视觉审查闭环（v0.3）、有界自动修复（v0.3）、
-跨页一致性（v0.4）、完整 A/B/C/D 对照评测（v0.4，方案见 eval/E4-PLAN.md）。**本地 .skill 打包/隔离安装与远程 `npx skills add` 两条链路均已实测通过（见 `eval/dist/install-test-report.md` 与 `eval/dist/remote-install-test.md`）。**
+跨页一致性（v0.4）。**本地 .skill 打包/隔离安装与远程 `npx skills add` 两条链路均已实测通过；A/B/C/D 四臂对照评测已执行（eval/results/E4-2026-11-22.md：Vismith 臂均 21.75 领先，唯一确定性 12/12 全零）。**

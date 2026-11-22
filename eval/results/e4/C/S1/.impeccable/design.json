@@ -1,0 +1,132 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-22T14:00:00Z",
+  "title": "Design System: 云翎客服台 · 节气物候历",
+  "extensions": {
+    "colorMeta": {
+      "rail": { "role": "neutral", "displayName": "绀青（Gan-Qing Rail）", "canonical": "#153841", "tonalRamp": ["#0B1D24", "#102A32", "#153841", "#1D4650", "#2A545E", "#42656D", "#6B858B", "#A3B5B8"] },
+      "ground": { "role": "neutral", "displayName": "月白纸地（Moon-White Ground）", "canonical": "#F5F7F6", "tonalRamp": ["#5F6A68", "#7C8583", "#9AA2A0", "#B8BEBD", "#D2D7D6", "#E4E8E7", "#F0F2F1", "#F5F7F6"] },
+      "term-xiaoxue": { "role": "primary", "displayName": "小雪冰蓝（Xiaoxue Ice Blue）", "canonical": "#2E7E9E", "tonalRamp": ["#122C38", "#1D4E63", "#23647D", "#2E7E9E", "#4B93AF", "#6FA8BF", "#9CC3D3", "#CFE0E8"] },
+      "term-lidong": { "role": "secondary", "displayName": "立冬青黛（Lidong Slate Teal）", "canonical": "#3F6672", "tonalRamp": ["#182B31", "#27434C", "#335661", "#3F6672", "#527682", "#6E8A93", "#94A9B0", "#C4D1D4"] },
+      "term-ice": { "role": "secondary", "displayName": "轨上冰（Rail Ice）", "canonical": "#5FAFC7", "tonalRamp": ["#1C3D4A", "#2A5566", "#3A6C80", "#5FAFC7", "#82C0D4", "#A5D1E0", "#C6E1EB", "#E3F0F5"] },
+      "term-ice-text": { "role": "secondary", "displayName": "文字级冰蓝（Ice Ink）", "canonical": "#23647D", "tonalRamp": ["#0E2230", "#16394A", "#23647D", "#2E7E9E", "#4B93AF", "#6FA8BF", "#9CC3D3", "#CFE0E8"] },
+      "ink": { "role": "neutral", "displayName": "墨（Ink）", "canonical": "#1B2A2E", "tonalRamp": ["#101C20", "#16252A", "#1B2A2E", "#33454A", "#52646A", "#75868B", "#9AA8AC", "#C6D0D2"] },
+      "state-danger": { "role": "tertiary", "displayName": "语义红（Semantic Danger）", "canonical": "#B3362B", "tonalRamp": ["#5C1B15", "#82271E", "#B3362B", "#C25B51", "#D2827A", "#E1ABA4", "#EFD3CF", "#FBEAE8"] },
+      "state-warn": { "role": "tertiary", "displayName": "语义琥珀（Semantic Warn）", "canonical": "#9A5B00", "tonalRamp": ["#4E2E00", "#714400", "#9A5B00", "#B2791F", "#C99749", "#DBB578", "#EBD3AC", "#FBF3E4"] },
+      "state-ok": { "role": "tertiary", "displayName": "语义绿（Semantic Ok）", "canonical": "#2E6B45", "tonalRamp": ["#173623", "#1F4A31", "#2E6B45", "#4B8560", "#6C9F80", "#93BAA4", "#BCD6C7", "#EAF3ED"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "KPI 数值", "purpose": "仅用于指标大数：36px/600/tabular-nums/-0.02em。" },
+      "headline": { "displayName": "页面标题", "purpose": "顶栏页题，20px/600。" },
+      "title": { "displayName": "区块标题", "purpose": "卡片与区块题，16px/600。" },
+      "body": { "displayName": "正文", "purpose": "列表行与正文，14px/400/20px。" },
+      "label": { "displayName": "标签", "purpose": "读出行、chip、注脚，12px。" }
+    },
+    "shadows": [
+      { "name": "card", "value": "0 1px 2px rgba(27,42,46,0.06), 0 4px 12px rgba(27,42,46,0.05)", "purpose": "卡面唯一阴影片语：偏移+柔焦双段；悬停改用色调层而非加深。" }
+    ],
+    "motion": [
+      { "name": "state-color", "value": "transition-colors 150ms", "purpose": "控件与列表行的状态色过渡（Operate 模式 150–250ms 下限）。" },
+      { "name": "press", "value": "transform translateY(1px) on :active", "purpose": "主按钮按压反馈，传达状态而非装饰。" }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "xl", "value": "1280px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "主按钮（派单）",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "绀青底主操作，用于列表行内派单与空态入口。",
+      "html": "<button class=\"ds-btn-primary\">派单</button>",
+      "css": ".ds-btn-primary { background: #153841; color: #E8F0F0; padding: 4px 8px; border: none; border-radius: 4px; font-size: 12px; font-weight: 500; display: inline-flex; align-items: center; gap: 4px; transition: background-color 150ms; } .ds-btn-primary:hover { background: #1D4650; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #23647D; outline-offset: 2px; }"
+    },
+    {
+      "name": "次按钮",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "白底发丝边次操作（空态第二入口）。",
+      "html": "<button class=\"ds-btn-secondary\">配置自动分配规则</button>",
+      "css": ".ds-btn-secondary { background: #FFFFFF; color: #1B2A2E; padding: 4px 12px; border: 1px solid #DCE3E2; border-radius: 4px; font-size: 12px; font-weight: 500; transition: background-color 150ms; } .ds-btn-secondary:hover { background: #F5F7F6; } .ds-btn-secondary:focus-visible { outline: 2px solid #23647D; outline-offset: 2px; }"
+    },
+    {
+      "name": "优先级 Chip",
+      "kind": "chip",
+      "refersTo": "chip-priority-medium",
+      "description": "语义底色 chip；四档：紧急/高/中/低。",
+      "html": "<span class=\"ds-chip\">中</span>",
+      "css": ".ds-chip { background: #E4EFF3; color: #23647D; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 500; display: inline-block; }"
+    },
+    {
+      "name": "卡面",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "纯白卡面：6px 圆角、1px 发丝边、20px 内距、唯一阴影片语；同排卡片同高共基线。",
+      "html": "<section class=\"ds-card\">内容</section>",
+      "css": ".ds-card { background: #FFFFFF; border: 1px solid #DCE3E2; border-radius: 6px; padding: 20px; box-shadow: 0 1px 2px rgba(27,42,46,0.06), 0 4px 12px rgba(27,42,46,0.05); }"
+    },
+    {
+      "name": "搜索输入",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "顶栏搜索：月白底、发丝边、focus 边框转冰蓝。",
+      "html": "<input class=\"ds-input\" type=\"search\" placeholder=\"搜索工单 / 客户 / 坐席\" />",
+      "css": ".ds-input { background: #F5F7F6; border: 1px solid #DCE3E2; border-radius: 4px; padding: 4px 12px 4px 36px; font-size: 14px; color: #1B2A2E; width: 224px; } .ds-input::placeholder { color: #55666B; } .ds-input:focus { border-color: #2E7E9E; outline: none; } .ds-input:focus-visible { outline: 2px solid #23647D; outline-offset: 2px; }"
+    },
+    {
+      "name": "侧轨导航项（活跃）",
+      "kind": "nav",
+      "refersTo": "nav-item-active",
+      "description": "绀青轨上的导航行：无彩色条纹，活跃靠底色+字重+轨上冰图标。",
+      "html": "<a class=\"ds-nav ds-nav--active\" href=\"#/overview\">总览</a>",
+      "css": ".ds-nav { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 4px; color: #9FB9BE; font-size: 14px; text-decoration: none; transition: background-color 150ms, color 150ms; } .ds-nav:hover { background: #1D4650; color: #E8F0F0; } .ds-nav--active { background: #1D4650; color: #E8F0F0; font-weight: 500; } .ds-nav:focus-visible { outline: 2px solid #23647D; outline-offset: 2px; }"
+    },
+    {
+      "name": "KPI 卡",
+      "kind": "custom",
+      "refersTo": "kpi-card",
+      "description": "数字+标签+vs 昨日三要素；36px 表格数字，注脚底对齐。",
+      "html": "<section class=\"ds-kpi\"><h3 class=\"ds-kpi-label\">今日新增工单</h3><p class=\"ds-kpi-value\">316<span class=\"ds-kpi-unit\">单</span></p><p class=\"ds-kpi-delta\">▼ 73 · 18.8% <span>vs 昨日</span></p></section>",
+      "css": ".ds-kpi { background: #FFFFFF; border: 1px solid #DCE3E2; border-radius: 6px; padding: 20px; box-shadow: 0 1px 2px rgba(27,42,46,0.06), 0 4px 12px rgba(27,42,46,0.05); display: flex; flex-direction: column; height: 100%; } .ds-kpi-label { color: #55666B; font-size: 14px; font-weight: 400; margin: 0; } .ds-kpi-value { font-size: 36px; line-height: 40px; font-weight: 600; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; color: #1B2A2E; margin: 12px 0 0; } .ds-kpi-unit { font-size: 14px; font-weight: 400; color: #55666B; margin-left: 8px; } .ds-kpi-delta { font-size: 14px; color: #55666B; font-variant-numeric: tabular-nums; margin: 12px 0 0; } .ds-kpi-delta span { font-size: 12px; }"
+    },
+    {
+      "name": "节气分界（签名组件）",
+      "kind": "custom",
+      "refersTo": "term-boundary",
+      "description": "世界进入数据图的唯一通道：跨节气柱变色 + 1.25px 冰蓝虚线 + 竖排节气标签。",
+      "html": "<div class=\"ds-term-boundary\"><span class=\"ds-term-label\">小雪 · 11-22</span></div>",
+      "css": ".ds-term-boundary { border-left: 1.25px dashed #2E7E9E; height: 100%; position: relative; } .ds-term-label { writing-mode: vertical-rl; font-size: 11px; color: #2E7E9E; position: absolute; top: 8px; left: 4px; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Phenological Almanac（节气物候历）",
+    "overview": "一个客服工单运营台的内页系统。世界（二十四节气 · 七十二候的历法传统）只向界面出借四样东西：type、palette、density、一个具名签名动作「节气分界」。导航、控件、布局全部保持 web 标准形态——历法是气质，不是戏服。",
+    "keyCharacteristics": [
+      "绀青轨（#153841）承载品牌与导航；内容区月白纸地（#F5F7F6）+ 纯白卡面",
+      "数据色取物候色卡：当前节气窗口决定主色（立冬青黛 → 小雪冰蓝）",
+      "全部数字使用 tabular-nums；间距全部为 4px 倍数",
+      "状态色只在携带语义处出现，不作装饰"
+    ],
+    "rules": [
+      { "name": "The Four Loans Rule", "body": "世界只借 type、palette、density、一个签名动作；它永远不供应布局、导航模型或控件形态。", "section": "colors" },
+      { "name": "The Semantic Color Rule", "body": "状态色（#B3362B / #9A5B00 / #2E6B45）只出现在携带语义的地方；一处纯装饰即违规。", "section": "colors" },
+      { "name": "The Fixed Ladder Rule", "body": "数字复用同一严格字号阶梯（36/14/12），层级只靠尺度对比，不做任意插值。", "section": "typography" },
+      { "name": "The Tonal Hover Rule", "body": "悬停以色调层响应；阴影在静止面上保持恒定。", "section": "elevation" }
+    ],
+    "dos": [
+      "Do 让所有数据数字走 tabular-nums 与固定字号阶梯。",
+      "Do 让世界只通过 type/palette/density/签名动作四条通道出现。",
+      "Do 保持间距 4px 倍数与文字对比度 ≥4.5:1（次级 ≥5.6:1）。"
+    ],
+    "donts": [
+      "Don't 使用渐变文字、彩色光晕、emoji/Unicode 图标、问候式标题。",
+      "Don't 在卡片、列表项、告警上用超过 1px 的彩色左/右边条。",
+      "Don't 把系统漂向「奶油纸地 + 衬线显示字」的默认渲染；纸地保持冷调月白。",
+      "Don't 让节气世界供应导航或控件形态（黄历边框、宜忌行、刻本装饰皆禁）。"
+    ]
+  }
+}

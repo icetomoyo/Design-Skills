@@ -1,0 +1,102 @@
+{
+  "seed": 20261122,
+  "note": "root-only 盲评映射，grader 不可读",
+  "map": [
+    {
+      "label": "e4-p01",
+      "arm": "A",
+      "scen": "S5",
+      "files": 4
+    },
+    {
+      "label": "e4-p02",
+      "arm": "A",
+      "scen": "S3",
+      "files": 2
+    },
+    {
+      "label": "e4-p03",
+      "arm": "C",
+      "scen": "S1",
+      "files": 15
+    },
+    {
+      "label": "e4-p04",
+      "arm": "D",
+      "scen": "S1",
+      "files": 19
+    },
+    {
+      "label": "e4-p05",
+      "arm": "D",
+      "scen": "S7",
+      "files": 3
+    },
+    {
+      "label": "e4-p06",
+      "arm": "B",
+      "scen": "S5",
+      "files": 4
+    },
+    {
+      "label": "e4-p07",
+      "arm": "B",
+      "scen": "S1",
+      "files": 16
+    },
+    {
+      "label": "e4-p08",
+      "arm": "B",
+      "scen": "S3",
+      "files": 2
+    },
+    {
+      "label": "e4-p09",
+      "arm": "C",
+      "scen": "S5",
+      "files": 5
+    },
+    {
+      "label": "e4-p10",
+      "arm": "C",
+      "scen": "S7",
+      "files": 4
+    },
+    {
+      "label": "e4-p11",
+      "arm": "A",
+      "scen": "S1",
+      "files": 16
+    },
+    {
+      "label": "e4-p12",
+      "arm": "D",
+      "scen": "S5",
+      "files": 4
+    },
+    {
+      "label": "e4-p13",
+      "arm": "A",
+      "scen": "S7",
+      "files": 3
+    },
+    {
+      "label": "e4-p14",
+      "arm": "B",
+      "scen": "S7",
+      "files": 3
+    },
+    {
+      "label": "e4-p15",
+      "arm": "C",
+      "scen": "S3",
+      "files": 3
+    },
+    {
+      "label": "e4-p16",
+      "arm": "D",
+      "scen": "S3",
+      "files": 3
+    }
+  ]
+}

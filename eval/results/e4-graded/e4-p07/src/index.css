@@ -1,0 +1,64 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================================
+   语义令牌 = design-system/supportdesk-ops/MASTER.md 契约
+   （skill ui-ux-pro-max Step 2b --persist 生成）
+   密度档 8/10：间距取 4px 基线的 8/12/16/24/32 档
+   ============================================================ */
+:root {
+  --color-primary: #2563eb;
+  --color-primary-text: #1d4ed8;
+  --color-on-primary: #ffffff;
+  --color-accent: #ea580c;
+  --color-accent-text: #c2410c;
+  --color-background: #f8fafc;
+  --color-foreground: #1e293b;
+  --color-card: #ffffff;
+  --color-muted: #e9eff8;
+  --color-muted-foreground: #475569;
+  --color-border: #e2e8f0;
+  --color-destructive: #dc2626;
+  --color-destructive-text: #b91c1c;
+  --color-success-text: #15803d;
+  --color-warning-text: #b45309;
+  --color-ring: #2563eb;
+  /* 4px 基线间距刻度（MASTER §Spacing，仅取 >=4px 的档位） */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+}
+
+@layer base {
+  html {
+    font-size: 16px; /* readable-font-size：正文基准 16px */
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    line-height: 1.5;
+  }
+  /* focus-states：键盘导航可见焦点环（2px，带偏移） */
+  :focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+  /* number-tabular：数据/金额/计时的等宽数字，防布局抖动 */
+  .tnum {
+    font-variant-numeric: tabular-nums;
+  }
+  /* reduced-motion：尊重系统减动效设置（Motion 档 2/10，仅保留必要过渡） */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      transition-delay: 0ms !important;
+    }
+  }
+}

@@ -1,0 +1,139 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "marketing-site",
+    "audience": "本地优先应用与离线优先工具链的开发者",
+    "scenarios": [
+      "产品落地页（hero + 三段功能论点 + 定价 + 页脚）",
+      "静态交付：无构建链、无网络、无浏览器验证"
+    ]
+  },
+  "brand": {
+    "personality": ["可靠", "克制", "工程师向"],
+    "references": ["ink 中性 ramp + 钴蓝单 accent（brief 给定）"]
+  },
+  "style": {
+    "direction": "低饱和 ink 中性 ramp 承载全部文本与结构；钴蓝 accent 只出现在主 CTA、链接与焦点；深度靠表面阶梯 + hairline，不用渐变与 glow",
+    "do_not": [
+      "紫蓝/紫粉渐变、渐变文字、彩色 glow、blob 背景玻璃卡",
+      "hero 上方 pill 徽章、全大写宽字距眉题、头像点阵、无来源五星",
+      "全部居中堆叠布局（hero 与功能节均非对称分栏）",
+      "hype 词（赋能/无缝/革命性/seamless/supercharge/unlock/magic）"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#1A56DB",
+      "primary_hover": "#1747D1",
+      "neutrals": ["#111827", "#374151", "#51607A"],
+      "surface": "#FFFFFF",
+      "text_on_primary": "#FFFFFF",
+      "canvas": "#F6F7F9",
+      "hairline": "#D9DEE8",
+      "code_surface": "#0B1220",
+      "code_text": "#E2E8F0",
+      "code_muted": "#93A1B8",
+      "footer_surface": "#111827",
+      "footer_text": "#D9DEE8",
+      "footer_link": "#A8B3C7"
+    },
+    "typography": {
+      "body": "Inter, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif",
+      "display": "Inter, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', system-ui, sans-serif",
+      "scale": [12, 14, 16, 18, 20, 24, 32, 40, 56]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64, 96, 128]
+    },
+    "radius": {
+      "sm": 6,
+      "md": 8,
+      "lg": 12
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(17,24,39,.08)",
+      "raised": "0 8px 24px rgba(17,24,39,.10)"
+    }
+  },
+  "components": {
+    "button": {
+      "height": 40,
+      "radius": "md",
+      "rules": [
+        "主操作唯一：实心钴蓝按钮全页只出现一次（hero 主 CTA）",
+        "顶栏 CTA 与定价按钮一律描边样式，不与主 CTA 抢层级",
+        "次级动作至多一个（hero 的仓库链接）"
+      ]
+    },
+    "code_card": {
+      "density": "compact",
+      "rules": [
+        "等宽字体只用于终端/SQL 内容，不做标签化妆",
+        "行内数字用 tabular-nums"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280
+    },
+    "density": "comfortable-persuade"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "顶部导航必须保留：wordmark + 工作原理/定价/文档/GitHub 链接组 + 顶栏 CTA（refine/redesign 时不得移除）"
+    },
+    {
+      "id": "INV-002",
+      "type": "functional",
+      "description": "CTA 层级必须保留：hero 主 CTA（实心钴蓝）全页唯一，次级动作至多一个（GitHub 仓库链接）"
+    },
+    {
+      "id": "INV-003",
+      "type": "behavior",
+      "description": "定价表必须位于首屏以下且全部文本对比度 >= 4.5:1（正文/弱文均实算达标）"
+    },
+    {
+      "id": "INV-004",
+      "type": "visual",
+      "description": "品牌前提固定：低饱和 ink 中性 ramp + 钴蓝单 accent + Inter 正文；分节间距保持 80-128px 节奏"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "静态交付：纯 HTML/CSS，无 npm install、无网络请求、无浏览器验证",
+      "不引入新字体文件（Inter 走本机字体栈，缺省回退系统 UI）"
+    ],
+    "pages": {
+      "index.html": [
+        "章节间距 96px（spacing.scale 内）",
+        "hero 非对称分栏：文案列 + 终端产品视觉列",
+        "信任要素只放可验证项（开源许可证、仓库、文档链接），无头像点阵/五星/无来源数字"
+      ]
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md",
+    "note": "由 S3-landing brief 建立：低饱和 ink ramp + 钴蓝 accent + Inter；neutrals 仅收录实算 >=4.5:1 的文本档"
+  }
+}

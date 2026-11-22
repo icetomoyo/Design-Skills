@@ -1,0 +1,643 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="云枢Desk 运营总览（静态预览快照，与 src/ React 实现同构；?empty=1 查看待办空态）" />
+    <title>运营总览 · 云枢Desk（静态预览）</title>
+    <style>
+      /* ============================================================
+         静态预览快照：与 src/（React + Tailwind）实现同构，
+         令牌来自 design-system/supportdesk-ops/MASTER.md。
+         零外部依赖（无 CDN / 无字体请求），离线可直接打开。
+         间距全部落在 4px 基线（8/12/16/20/24/32）。
+         ============================================================ */
+      :root {
+        --primary: #2563eb;
+        --primary-text: #1d4ed8;
+        --on-primary: #ffffff;
+        --accent: #ea580c;
+        --accent-text: #c2410c;
+        --bg: #f8fafc;
+        --fg: #1e293b;
+        --card: #ffffff;
+        --muted: #e9eff8;
+        --muted-fg: #475569;
+        --border: #e2e8f0;
+        --destructive: #dc2626;
+        --destructive-text: #b91c1c;
+        --success: #15803d;
+        --ring: #2563eb;
+      }
+      * { box-sizing: border-box; }
+      html { font-size: 16px; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--fg);
+        line-height: 1.5;
+        font-family: Inter, system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        -webkit-font-smoothing: antialiased;
+      }
+      a { text-decoration: none; color: inherit; }
+      button { font: inherit; border: 0; background: none; padding: 0; cursor: pointer; color: inherit; }
+      ul { list-style: none; margin: 0; padding: 0; }
+      h1, h2, h3, p { margin: 0; }
+      .tnum { font-variant-numeric: tabular-nums; }
+      .icon { width: 16px; height: 16px; flex: none; }
+      :focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; border-radius: 4px; }
+      @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { transition: none !important; animation: none !important; }
+      }
+
+      /* 跳转链接（键盘可达） */
+      .skip {
+        position: absolute; left: -9999px; top: 16px; z-index: 50;
+      }
+      .skip:focus { left: 16px; background: var(--primary); color: var(--on-primary); padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; }
+
+      /* ---------- 侧栏（顶栏+侧栏骨架 · 左） ---------- */
+      .sidebar {
+        position: fixed; top: 0; bottom: 0; left: 0; z-index: 40;
+        width: 240px; display: flex; flex-direction: column;
+        background: var(--card); border-right: 1px solid var(--border);
+      }
+      .brand { display: flex; align-items: center; gap: 8px; height: 64px; padding: 0 16px; border-bottom: 1px solid var(--border); flex: none; }
+      .brand-mark {
+        width: 32px; height: 32px; border-radius: 6px; background: var(--primary);
+        display: inline-flex; align-items: center; justify-content: center; flex: none;
+      }
+      .brand-name { font-size: 14px; font-weight: 600; color: #0f172a; line-height: 1.2; }
+      .brand-sub { font-size: 12px; color: var(--muted-fg); line-height: 1.2; }
+      .nav { flex: 1; overflow-y: auto; padding: 16px 12px; display: flex; flex-direction: column; gap: 24px; }
+      .nav-title { font-size: 12px; font-weight: 500; letter-spacing: 0.025em; color: var(--muted-fg); padding: 0 12px 8px; }
+      .nav li + li { margin-top: 4px; }
+      .nav a {
+        display: flex; align-items: center; gap: 12px; height: 36px; padding: 0 12px;
+        border-left: 2px solid transparent; border-radius: 6px;
+        font-size: 14px; color: #334155; transition: background-color 150ms ease, color 150ms ease;
+      }
+      .nav a:hover { background: #f1f5f9; color: #0f172a; }
+      .nav a.active {
+        background: var(--muted); border-left-color: var(--primary);
+        color: var(--primary-text); font-weight: 500;
+      }
+      .nav-badge {
+        margin-left: auto; background: var(--primary); color: var(--on-primary);
+        border-radius: 999px; padding: 1px 8px; font-size: 12px; font-weight: 500;
+      }
+      .sidebar-foot { display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); padding: 12px 16px; }
+      .status-dot { width: 8px; height: 8px; border-radius: 999px; background: var(--success); }
+      .sidebar-foot span:last-child { font-size: 12px; color: var(--muted-fg); }
+
+      /* ---------- 顶栏（骨架 · 上） ---------- */
+      .topbar {
+        position: sticky; top: 0; z-index: 30; height: 64px;
+        display: flex; align-items: center; gap: 12px;
+        background: var(--card); border-bottom: 1px solid var(--border); padding: 0 16px;
+      }
+      .icon-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px; border-radius: 6px; color: #334155;
+        transition: background-color 150ms ease, color 150ms ease;
+      }
+      .icon-btn:hover { background: #f1f5f9; color: #0f172a; }
+      .menu-btn { display: inline-flex; }
+      .search { position: relative; display: none; }
+      .search .icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted-fg); pointer-events: none; }
+      .search input {
+        height: 36px; width: 256px; border: 1px solid var(--border); border-radius: 6px;
+        padding: 0 12px 0 36px; font-size: 14px; color: #0f172a; background: var(--card);
+        transition: border-color 150ms ease;
+      }
+      .search input::placeholder { color: #64748b; }
+      .search input:hover { border-color: #cbd5e1; }
+      .search input:focus { border-color: var(--primary); outline: none; }
+      .search input:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+      .spacer { flex: 1; }
+      select {
+        height: 36px; border: 1px solid var(--border); border-radius: 6px; background: var(--card);
+        padding: 0 8px; font-size: 14px; color: #334155; cursor: pointer; transition: border-color 150ms ease;
+      }
+      select:hover { border-color: #cbd5e1; }
+      .bell { position: relative; }
+      .bell-badge {
+        position: absolute; right: -2px; top: -2px; background: var(--destructive); color: #fff;
+        border-radius: 999px; padding: 0 6px; font-size: 10px; line-height: 16px; font-weight: 500;
+      }
+      .user { display: none; align-items: center; gap: 8px; border-left: 1px solid var(--border); padding-left: 12px; }
+      .avatar {
+        width: 32px; height: 32px; border-radius: 999px; background: var(--muted);
+        color: var(--primary-text); font-size: 14px; font-weight: 500;
+        display: inline-flex; align-items: center; justify-content: center;
+      }
+      .user-name { font-size: 14px; font-weight: 500; color: #0f172a; line-height: 1.2; }
+      .user-role { font-size: 12px; color: var(--muted-fg); line-height: 1.2; }
+
+      /* ---------- 内容区 ---------- */
+      .shell { padding-left: 240px; }
+      .main { padding: 16px; display: flex; flex-direction: column; gap: 24px; }
+      .page-title { font-size: 20px; font-weight: 600; color: #0f172a; }
+      .page-meta { margin-top: 4px; font-size: 14px; color: var(--muted-fg); }
+
+      .card {
+        background: var(--card); border: 1px solid var(--border);
+        border-radius: 8px; box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+      }
+
+      /* KPI 卡 */
+      .kpi-grid { display: grid; grid-template-columns: 1fr; gap: 16px; }
+      .kpi { display: flex; flex-direction: column; height: 100%; padding: 20px; }
+      .kpi-head { display: flex; align-items: center; gap: 8px; }
+      .kpi-icon {
+        width: 32px; height: 32px; border-radius: 6px; background: var(--muted);
+        color: var(--primary-text); display: inline-flex; align-items: center; justify-content: center; flex: none;
+      }
+      .kpi-label { font-size: 14px; font-weight: 500; color: var(--muted-fg); }
+      .kpi-value { margin-top: 12px; display: flex; align-items: baseline; gap: 4px; }
+      .kpi-num { font-size: 30px; font-weight: 600; color: #0f172a; }
+      .kpi-unit { font-size: 14px; color: var(--muted-fg); }
+      .kpi-delta { margin-top: 8px; display: flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; }
+      .kpi-delta .icon { width: 12px; height: 12px; }
+      .delta-good { color: var(--success); }
+      .delta-bad { color: var(--destructive-text); }
+      .kpi-note { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--border); font-size: 12px; color: #64748b; }
+
+      /* 主行：图 2/3 + 列表 1/3 */
+      .row-grid { display: grid; grid-template-columns: 1fr; gap: 16px; align-items: start; }
+      .trend { padding: 20px; }
+      .trend-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+      .trend-title { font-size: 16px; font-weight: 600; color: #0f172a; }
+      .trend-sub { font-size: 12px; color: var(--muted-fg); }
+      .legend { display: flex; align-items: center; gap: 16px; font-size: 12px; color: var(--muted-fg); }
+      .legend li { display: flex; align-items: center; gap: 6px; }
+      .export-btn {
+        display: inline-flex; align-items: center; gap: 6px; height: 32px; padding: 0 12px;
+        border: 1px solid var(--border); border-radius: 6px; font-size: 12px; font-weight: 500;
+        color: #334155; transition: background-color 150ms ease;
+      }
+      .export-btn:hover { background: #f8fafc; }
+      .export-btn .icon { width: 14px; height: 14px; }
+      .chart-svg { display: block; width: 100%; height: auto; margin-top: 16px; }
+      .chart-svg .pt { cursor: pointer; fill: transparent; stroke: transparent; stroke-width: 0; transition: stroke 150ms ease; }
+      .chart-svg .pt:hover, .chart-svg .pt:focus-visible { stroke: #1d4ed8; stroke-width: 2; }
+      details.data { margin-top: 12px; }
+      details.data summary { cursor: pointer; font-size: 12px; font-weight: 500; color: var(--primary-text); }
+      details.data summary:hover { color: var(--primary); }
+      details.data table { width: 100%; border-collapse: collapse; margin-top: 8px; font-size: 14px; }
+      details.data th { text-align: left; font-size: 12px; font-weight: 500; color: var(--muted-fg); padding: 8px 16px 8px 0; border-bottom: 1px solid var(--border); }
+      details.data th:last-child, details.data td:last-child { text-align: right; padding-right: 0; }
+      details.data td { padding: 6px 16px 6px 0; border-bottom: 1px solid rgba(226, 232, 240, 0.6); color: #334155; }
+      details.data td:last-child { color: #0f172a; }
+
+      /* 待办列表 */
+      .panel { display: flex; flex-direction: column; height: 100%; }
+      .panel-head { display: flex; align-items: center; gap: 8px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+      .panel-title { font-size: 16px; font-weight: 600; color: #0f172a; }
+      .top-badge { background: #f1f5f9; color: #334155; border-radius: 4px; padding: 2px 6px; font-size: 12px; font-weight: 500; }
+      .link { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; font-weight: 500; color: var(--primary-text); transition: color 150ms ease; }
+      .link:hover { color: var(--primary); }
+      .ticket-list li + li { border-top: 1px solid var(--border); }
+      .ticket-row {
+        display: flex; align-items: center; gap: 12px; width: 100%;
+        padding: 12px 20px; text-align: left; transition: background-color 150ms ease;
+      }
+      .ticket-row:hover { background: #f8fafc; }
+      .p-dot { width: 8px; height: 8px; border-radius: 999px; flex: none; }
+      .p-urgent { background: var(--destructive); }
+      .p-high { background: var(--accent); }
+      .p-mid { background: var(--primary); }
+      .p-low { background: #64748b; }
+      .ticket-main { min-width: 0; flex: 1; }
+      .ticket-id { display: block; font-size: 12px; color: var(--muted-fg); }
+      .ticket-subject { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 14px; font-weight: 500; color: #0f172a; }
+      .ticket-meta { flex: none; text-align: right; }
+      .ticket-wait { display: block; font-size: 14px; color: #334155; }
+      .ticket-sla { display: block; font-size: 12px; color: var(--destructive-text); }
+      .chev { color: #64748b; }
+      .panel-foot { border-top: 1px solid var(--border); padding: 12px 20px; font-size: 12px; color: #64748b; }
+
+      /* 空态（说明 + 入口） */
+      .empty { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 48px 24px; text-align: center; }
+      .empty-icon {
+        width: 48px; height: 48px; border-radius: 999px; background: var(--muted);
+        color: var(--primary-text); display: inline-flex; align-items: center; justify-content: center;
+      }
+      .empty-icon .icon { width: 24px; height: 24px; }
+      .empty-title { margin-top: 12px; font-size: 14px; font-weight: 600; color: #0f172a; }
+      .empty-desc { max-width: 320px; font-size: 14px; line-height: 1.6; color: var(--muted-fg); }
+      .empty-actions { margin-top: 16px; display: flex; align-items: center; gap: 12px; }
+      .btn-primary {
+        display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 6px;
+        background: var(--primary); color: var(--on-primary); font-size: 14px; font-weight: 500;
+        transition: background-color 150ms ease;
+      }
+      .btn-primary:hover { background: var(--primary-text); }
+
+      /* ---------- 响应式（375 / 768 / 1024 / 1440） ---------- */
+      @media (min-width: 640px) {
+        .main { padding: 24px; }
+        .topbar { padding: 0 24px; }
+        .user { display: flex; }
+      }
+      @media (min-width: 768px) {
+        .search { display: block; }
+        .menu-btn { display: none; }
+        .kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      }
+      @media (min-width: 1024px) {
+        .row-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .trend-wrap { grid-column: span 2 / span 2; }
+      }
+      @media (min-width: 1280px) {
+        .kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 24px; }
+        .row-grid { gap: 24px; }
+      }
+      @media (max-width: 1023px) {
+        .sidebar { display: none; }
+        .shell { padding-left: 0; }
+      }
+      .sr-only {
+        position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+        overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <a class="skip" href="#main">跳到主要内容</a>
+
+    <!-- 侧栏 -->
+    <aside class="sidebar" aria-label="主导航">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+            <path d="M5 16v-5a7 7 0 0 1 14 0v5" />
+            <path d="M3 16h4M17 16h4" />
+            <path d="M9 20h6" />
+          </svg>
+        </span>
+        <div>
+          <p class="brand-name">云枢Desk</p>
+          <p class="brand-sub">工单运营平台</p>
+        </div>
+      </div>
+      <nav class="nav">
+        <div>
+          <h2 class="nav-title">运营</h2>
+          <ul>
+            <li>
+              <a href="#" class="active" aria-current="page">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg>
+                <span>运营总览</span>
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2M13 11v2M13 17v2"/></svg>
+                <span>全部工单</span>
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="9" cy="8" r="3"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0"/><path d="M16 6.5a3 3 0 0 1 0 5.4M18.5 19a5.5 5.5 0 0 0-3-4.9"/></svg>
+                <span>分配队列</span>
+                <span class="nav-badge tnum">8</span>
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V10M10 20V4M16 20v-8M21 20H3"/></svg>
+                <span>报表中心</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+        <div>
+          <h2 class="nav-title">客户与配置</h2>
+          <ul>
+            <li>
+              <a href="#">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M5 20a7 7 0 0 1 14 0"/></svg>
+                <span>客户列表</span>
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 9.5C8 19.4 5 15.5 5 11V6z"/><path d="M9 12l2 2 4-4"/></svg>
+                <span>SLA 策略</span>
+              </a>
+            </li>
+            <li>
+              <a href="#">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1 1.55V21a2 2 0 1 1-4 0v-.09a1.7 1.7 0 0 0-1.11-1.55 1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.55-1H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.64 8.9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.55V3a2 2 0 1 1 4 0v.09a1.7 1.7 0 0 0 1 1.55 1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.7 1.7 0 0 0-.34 1.87V9a1.7 1.7 0 0 0 1.55 1H21a2 2 0 1 1 0 4h-.09a1.7 1.7 0 0 0-1.51 1z"/></svg>
+                <span>系统设置</span>
+              </a>
+            </li>
+          </ul>
+        </div>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="status-dot" aria-hidden="true"></span>
+        <span>服务状态：正常</span>
+      </div>
+    </aside>
+
+    <div class="shell">
+      <!-- 顶栏 -->
+      <header class="topbar">
+        <button type="button" class="icon-btn menu-btn" aria-label="打开导航菜单">
+          <svg class="icon" style="width:20px;height:20px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        </button>
+        <form class="search" role="search" onsubmit="return false">
+          <label for="global-search" class="sr-only">搜索工单、客户或 TKD 编号</label>
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.8-3.8"/></svg>
+          <input id="global-search" type="search" placeholder="搜索工单 / 客户 / TKD 编号" />
+        </form>
+        <div class="spacer"></div>
+        <div>
+          <label for="range-select" class="sr-only">统计时间范围</label>
+          <select id="range-select">
+            <option value="1d">今日</option>
+            <option value="7d">近 7 天</option>
+            <option value="14d" selected>近 14 天</option>
+          </select>
+        </div>
+        <button type="button" class="icon-btn" aria-label="刷新数据">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+        </button>
+        <button type="button" class="icon-btn bell" aria-label="通知，3 条未读">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 8-3 8h18s-3-1-3-8"/><path d="M10.3 20a2 2 0 0 0 3.4 0"/></svg>
+          <span class="bell-badge tnum">3</span>
+        </button>
+        <div class="user">
+          <span class="avatar" aria-hidden="true">陈</span>
+          <div>
+            <p class="user-name">陈默</p>
+            <p class="user-role">运营主管</p>
+          </div>
+        </div>
+      </header>
+
+      <main id="main" class="main">
+        <header>
+          <h1 class="page-title">运营总览</h1>
+          <p class="page-meta">数据截止 2026-03-11 18:00 · 每小时刷新</p>
+        </header>
+
+        <!-- KPI 卡 -->
+        <section class="kpi-grid" aria-label="关键指标">
+          <article class="card kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg></span>
+              <h3 class="kpi-label">今日新增工单</h3>
+            </div>
+            <p class="kpi-value"><span class="kpi-num tnum">612</span><span class="kpi-unit">张</span></p>
+            <p class="kpi-delta tnum delta-good">
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 19 5 7h14z" fill="currentColor"/></svg>
+              <span>较昨日 -76 张（-11.0%）</span><span class="sr-only">，优于昨日水平</span>
+            </p>
+            <p class="kpi-note tnum">今日已解决 437 张 · 转入明日 41 张</p>
+          </article>
+
+          <article class="card kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+              <h3 class="kpi-label">平均首次响应</h3>
+            </div>
+            <p class="kpi-value"><span class="kpi-num tnum">4分12秒</span></p>
+            <p class="kpi-delta tnum delta-good">
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 19 5 7h14z" fill="currentColor"/></svg>
+              <span>较昨日 -26 秒（-9.3%）</span><span class="sr-only">，优于昨日水平</span>
+            </p>
+            <p class="kpi-note tnum">目标 5 分钟内 · 连续 6 天达标</p>
+          </article>
+
+          <article class="card kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l7 3v5c0 4.5-3 8.4-7 9.5C8 19.4 5 15.5 5 11V6z"/><path d="M9 12l2 2 4-4"/></svg></span>
+              <h3 class="kpi-label">SLA 达标率</h3>
+            </div>
+            <p class="kpi-value"><span class="kpi-num tnum">94.2</span><span class="kpi-unit">%</span></p>
+            <p class="kpi-delta tnum delta-good">
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 5l7 12H5z" fill="currentColor"/></svg>
+              <span>较昨日 +1.1 pp</span><span class="sr-only">，优于昨日水平</span>
+            </p>
+            <p class="kpi-note tnum">今日 SLA 内待跟进 26 张 · 临界 9 张</p>
+          </article>
+
+          <article class="card kpi">
+            <div class="kpi-head">
+              <span class="kpi-icon" aria-hidden="true"><svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14v-2a8 8 0 0 1 16 0v2"/><rect x="2" y="13" width="4" height="7" rx="1.5"/><rect x="18" y="13" width="4" height="7" rx="1.5"/></svg></span>
+              <h3 class="kpi-label">活跃坐席</h3>
+            </div>
+            <p class="kpi-value"><span class="kpi-num tnum">36</span><span class="kpi-unit">/ 42 在编</span></p>
+            <p class="kpi-delta tnum delta-bad">
+              <svg viewBox="0 0 24 24" class="icon" aria-hidden="true"><path d="M12 19 5 7h14z" fill="currentColor"/></svg>
+              <span>较昨日 -3 人</span><span class="sr-only">，需关注</span>
+            </p>
+            <p class="kpi-note tnum">晚班 18:00 后到岗 6 人 · 在线率 85.7%</p>
+          </article>
+        </section>
+
+        <div class="row-grid">
+          <!-- 主图（占内容宽 2/3） -->
+          <section class="card trend trend-wrap" aria-labelledby="trend-title">
+            <header class="trend-head">
+              <div>
+                <h2 id="trend-title" class="trend-title">工单量趋势</h2>
+                <p class="trend-sub">近 14 天（02-26 至 03-11）· 按日汇总</p>
+              </div>
+              <div class="spacer"></div>
+              <ul class="legend" aria-label="图例">
+                <li>
+                  <svg width="16" height="8" aria-hidden="true"><line x1="0" y1="4" x2="16" y2="4" stroke="#2563EB" stroke-width="2"/></svg>
+                  工单量（张/日）
+                </li>
+                <li>
+                  <svg width="12" height="12" aria-hidden="true"><rect x="0" y="0" width="12" height="12" fill="#F1F5F9"/></svg>
+                  周末
+                </li>
+                <li>
+                  <svg width="12" height="12" aria-hidden="true"><circle cx="6" cy="6" r="4" fill="#2563EB" stroke="#FFFFFF" stroke-width="1.5"/></svg>
+                  今日
+                </li>
+              </ul>
+              <button type="button" class="export-btn">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+                导出 CSV
+              </button>
+            </header>
+
+            <svg
+              class="chart-svg"
+              viewBox="0 0 600 240"
+              role="img"
+              aria-label="近14天工单量折线图：工作日稳定在600到760张，周末回落至240到300张；最高为03-06的755张，最低为03-01的243张，今日03-11为612张"
+            >
+              <!-- 周末底纹 -->
+              <rect x="103.08" y="20" width="78.77" height="180" fill="#F1F5F9" />
+              <rect x="339.38" y="20" width="78.77" height="180" fill="#F1F5F9" />
+              <!-- 网格与 Y 轴 -->
+              <g font-size="10" fill="#64748B">
+                <line x1="44" x2="556" y1="200" y2="200" stroke="#E2E8F0" stroke-width="1" /><text x="36" y="203" text-anchor="end">0</text>
+                <line x1="44" x2="556" y1="155" y2="155" stroke="#E2E8F0" stroke-width="1" /><text x="36" y="158" text-anchor="end">200</text>
+                <line x1="44" x2="556" y1="110" y2="110" stroke="#E2E8F0" stroke-width="1" /><text x="36" y="113" text-anchor="end">400</text>
+                <line x1="44" x2="556" y1="65" y2="65" stroke="#E2E8F0" stroke-width="1" /><text x="36" y="68" text-anchor="end">600</text>
+                <line x1="44" x2="556" y1="20" y2="20" stroke="#E2E8F0" stroke-width="1" /><text x="36" y="23" text-anchor="end">800</text>
+                <text x="36" y="12" text-anchor="end" fill="#475569">张</text>
+              </g>
+              <!-- 面积与折线 -->
+              <path d="M44 60.95 L83.38 55.55 L122.77 135.43 L162.15 145.33 L201.54 65.9 L240.92 49.03 L280.31 56.45 L319.69 42.05 L359.08 30.13 L398.46 134.53 L437.85 140.6 L477.23 59.83 L516.62 45.2 L556 62.3 L556 200 L44 200 Z" fill="#2563EB" fill-opacity="0.2" />
+              <path d="M44 60.95 L83.38 55.55 L122.77 135.43 L162.15 145.33 L201.54 65.9 L240.92 49.03 L280.31 56.45 L319.69 42.05 L359.08 30.13 L398.46 134.53 L437.85 140.6 L477.23 59.83 L516.62 45.2 L556 62.3" fill="none" stroke="#2563EB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+              <!-- 今日点直接标注 -->
+              <circle cx="556" cy="62.3" r="4.5" fill="#2563EB" stroke="#FFFFFF" stroke-width="2" />
+              <text x="556" y="40.3" text-anchor="end" font-size="11" font-weight="600" fill="#1E293B">612</text>
+              <text x="556" y="52.3" text-anchor="end" font-size="10" fill="#475569">今日</text>
+              <!-- 数据点（悬停提示 + 键盘可达） -->
+              <g>
+                <circle class="pt" cx="44" cy="60.95" r="9" tabindex="0" role="img" aria-label="02-26 周四，618 张"><title>02-26（周四）618 张</title></circle>
+                <circle class="pt" cx="83.38" cy="55.55" r="9" tabindex="0" role="img" aria-label="02-27 周五，642 张"><title>02-27（周五）642 张</title></circle>
+                <circle class="pt" cx="122.77" cy="135.43" r="9" tabindex="0" role="img" aria-label="02-28 周六，287 张"><title>02-28（周六）287 张</title></circle>
+                <circle class="pt" cx="162.15" cy="145.33" r="9" tabindex="0" role="img" aria-label="03-01 周日，243 张"><title>03-01（周日）243 张</title></circle>
+                <circle class="pt" cx="201.54" cy="65.9" r="9" tabindex="0" role="img" aria-label="03-02 周一，596 张"><title>03-02（周一）596 张</title></circle>
+                <circle class="pt" cx="240.92" cy="49.03" r="9" tabindex="0" role="img" aria-label="03-03 周二，671 张"><title>03-03（周二）671 张</title></circle>
+                <circle class="pt" cx="280.31" cy="56.45" r="9" tabindex="0" role="img" aria-label="03-04 周三，638 张"><title>03-04（周三）638 张</title></circle>
+                <circle class="pt" cx="319.69" cy="42.05" r="9" tabindex="0" role="img" aria-label="03-05 周四，702 张"><title>03-05（周四）702 张</title></circle>
+                <circle class="pt" cx="359.08" cy="30.13" r="9" tabindex="0" role="img" aria-label="03-06 周五，755 张"><title>03-06（周五）755 张</title></circle>
+                <circle class="pt" cx="398.46" cy="134.53" r="9" tabindex="0" role="img" aria-label="03-07 周六，291 张"><title>03-07（周六）291 张</title></circle>
+                <circle class="pt" cx="437.85" cy="140.6" r="9" tabindex="0" role="img" aria-label="03-08 周日，264 张"><title>03-08（周日）264 张</title></circle>
+                <circle class="pt" cx="477.23" cy="59.83" r="9" tabindex="0" role="img" aria-label="03-09 周一，623 张"><title>03-09（周一）623 张</title></circle>
+                <circle class="pt" cx="516.62" cy="45.2" r="9" tabindex="0" role="img" aria-label="03-10 周二，688 张"><title>03-10（周二）688 张</title></circle>
+                <circle class="pt" cx="556" cy="62.3" r="9" tabindex="0" role="img" aria-label="03-11 周三，612 张（今日）"><title>03-11（周三）612 张 · 今日</title></circle>
+              </g>
+              <!-- X 轴标签（隔日抽稀） -->
+              <g font-size="10" fill="#475569">
+                <text x="44" y="220" text-anchor="middle">02-26</text>
+                <text x="122.77" y="220" text-anchor="middle">02-28</text>
+                <text x="201.54" y="220" text-anchor="middle">03-02</text>
+                <text x="280.31" y="220" text-anchor="middle">03-04</text>
+                <text x="359.08" y="220" text-anchor="middle">03-06</text>
+                <text x="437.85" y="220" text-anchor="middle">03-08</text>
+                <text x="516.62" y="220" text-anchor="middle">03-10</text>
+                <text x="556" y="220" text-anchor="middle">03-11</text>
+              </g>
+            </svg>
+
+            <details class="data">
+              <summary>查看数据表（无障碍备用）</summary>
+              <table class="tnum">
+                <caption class="sr-only">近 14 天每日工单量数据表</caption>
+                <thead>
+                  <tr><th scope="col">日期</th><th scope="col">星期</th><th scope="col">工单量（张）</th></tr>
+                </thead>
+                <tbody>
+                  <tr><td>02-26</td><td>周四</td><td>618</td></tr>
+                  <tr><td>02-27</td><td>周五</td><td>642</td></tr>
+                  <tr><td>02-28</td><td>周六</td><td>287</td></tr>
+                  <tr><td>03-01</td><td>周日</td><td>243</td></tr>
+                  <tr><td>03-02</td><td>周一</td><td>596</td></tr>
+                  <tr><td>03-03</td><td>周二</td><td>671</td></tr>
+                  <tr><td>03-04</td><td>周三</td><td>638</td></tr>
+                  <tr><td>03-05</td><td>周四</td><td>702</td></tr>
+                  <tr><td>03-06</td><td>周五</td><td>755</td></tr>
+                  <tr><td>03-07</td><td>周六</td><td>291</td></tr>
+                  <tr><td>03-08</td><td>周日</td><td>264</td></tr>
+                  <tr><td>03-09</td><td>周一</td><td>623</td></tr>
+                  <tr><td>03-10</td><td>周二</td><td>688</td></tr>
+                  <tr><td>03-11</td><td>周三</td><td>612</td></tr>
+                </tbody>
+              </table>
+            </details>
+          </section>
+
+          <!-- 第二数据块：列表 -->
+          <section class="card panel" aria-labelledby="unassigned-title">
+            <div id="list-view">
+              <header class="panel-head">
+                <h2 id="unassigned-title" class="panel-title">未分配工单</h2>
+                <span class="top-badge tnum">Top 8</span>
+                <div class="spacer"></div>
+                <a href="#" class="link">
+                  查看全部
+                  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </a>
+              </header>
+              <ul class="ticket-list">
+                <li><button type="button" class="ticket-row" aria-label="紧急工单 TKD-20471：客户无法导出上月账单（企业版），邮件渠道，已等待2小时14分，打开工单">
+                  <span class="p-dot p-urgent" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20471 · 邮件</span><span class="ticket-subject">客户无法导出上月账单（企业版）</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">紧急 · 等待 2小时14分</span><span class="ticket-sla tnum">SLA 剩 46 分钟</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+                <li><button type="button" class="ticket-row" aria-label="紧急工单 TKD-20468：API 回调重试导致重复扣费，API渠道，已等待1小时52分，打开工单">
+                  <span class="p-dot p-urgent" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20468 · API</span><span class="ticket-subject">API 回调重试导致重复扣费</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">紧急 · 等待 1小时52分</span><span class="ticket-sla tnum">SLA 剩 1 小时</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+                <li><button type="button" class="ticket-row" aria-label="高优先级工单 TKD-20465：单点登录后组织架构未同步，在线渠道，已等待1小时31分，打开工单">
+                  <span class="p-dot p-high" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20465 · 在线</span><span class="ticket-subject">单点登录后组织架构未同步</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">高 · 等待 1小时31分</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+                <li><button type="button" class="ticket-row" aria-label="高优先级工单 TKD-20462：移动端附件上传卡在 99%，在线渠道，已等待1小时08分，打开工单">
+                  <span class="p-dot p-high" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20462 · 在线</span><span class="ticket-subject">移动端附件上传卡在 99%</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">高 · 等待 1小时08分</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+                <li><button type="button" class="ticket-row" aria-label="中优先级工单 TKD-20458：子账号权限模板复制失败，邮件渠道，已等待58分钟，打开工单">
+                  <span class="p-dot p-mid" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20458 · 邮件</span><span class="ticket-subject">子账号权限模板复制失败</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">中 · 等待 58分钟</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+                <li><button type="button" class="ticket-row" aria-label="中优先级工单 TKD-20455：报表导出 CSV 用 Excel 打开乱码，API渠道，已等待43分钟，打开工单">
+                  <span class="p-dot p-mid" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20455 · API</span><span class="ticket-subject">报表导出 CSV 用 Excel 打开乱码</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">中 · 等待 43分钟</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+                <li><button type="button" class="ticket-row" aria-label="中优先级工单 TKD-20451：工单合并误操作后需要恢复，电话渠道，已等待27分钟，打开工单">
+                  <span class="p-dot p-mid" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20451 · 电话</span><span class="ticket-subject">工单合并误操作后需要恢复</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">中 · 等待 27分钟</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+                <li><button type="button" class="ticket-row" aria-label="低优先级工单 TKD-20447：更换发票抬头后开票失败，邮件渠道，已等待12分钟，打开工单">
+                  <span class="p-dot p-low" aria-hidden="true"></span>
+                  <span class="ticket-main"><span class="ticket-id tnum">TKD-20447 · 邮件</span><span class="ticket-subject">更换发票抬头后开票失败</span></span>
+                  <span class="ticket-meta"><span class="ticket-wait tnum">低 · 等待 12分钟</span></span>
+                  <svg class="icon chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>
+                </button></li>
+              </ul>
+              <footer class="panel-foot"><p class="tnum">共 23 张未分配 · 按等待时长降序，此处显示前 8 张</p></footer>
+            </div>
+
+            <!-- 空态：?empty=1 显示（与 React EmptyState 分支同构） -->
+            <div id="empty-view" class="empty" hidden>
+              <span class="empty-icon" aria-hidden="true">
+                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-6l-2 3h-4l-2-3H2"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>
+              </span>
+              <h3 class="empty-title">暂无未分配工单</h3>
+              <p class="empty-desc">当前所有新工单均已按分配规则进入坐席或队列；新工单进入后，这里会按等待时长显示前 8 条。</p>
+              <div class="empty-actions">
+                <button type="button" class="btn-primary">前往分配队列</button>
+                <a href="#" class="link">查看自动分配规则</a>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <script>
+      // 静态预览专用：?empty=1 切换待办列表空态（React 版由组件分支渲染）
+      if (/[?&]empty=1\b/.test(location.search)) {
+        document.getElementById('list-view').hidden = true;
+        document.getElementById('empty-view').hidden = false;
+      }
+    </script>
+  </body>
+</html>

@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concord — conflict-free sync inside SQLite</title>
+<meta name="description" content="Concord is a CRDT sync engine embedded as a SQLite extension: every device writes offline, columns merge conflict-free, and every replica converges to the same bytes.">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header class="site-nav" id="top">
+  <div class="nav-inner">
+    <a class="wordmark" href="#top" aria-label="Concord home">
+      <svg class="mark" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+        <path d="M3 18 L11 4 L19 18 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+        <path d="M7 18 L11 11 L15 18" stroke="currentColor" stroke-width="1.2"/>
+        <circle cx="11" cy="4" r="1.8" fill="currentColor"/>
+        <circle cx="3" cy="18" r="1.8" fill="currentColor"/>
+        <circle cx="19" cy="18" r="1.8" fill="currentColor"/>
+      </svg>
+      <span>Concord</span>
+    </a>
+    <nav class="nav-links" aria-label="Sections">
+      <a href="#merge">Merge</a>
+      <a href="#transport">Transport</a>
+      <a href="#determinism">Determinism</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#docs">Docs</a>
+    </nav>
+    <a class="btn btn-primary btn-nav" href="#install">Install the extension</a>
+  </div>
+</header>
+
+<main>
+
+  <!-- ======================= HERO ======================= -->
+  <section class="hero" aria-labelledby="hero-title">
+    <div class="hero-grid">
+      <div class="hero-copy">
+        <h1 id="hero-title">Concord merges two offline SQLite writes into one row — inside the file itself.</h1>
+        <p class="hero-sub">A CRDT sync engine embedded as a SQLite extension. Every device writes plain SQL while offline; Concord merges contested columns deterministically and converges every replica to the same bytes. No server sits in the write path.</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary btn-hero" href="#install">Install the extension</a>
+          <a class="link-secondary" href="#docs">Read the docs<span class="arrow" aria-hidden="true">→</span></a>
+        </div>
+        <p class="hero-trust">
+          <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 9 L8 3 L14 9 M4 7.5 V13.5 H12 V7.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Apache-2.0 source · <a class="quiet-link" href="https://github.com/concord-sqlite/concord">github.com/concord-sqlite/concord</a> · built on published CRDT research
+        </p>
+      </div>
+
+      <div class="station-demo" role="group" aria-label="Interactive merge demonstration">
+        <p class="demo-caption">Two stations, one task row. Pick each station’s write; the net resolves the point.</p>
+
+        <svg class="net" viewBox="0 0 520 96" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+          <line x1="40" y1="26" x2="480" y2="26" stroke="var(--ink-3)" stroke-width="1"/>
+          <path d="M40 26 L260 78 M480 26 L260 78 M40 26 L480 26" stroke="var(--cobalt)" stroke-width="1.25" class="draw"/>
+          <circle cx="40" cy="26" r="3.5" fill="var(--ink-8)"/>
+          <circle cx="480" cy="26" r="3.5" fill="var(--ink-8)"/>
+          <circle cx="260" cy="78" r="4.5" fill="var(--cobalt)"/>
+          <text x="40" y="14" class="net-label" text-anchor="middle">STATION A</text>
+          <text x="480" y="14" class="net-label" text-anchor="middle">STATION B</text>
+          <text x="260" y="94" class="net-label net-label--cobalt" text-anchor="middle">RESOLVED</text>
+          <text x="130" y="42" class="net-measure" text-anchor="middle">Δ 41 ops</text>
+          <text x="390" y="42" class="net-measure" text-anchor="middle">Δ 9 ops</text>
+        </svg>
+
+        <form class="stations" onsubmit="return false;">
+          <fieldset class="station">
+            <legend>Station A · laptop · offline 3 h</legend>
+            <label class="write"><input type="radio" name="wa" id="wa1" value="status">
+              <code>UPDATE tasks SET status='in review'</code>
+              <span class="ts">ts 14:02Z</span>
+            </label>
+            <label class="write"><input type="radio" name="wa" id="wa2" value="due">
+              <code>UPDATE tasks SET due='2025-04-18'</code>
+              <span class="ts">ts 14:02Z</span>
+            </label>
+          </fieldset>
+
+          <fieldset class="station">
+            <legend>Station B · phone · offline 9 h</legend>
+            <label class="write"><input type="radio" name="wb" id="wb1" value="status">
+              <code>UPDATE tasks SET status='blocked'</code>
+              <span class="ts">ts 14:31Z</span>
+            </label>
+            <label class="write"><input type="radio" name="wb" id="wb2" value="owner">
+              <code>UPDATE tasks SET owner='dana'</code>
+              <span class="ts">ts 14:31Z</span>
+            </label>
+          </fieldset>
+        </form>
+
+        <div class="verdict">
+          <p class="no-has-note">Your browser cannot run the interactive merge; the example resolution below is shown statically.</p>
+          <div class="awaiting" role="note">
+            <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 14 V4 M8 4 L5 7 M8 4 L11 7 M5 3.5 h6" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            Awaiting both observations. Plot a write on each station and the merged row resolves below.
+          </div>
+
+          <div class="resolved">
+            <p class="verdict-title">
+              <svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 2 L14 13 H2 Z" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+              Resolved point · tasks #417
+            </p>
+
+            <div class="variant v-a1-b1">
+              <table class="row-table">
+                <caption class="visually-hidden">Merged row: status contested, later write survives</caption>
+                <thead><tr><th scope="col">id</th><th scope="col">title</th><th scope="col">owner</th><th scope="col">status</th><th scope="col">due</th></tr></thead>
+                <tbody><tr>
+                  <td>417</td><td>Ship v0.9 changelog</td><td>ren</td>
+                  <td><span class="kept"><svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 v10 M3 8 h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>blocked</span></td>
+                  <td>2025-05-02</td>
+                </tr></tbody>
+              </table>
+              <p class="merge-note">Same column contested. Both writes live in the register; the hybrid logical clock picks <code>14:31Z</code>, so Station B’s write survives and Station A’s is retained in history, flagged rather than dropped.</p>
+              <p class="history-line">
+                <svg class="icon icon--superseded" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 4.5 L11.5 11.5 M11.5 4.5 L4.5 11.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+                <span><code>status='in review'</code> · station A · 14:02Z : superseded, retained in history</span>
+              </p>
+            </div>
+
+            <div class="variant v-a1-b2">
+              <table class="row-table">
+                <caption class="visually-hidden">Merged row: different columns, both writes apply</caption>
+                <thead><tr><th scope="col">id</th><th scope="col">title</th><th scope="col">owner</th><th scope="col">status</th><th scope="col">due</th></tr></thead>
+                <tbody><tr>
+                  <td>417</td><td>Ship v0.9 changelog</td>
+                  <td><span class="kept"><svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 v10 M3 8 h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>dana</span></td>
+                  <td><span class="kept"><svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 v10 M3 8 h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>in review</span></td>
+                  <td>2025-05-02</td>
+                </tr></tbody>
+              </table>
+              <p class="merge-note">Different columns. Both writes apply: nothing was contested, nothing was overwritten.</p>
+            </div>
+
+            <div class="variant v-a2-b1">
+              <table class="row-table">
+                <caption class="visually-hidden">Merged row: due and status both apply</caption>
+                <thead><tr><th scope="col">id</th><th scope="col">title</th><th scope="col">owner</th><th scope="col">status</th><th scope="col">due</th></tr></thead>
+                <tbody><tr>
+                  <td>417</td><td>Ship v0.9 changelog</td><td>ren</td>
+                  <td><span class="kept"><svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 v10 M3 8 h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>blocked</span></td>
+                  <td><span class="kept"><svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 v10 M3 8 h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>2025-04-18</span></td>
+                </tr></tbody>
+              </table>
+              <p class="merge-note">Different columns. Station A’s date and Station B’s status both apply.</p>
+            </div>
+
+            <div class="variant v-a2-b2">
+              <table class="row-table">
+                <caption class="visually-hidden">Merged row: due and owner both apply</caption>
+                <thead><tr><th scope="col">id</th><th scope="col">title</th><th scope="col">owner</th><th scope="col">status</th><th scope="col">due</th></tr></thead>
+                <tbody><tr>
+                  <td>417</td><td>Ship v0.9 changelog</td>
+                  <td><span class="kept"><svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 v10 M3 8 h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>dana</span></td>
+                  <td>draft</td>
+                  <td><span class="kept"><svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3 v10 M3 8 h10" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>2025-04-18</span></td>
+                </tr></tbody>
+              </table>
+              <p class="merge-note">Different columns. Both writes apply; the merge touches only the cells written.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= S1 · MERGE ======================= -->
+  <section class="arg arg-merge" id="merge" aria-labelledby="merge-title">
+    <div class="arg-grid arg-grid--prose-first">
+      <div class="arg-copy">
+        <h2 id="merge-title">Same row, same column, two devices — both writes have a home.</h2>
+        <p>Concord tracks every column as its own conflict-free register with a hybrid logical clock. A merge never loses a cell you didn’t contest, and a contested cell resolves by causality you can replay, not by which device happened to sync first.</p>
+        <p>Because the registers live in your SQLite file, the merge runs where your data runs: in-process, in a test, on a plane. There is no authoritative copy to reconcile against.</p>
+        <p class="measurement">merge cost: O(columns touched) · no tombstone sweeps · zero network on write</p>
+      </div>
+      <figure class="arg-art">
+        <pre class="trace"><code>-- station A (offline)              -- station B (offline)
+UPDATE tasks
+SET status = 'in review'
+WHERE id = 417;                     UPDATE tasks
+                                    SET status = 'blocked'
+                                    WHERE id = 417;
+
+-- after sync, identical on every replica:
+SELECT status, merge_clock FROM tasks WHERE id = 417;
+
+status   | merge_clock
+---------+---------------------------
+blocked  | HLC 14:31:00.012 · n=2</code></pre>
+        <figcaption class="measurement">trace · fixture <code>tasks-417-two-writers</code> · synthetic data</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ======================= S2 · TRANSPORT ======================= -->
+  <section class="arg arg-transport" id="transport" aria-labelledby="transport-title">
+    <div class="arg-grid arg-grid--full">
+      <div class="arg-copy arg-copy--wide">
+        <h2 id="transport-title">The write path has no server in it.</h2>
+        <p>Writes commit locally in microseconds; replication rides whatever bytes you already have. A WebSocket relay, WebRTC between peers, a shared folder, a mailed drive: Concord exchanges causal deltas, so the transport is dumb by design. A relay, when you want one for NAT traversal, forwards ciphertext it cannot read.</p>
+      </div>
+      <figure class="arg-art arg-art--net">
+        <svg class="transport-net" viewBox="0 0 960 320" fill="none" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Three devices connected through three transports to one converged database state">
+          <g class="tn-lines">
+            <path d="M170 92 L480 160" stroke="var(--cobalt)" stroke-width="1.25"/>
+            <path d="M480 64 L480 160" stroke="var(--cobalt)" stroke-width="1.25"/>
+            <path d="M790 92 L480 160" stroke="var(--cobalt)" stroke-width="1.25"/>
+            <path d="M170 92 L480 64" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 4"/>
+            <path d="M480 64 L790 92" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 4"/>
+            <path d="M170 92 L790 92" stroke="var(--ink-3)" stroke-width="1" stroke-dasharray="3 4"/>
+          </g>
+          <g class="tn-station">
+            <circle cx="170" cy="92" r="5" fill="var(--ink-8)"/>
+            <text x="170" y="70" class="net-label" text-anchor="middle">LAPTOP · SQLITE FILE</text>
+            <text x="170" y="122" class="net-measure" text-anchor="middle">Δ 41 ops queued</text>
+          </g>
+          <g class="tn-station">
+            <circle cx="480" cy="64" r="5" fill="var(--ink-8)"/>
+            <text x="480" y="42" class="net-label" text-anchor="middle">PHONE · SQLITE FILE</text>
+            <text x="480" y="94" class="net-measure" text-anchor="middle">Δ 9 ops queued</text>
+          </g>
+          <g class="tn-station">
+            <circle cx="790" cy="92" r="5" fill="var(--ink-8)"/>
+            <text x="790" y="70" class="net-label" text-anchor="middle">TABLET · SQLITE FILE</text>
+            <text x="790" y="122" class="net-measure" text-anchor="middle">Δ 2 ops queued</text>
+          </g>
+          <g class="tn-hub">
+            <circle cx="480" cy="160" r="7" fill="var(--cobalt)"/>
+            <rect x="330" y="196" width="300" height="76" rx="3" stroke="var(--ink-3)" fill="var(--ink-1)"/>
+            <text x="480" y="226" class="net-label net-label--cobalt" text-anchor="middle">CONVERGED SYNC SET</text>
+            <text x="480" y="252" class="net-measure" text-anchor="middle">state hash 9f3c1d · identical on all replicas</text>
+          </g>
+          <g class="tn-transports">
+            <text x="300" y="116" class="net-measure" text-anchor="middle">wss relay · ciphertext</text>
+            <text x="635" y="116" class="net-measure" text-anchor="middle">webrtc · peer-to-peer</text>
+            <text x="480" y="132" class="net-measure" text-anchor="middle">file sync · any bytes</text>
+          </g>
+        </svg>
+        <figcaption class="measurement">baseline survey · three replicas, three transports, one sync set</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ======================= S3 · DETERMINISM ======================= -->
+  <section class="arg arg-determinism" id="determinism" aria-labelledby="determinism-title">
+    <div class="arg-grid arg-grid--art-first">
+      <figure class="arg-art">
+        <table class="conv-table">
+          <caption class="visually-hidden">Every replay order of the same operation set produces the same final state hash</caption>
+          <thead>
+            <tr><th scope="col">replay order</th><th scope="col">final state hash</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>A → B → C</code></td><td><code>9f3c1d…</code></td></tr>
+            <tr><td><code>C → B → A</code></td><td><code>9f3c1d…</code></td></tr>
+            <tr><td><code>B → C → A</code></td><td><code>9f3c1d…</code></td></tr>
+            <tr><td><code>all 720 permutations</code></td><td><code>9f3c1d… ✓</code></td></tr>
+          </tbody>
+        </table>
+        <pre class="trace trace--ci"><code>$ concord verify fixtures/ --permutations=all
+fixtures/tasks-417-two-writers  ok   720/720 converge
+fixtures/offline-month           ok   5040/5040 converge
+converged in 3.1 s · exit 0</code></pre>
+        <figcaption class="measurement">convergence matrix · <code>concord verify</code> in CI</figcaption>
+      </figure>
+      <div class="arg-copy">
+        <h2 id="determinism-title">Merge order cannot change the result.</h2>
+        <p>The merge is a pure function of causal history. Replay the same operations in any order, on any schedule, and every replica lands on the same bytes, so convergence becomes an assertion, not a hope.</p>
+        <p>Ship the assertion with your app: one command replays your fixtures through every permutation and fails the build the moment any two histories diverge.</p>
+        <p class="measurement">determinism: pure merge · one hash per history · assertable in CI</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ======================= TRUST ======================= -->
+  <section class="trust" aria-label="Verifiable facts">
+    <ul class="trust-list">
+      <li>
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 9 L8 3 L14 9 M4 7.5 V13.5 H12 V7.5" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Open source, <a href="https://github.com/concord-sqlite/concord">read the repository</a>: every claim on this page is a test in the repo
+      </li>
+      <li>
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M3 3 h7 l3 3 v7 h-10 z M10 3 v3 h3" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linejoin="round"/></svg>
+        Apache-2.0 · no telemetry calls in the core
+      </li>
+      <li>
+        <svg class="icon" viewBox="0 0 16 16" aria-hidden="true"><path d="M2 4 h12 M2 8 h12 M2 12 h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+        CRDT semantics from published research: <a href="https://local-first.fm">local-first.fm</a> and the papers it cites
+      </li>
+    </ul>
+  </section>
+
+  <!-- ======================= PRICING ======================= -->
+  <section class="pricing" id="pricing" aria-labelledby="pricing-title">
+    <div class="pricing-head">
+      <h2 id="pricing-title">Pricing you can read twice.</h2>
+      <p>The merge engine is free forever. You pay only for relay infrastructure and support.</p>
+    </div>
+    <div class="pricing-grid">
+      <div class="tier">
+        <h3>Core</h3>
+        <p class="price"><span class="cur">$0</span><span class="per"> / forever</span></p>
+        <ul class="tier-features">
+          <li>Full CRDT merge engine</li>
+          <li>Unlimited devices &amp; replicas</li>
+          <li>Peer-to-peer and file transports</li>
+          <li>Community support</li>
+        </ul>
+        <p class="tier-note">Everything demonstrated on this page runs on Core.</p>
+      </div>
+      <div class="tier tier--featured" aria-label="Featured tier">
+        <h3>Team</h3>
+        <p class="price"><span class="cur">$18</span><span class="per"> / developer / month</span></p>
+        <p class="tier-flag-line">
+          <svg class="icon icon--cobalt" viewBox="0 0 16 16" aria-hidden="true"><path d="M4 2 v12 M4 3 h8 l-2.5 2.5 L12 8 H4" stroke="currentColor" stroke-width="1.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          where most teams land
+        </p>
+        <ul class="tier-features">
+          <li>Hosted relay, NAT traversal</li>
+          <li>Encrypted delta backups</li>
+          <li>Convergence dashboards</li>
+          <li>Priority builds</li>
+        </ul>
+        <p class="tier-note">Relay sees ciphertext only.</p>
+      </div>
+      <div class="tier">
+        <h3>Embedded</h3>
+        <p class="price"><span class="cur">Custom</span></p>
+        <ul class="tier-features">
+          <li>On-prem or air-gapped relay</li>
+          <li>Audit logs, export controls</li>
+          <li>SLA with paid support</li>
+          <li>Integration reviews</li>
+        </ul>
+        <p class="tier-note">For regulated and offline-first deployments.</p>
+      </div>
+    </div>
+    <p class="pricing-fineprint">Illustrative pricing for a fictional product used in a design study. Repository links are placeholders.</p>
+  </section>
+
+  <!-- ======================= INSTALL ======================= -->
+  <section class="install" id="install" aria-labelledby="install-title">
+    <div class="install-grid">
+      <div class="install-copy">
+        <h2 id="install-title">Install the extension.</h2>
+        <p>One package per runtime, or load the extension into any SQLite shell you already have. Your schema stays yours; Concord adds its registers per table.</p>
+      </div>
+      <div class="install-commands">
+        <div class="cmd">
+          <span class="cmd-label">Node · Electron</span>
+          <pre class="trace trace--cmd"><code>npm install @concord/sqlite</code></pre>
+        </div>
+        <div class="cmd">
+          <span class="cmd-label">Rust</span>
+          <pre class="trace trace--cmd"><code>cargo add concord</code></pre>
+        </div>
+        <div class="cmd">
+          <span class="cmd-label">Any SQLite shell</span>
+          <pre class="trace trace--cmd"><code>.load libconcord
+concord enable tasks;</code></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<!-- ======================= FOOTER ======================= -->
+<footer class="site-foot" id="docs">
+  <div class="foot-grid">
+    <div class="foot-brand">
+      <a class="wordmark wordmark--light" href="#top">
+        <svg class="mark" width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true">
+          <path d="M3 18 L11 4 L19 18 Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M7 18 L11 11 L15 18" stroke="currentColor" stroke-width="1.2"/>
+          <circle cx="11" cy="4" r="1.8" fill="currentColor"/>
+          <circle cx="3" cy="18" r="1.8" fill="currentColor"/>
+          <circle cx="19" cy="18" r="1.8" fill="currentColor"/>
+        </svg>
+        <span>Concord</span>
+      </a>
+      <p class="foot-line">A local-first sync engine for SQLite. Two offline writes, one converged file.</p>
+    </div>
+    <nav class="foot-col" aria-label="Product">
+      <h4>Product</h4>
+      <a href="#merge">Merge</a>
+      <a href="#transport">Transport</a>
+      <a href="#determinism">Determinism</a>
+      <a href="#pricing">Pricing</a>
+    </nav>
+    <nav class="foot-col" aria-label="Resources">
+      <h4>Resources</h4>
+      <a href="#docs">Documentation</a>
+      <a href="https://github.com/concord-sqlite/concord">GitHub repository</a>
+      <a href="https://local-first.fm">Local-first reading</a>
+      <a href="#install">Install</a>
+    </nav>
+    <nav class="foot-col" aria-label="Project">
+      <h4>Project</h4>
+      <a href="https://github.com/concord-sqlite/concord">Apache-2.0 license</a>
+      <a href="https://github.com/concord-sqlite/concord">Changelog</a>
+      <a href="https://github.com/concord-sqlite/concord">Security policy</a>
+    </nav>
+  </div>
+  <div class="foot-legal">
+    <p>Concord is a fictional product created for a design study. Pricing is illustrative; repository links are placeholders.</p>
+    <p class="sheet-no">Sheet 001 — set in Inter · plotted in cobalt</p>
+  </div>
+</footer>
+
+</body>
+</html>

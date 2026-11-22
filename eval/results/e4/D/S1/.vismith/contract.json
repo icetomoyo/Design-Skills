@@ -1,0 +1,153 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "saas-dashboard",
+    "audience": "订阅制客服工单平台（DeskPilot）的运营/客服主管；桌面优先，operate 意图",
+    "scenarios": [
+      "S1 运营总览页：KPI 行（4 卡）+ 近 14 天工单量趋势主图 + 未分配工单 Top 8 列表"
+    ]
+  },
+  "brand": {
+    "personality": ["克制", "可信赖", "高效"],
+    "references": ["Linear / Height 式数据密集后台：单一中性 ramp + 低饱和 accent"]
+  },
+  "style": {
+    "direction": "简洁数据密集型：一个中性 ramp 承载全部表面与文字，accent 只给主操作、选中态与关键变化；层次靠字号与表面阶梯，不靠彩色装饰",
+    "do_not": [
+      "玻璃拟态",
+      "大面积渐变 / 渐变文字 / 彩色 glow",
+      "emoji 作图标或状态",
+      "问候式标题、无来源数字声明（Trusted by N）"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#2563EB",
+      "text_on_primary": "#FFFFFF",
+      "success": "#047857",
+      "danger": "#B91C1C",
+      "warning": "#B45309",
+      "neutrals": ["#0F172A", "#334155", "#475569", "#64748B"],
+      "surface": "#FFFFFF",
+      "surface_muted": "#F1F5F9",
+      "surface_subtle": "#F8FAFC",
+      "border": "#E2E8F0",
+      "chart_series": ["#2563EB", "#64748B"]
+    },
+    "typography": {
+      "body": "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "display": "Inter, system-ui, -apple-system, 'Segoe UI', sans-serif",
+      "scale": [12, 14, 16, 18, 20, 24, 32]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 24, 32, 48]
+    },
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 12
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(15,23,42,.08)"
+    }
+  },
+  "components": {
+    "button": {
+      "height": 32,
+      "radius": "md",
+      "rules": [
+        "主操作唯一（主内容区同一屏仅一个 primary 按钮）",
+        "危险操作需二次确认",
+        "焦点样式 focus-visible:ring-2 ring-primary-600"
+      ]
+    },
+    "table": {
+      "density": "compact",
+      "rules": ["数字右对齐 + tabular-nums", "禁用斑马纹", "表头用 text-xs 小标签"]
+    },
+    "kpi_card": {
+      "rules": [
+        "同高（grid 拉伸 + h-full）",
+        "三要素齐全：标签 + 数值 + 较昨日变化",
+        "变化值必须带方向（箭头图标 + 正负号）与基准文案"
+      ]
+    },
+    "chart": {
+      "rules": [
+        "主图占内容宽 >=2/3",
+        "第二数据块必须是列表，不再放第二张同权图",
+        "图配可见数据表（切换视图）+ 一句话结论"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280
+    },
+    "density": "compact"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "KPI 行 4 张卡同高；每张必含 标签 + 数值 + 较昨日变化 三要素，变化值带方向（箭头 + 正负号）与基准说明"
+    },
+    {
+      "id": "INV-002",
+      "type": "visual",
+      "description": "主图卡占内容宽度 >=2/3（xl 起 4 列网格中占 3 列）；第二数据块必须是未分配工单列表，不得出现第二张同权图表"
+    },
+    {
+      "id": "INV-003",
+      "type": "functional",
+      "description": "页面骨架含侧栏（lg 起 240px 纵向导航，以下折叠为横向导航条）与 64px 顶栏；全部间距落在 4px 基线（Tailwind 整数刻度）"
+    },
+    {
+      "id": "INV-004",
+      "type": "functional",
+      "description": "数据四态真实可触达：载入（同形骨架 role=status + aria-busy）/ 错误（role=alert + 错误码 + 重试）/ 空（说明 + 出口）/ 成功；mock 层支持 ?mock=loading|error|empty 开关"
+    },
+    {
+      "id": "INV-005",
+      "type": "visual",
+      "description": "无 slop 症状：无渐变文字、无彩色 glow、无 emoji 图标、无问候式标题；图标一律内联线性 SVG（aria-hidden）"
+    },
+    {
+      "id": "INV-006",
+      "type": "functional",
+      "description": "mock 数量级真实：日工单量 200-900；KPI/列表数字禁止 99999/123456 类假数据特征；页面不出现无来源的 Trusted by 类声明；时间戳与基准必须具体"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "技术栈固定 React 18 + Tailwind 3 + Vite；本次为静态交付：不执行 npm install、不联网、不启动浏览器",
+      "不引入新字体文件，字体走系统栈回退",
+      "图标用内联线性 SVG，不引入图标库依赖",
+      "无浏览器可用：只做静态检查，明确声明未做像素级视觉验证"
+    ],
+    "pages": {
+      "overview": "内容自上而下：KPI 行（4 卡）→ 主图行（趋势图 3/4 宽 + 未分配 Top8 列表 1/4 宽，xl 以下堆叠）；内容区 max-w 1280 居中，页内边距 16/32；卡片 radius md + shadow card + hairline border"
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md"
+  }
+}
