@@ -44,7 +44,10 @@ function ignored(ruleId, rel, ignores) {
   const rule = ignores[ruleId];
   if (!rule || !Array.isArray(rule.files)) return null;
   const norm = rel.replace(/\\/g, '/');
-  for (const pat of rule.files) if (wildcardToRe(String(pat)).test(norm) || norm.includes(String(pat))) return rule.reason || 'ignored';
+  for (const pat0 of rule.files) {
+    const pat = String(pat0).replace(/\\/g, '/'); // 两侧统一正斜杠，兼容 Windows 绝对路径
+    if (wildcardToRe(pat).test(norm) || norm.includes(pat)) return { reason: rule.reason || 'ignored', evidence: rule.evidence || '' };
+  }
   return null;
 }
 
@@ -80,6 +83,15 @@ const WITH_JS_RE = /\.(css|scss|vue|tsx|jsx|ts|js|html|svelte|astro)$/i;
 
 function makeFinding(id, o) {
   return { id, severity: o.severity, confidence: o.confidence || 'heuristic', rule: o.rule, evidence: { file: o.file || '-', line: o.line || 0, detail: o.detail }, fix_hint: o.fixHint || '', verify: o.verify || '' };
+}
+
+// v0.2 分级（ADR-14，hallmark Floor/Reflex 思想）：确定性 error 不可豁免；其余可留痕豁免
+function tierOf(fd) {
+  return fd.severity === 'error' && fd.confidence === 'certain' ? 'floor' : 'reflex';
+}
+
+function effectiveLen(s) {
+  return String(s || '').replace(/[\s\p{P}\p{S}]/gu, '').length;
 }
 
 function ruleCHK01(ctx) {
@@ -254,9 +266,50 @@ function ruleCHK07(ctx) {
   return findings;
 }
 
+// v0.2 新规则
+function ruleCHK08(ctx) {
+  const motionRe = /animate-(?:pulse|bounce|spin|ping)|transition-(?:all|colors|opacity|transform)|animation\s*:|@keyframes/i;
+  const reducedRe = /motion-reduce|motion-safe|prefers-reduced-motion/i;
+  const all = ctx.files.map((f) => f.text).join('\n');
+  if (!motionRe.test(all) || reducedRe.test(all)) return [];
+  const f = ctx.files.find((x) => motionRe.test(x.text));
+  return [makeFinding('CHK-08', { severity: 'info', rule: 'reduced-motion', file: f.rel, line: 0, detail: '存在动效但未提供 prefers-reduced-motion 适配', fixHint: '动效处加 motion-reduce: 变体或媒体查询降级', verify: '重跑 checks.mjs，CHK-08 通过' })];
+}
+
+function ruleCHK09(ctx) {
+  const findings = [];
+  for (const f of ctx.files) {
+    if (!/\.html$/i.test(f.rel)) continue;
+    let prev = 0;
+    const lines = f.text.split('\n');
+    for (let i = 0; i < lines.length; i++) {
+      const m = /<(h[1-6])[\s>]/i.exec(lines[i]);
+      if (!m) continue;
+      const lv = parseInt(m[1][1], 10);
+      if (prev === 0 && lv !== 1) findings.push(makeFinding('CHK-09', { severity: 'warning', rule: 'heading-order', file: f.rel, line: i + 1, detail: '首个标题为 h' + lv + '（文档级页面应以 h1 锚定）', fixHint: '主标题用 h1；纯片段文档除外', verify: '重跑 checks.mjs，CHK-09 通过' }));
+      else if (prev && lv - prev > 1) findings.push(makeFinding('CHK-09', { severity: 'warning', rule: 'heading-order', file: f.rel, line: i + 1, detail: 'h' + prev + ' → h' + lv + ' 层级跳跃', fixHint: '补齐中间层级或修正标签', verify: '重跑 checks.mjs，CHK-09 通过' }));
+      prev = lv;
+      if (findings.length >= 10) return findings;
+    }
+  }
+  return findings;
+}
+
+function ruleCHK10(ctx) {
+  for (const f of ctx.files) {
+    if (!/\.html$/i.test(f.rel)) continue;
+    const idx = f.text.search(/<html/i);
+    if (idx >= 0 && !/<html[^>]*\blang\s*=\s*["'][a-z]{2}(?:-[A-Za-z]{2,4})?["']/i.test(f.text)) {
+      return [makeFinding('CHK-10', { severity: 'error', confidence: 'certain', rule: 'html-lang', file: f.rel, line: lineOfIndex(f.text, idx), detail: '<html> 缺少 lang 属性（屏幕阅读器发音依赖）', fixHint: '加 lang="zh-CN" / lang="en" 等', verify: '重跑 checks.mjs，CHK-10 通过' })];
+    }
+  }
+  return [];
+}
+
 const RULES = [
   { id: 'CHK-01', fn: ruleCHK01 }, { id: 'CHK-02', fn: ruleCHK02 }, { id: 'CHK-03', fn: ruleCHK03 },
-  { id: 'CHK-04', fn: ruleCHK04 }, { id: 'CHK-05', fn: ruleCHK05 }, { id: 'CHK-06', fn: ruleCHK06 }, { id: 'CHK-07', fn: ruleCHK07 }
+  { id: 'CHK-04', fn: ruleCHK04 }, { id: 'CHK-05', fn: ruleCHK05 }, { id: 'CHK-06', fn: ruleCHK06 }, { id: 'CHK-07', fn: ruleCHK07 },
+  { id: 'CHK-08', fn: ruleCHK08 }, { id: 'CHK-09', fn: ruleCHK09 }, { id: 'CHK-10', fn: ruleCHK10 }
 ];
 
 async function main() {
@@ -276,8 +329,18 @@ async function main() {
     let out = [];
     try { out = r.fn(ctx) || []; } catch (e) { out = [{ id: r.id, severity: 'info', confidence: 'certain', rule: r.id + '-error', evidence: { file: '-', line: 0, detail: '规则执行失败：' + e.message }, fix_hint: '', verify: '' }]; }
     for (const fd of out) {
+      fd.tier = tierOf(fd);
       const ign = ignored(fd.id, String(fd.evidence.file), ignores);
-      if (ign) { fd.severity = 'info'; fd.evidence.detail += '（已豁免：' + ign + '）'; }
+      if (ign) {
+        if (fd.tier === 'floor') {
+          fd.evidence.detail += '（豁免被拒：该发现为 floor 级（确定性 error），不可豁免——修复它）';
+        } else if (effectiveLen(ign.reason) < 12) {
+          fd.evidence.detail += '（豁免无效：理由有效字符不足 12（当前 ' + effectiveLen(ign.reason) + '），须写明具体依据）';
+        } else {
+          fd.severity = 'info';
+          fd.evidence.detail += '（已豁免：' + ign.reason + '｜证据：' + (ign.evidence || '未提供') + '）';
+        }
+      }
       findings.push(fd);
     }
   }

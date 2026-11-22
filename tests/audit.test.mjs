@@ -109,6 +109,49 @@ test('v0.2: CHK-02 off-token-color-class 与 CHK-04 text-* 类名层', async () 
   assert.ok(!out.findings.some((f) => f.rule === 'type-scale' && f.evidence.detail.includes('text-base')), 'text-base=16px 在阶梯内不应命中');
 });
 
+test('v0.2 波2: tier 分级豁免（floor 拒绝 / reflex 理由不足无效 / 有效降级留痕）', async () => {
+  const dir = await tmp();
+  const c = path.join(dir, 'c.json');
+  await fs.writeFile(c, JSON.stringify(MIN_CONTRACT)); // 含 #94A3B8 低对比（floor）
+  const css = path.join(dir, 'page.css');
+  await fs.writeFile(css, '.a { margin: 10px; }\n.b { margin: 12px; }\n');
+  const cfg = path.join(dir, 'rules.json');
+  await fs.writeFile(cfg, JSON.stringify({
+    'CHK-01': { files: ['**/contract.json'], reason: '视觉稿如此规定不能改', evidence: 'design-v3.png' },
+    'CHK-03': { files: [css], reason: '遗留模块像素对齐第三方组件视觉稿' }
+  }));
+  const r = await run(['scripts/checks.mjs', css, '--contract', c, '--config', cfg, '--json']);
+  const out = JSON.parse(r.stdout);
+  const c1 = out.findings.find((f) => f.id === 'CHK-01' && f.severity === 'error');
+  assert.ok(c1, '应存在对比度 error');
+  assert.ok(c1.evidence.detail.includes('豁免被拒'), 'floor 豁免应被拒绝：' + c1.evidence.detail);
+  assert.ok(out.findings.some((f) => f.id === 'CHK-03' && f.evidence.detail.includes('已豁免：遗留模块')), 'reflex 有效豁免应降级留痕');
+  // 理由不足：换弱理由重跑
+  await fs.writeFile(cfg, JSON.stringify({ 'CHK-03': { files: [css], reason: '太短' } }));
+  const r2 = await run(['scripts/checks.mjs', css, '--contract', c, '--config', cfg, '--json']);
+  const out2 = JSON.parse(r2.stdout);
+  const c3 = out2.findings.find((f) => f.id === 'CHK-03');
+  assert.ok(c3 && c3.severity === 'warning' && c3.evidence.detail.includes('豁免无效'), '弱理由豁免应无效且保持 warning');
+  assert.ok(out2.findings.every((f) => typeof f.tier === 'string'), 'findings 应带 tier 字段');
+});
+
+test('v0.2 波2: CHK-08/09/10 新规则正反例', async () => {
+  const dir = await tmp();
+  const bad = path.join(dir, 'bad.html');
+  await fs.writeFile(bad, '<!doctype html>\n<html>\n<body>\n<h2>二级先行</h2>\n<h4>跳级</h4>\n<div class="animate-pulse">x</div>\n</body>\n</html>\n');
+  const r = await run(['scripts/checks.mjs', bad, '--json']);
+  const out = JSON.parse(r.stdout);
+  assert.ok(out.findings.some((f) => f.id === 'CHK-10' && f.tier === 'floor'), '缺 lang 应为 floor error');
+  assert.ok(out.findings.some((f) => f.id === 'CHK-09' && f.evidence.detail.includes('h2')), '首标题 h2 应命中');
+  assert.ok(out.findings.some((f) => f.id === 'CHK-09' && f.evidence.detail.includes('跳跃')), 'h2→h4 跳级应命中');
+  assert.ok(out.findings.some((f) => f.id === 'CHK-08'), '动效无 reduced-motion 应命中');
+  const ok = path.join(dir, 'ok.html');
+  await fs.writeFile(ok, '<!doctype html>\n<html lang="zh-CN">\n<body>\n<h1>主标</h1>\n<h2>次级</h2>\n<div class="animate-pulse motion-reduce:animate-none">x</div>\n</body>\n</html>\n');
+  const r2 = await run(['scripts/checks.mjs', ok, '--json']);
+  const o2 = JSON.parse(r2.stdout);
+  assert.ok(!o2.findings.some((f) => ['CHK-08', 'CHK-09', 'CHK-10'].includes(f.id)), '合规文件不应命中新规则：' + JSON.stringify(o2.findings.map((f) => f.id + ':' + f.rule)));
+});
+
 test('v0.2: extract spacing 默认刻度判定与漂移警告', async () => {
   const dir = await tmp();
   const proj = path.join(dir, 'proj');

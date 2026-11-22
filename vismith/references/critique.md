@@ -10,6 +10,11 @@ node scripts/checks.mjs <目标> --contract .vismith/contract.json --json
 - warning：契约偏离或一致性风险，按契约优先级评估
 - info：说明性输出（豁免、降级提示、跳过原因）
 
+### 豁免分级（v0.2，Floor/Reflex）
+- **floor**：`error + certain` 的发现（如契约模式低对比、img 缺 alt、html 缺 lang）——**不可豁免**，尝试豁免会被拒绝并在 detail 留痕。
+- **reflex**：其余发现可豁免，但 `.vismith/rules.json` 中的条目须满足：`files`（匹配路径）+ `reason`（去空白/标点后 >=12 有效字符的具体依据）+ 可选 `evidence`（证据引用）；理由不足视为无效豁免，保持原严重度。
+- 豁免是设计决策：每次有效豁免自动留痕于 findings；连续豁免同一规则应考虑把它写进 contract 约束而不是继续豁免。
+
 ## 2. 语义层（Agent 判断，逐项标注置信度）
 按类别 checklist 检查（routing.md 类别列）：
 - 视觉层次：首屏焦点是否唯一、扫读路径是否成立

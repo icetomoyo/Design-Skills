@@ -10,8 +10,8 @@
 - **任务路由**：generate / refine / redesign / review / contract / recall 六模式 × 六产品类别 × 访客意图轴
 - **知识检索**：45 条带 scope 元数据的设计知识（16 原创 + 29 改编自 unslop/ui-ux-pro-max/hallmark：类别 playbook、a11y、反模板化、RTL、tokens 数值体系、图表选型、性能、文案纪律），
   词法评分 + 双层弃权阈值（min-score/min-margin，宁缺勿滥），每条标注来源与适用范围（SOURCES.md 全量登记）
-- **确定性检查**：7 条种子规则（对比度 WCAG 计算、硬编码色、间距基线、字号阶、焦点可见、语义、固定宽），
-  结构化 JSON 输出，heuristic 与 certain 分级，支持豁免配置
+- **确定性检查**：10 条规则（对比度 WCAG、硬编码色与 off-token 类、间距基线、字号阶与 text-* 类、焦点可见、语义、固定宽、reduced-motion、标题层级、html-lang），
+  结构化 JSON 输出（heuristic/certain 分级），**Floor/Reflex 分级豁免**：确定性 error 不可豁免，其余须 >=12 有效字符理由 + 证据留痕方可降级（机器验证）
 - **项目设计记忆**：.vismith/ 内契约、决策日志、例外、审查报告，git 可追踪
 
 ## 安装
@@ -64,6 +64,6 @@
 
 ## 状态（v0.1）
 
-已实现：路由、契约（init/extract/validate/show）、检索、7 条检查、记忆协议、token 预算、测试套件。
+已实现：路由、契约（init/extract/validate/show）、检索、10 条检查（含 Floor/Reflex 分级豁免）、记忆协议、token 预算、测试套件。
 未实现（路线图见 PRD §9）：ui-ux-pro-max 知识库改编扩容、视觉审查闭环（v0.3）、有界自动修复（v0.3）、
 跨页一致性（v0.4）、完整 A/B/C/D 对照评测（v0.4）。**本地 .skill 打包/隔离安装链路已实测通过（见 `eval/dist/install-test-report.md`）；远程 `npx skills add` 在仓库推送 GitHub 前不可用，尚未实测 [待验证]。**
