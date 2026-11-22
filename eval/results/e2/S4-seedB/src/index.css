@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  @apply bg-canvas text-ink-900 antialiased;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 全局焦点兜底：组件级 focus-visible ring 之外的键盘焦点也必须可见（INV-004） */
+:focus-visible {
+  @apply outline-none ring-2 ring-primary-600 ring-offset-1 ring-offset-canvas;
+}
+
+/* 动效降级：CHK-08 / prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* 表格 sticky 单元格在 border-separate 下的对齐基线（与组件内 border-b 配合，行高由 tr 固定） */
+table.host-grid {
+  border-collapse: separate;
+  border-spacing: 0;
+  table-layout: fixed;
+}

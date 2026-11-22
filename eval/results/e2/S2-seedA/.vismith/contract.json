@@ -1,0 +1,162 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "admin-console",
+    "audience": "企业 HR 专员与系统管理员（B2B 管理后台 · 员工入职流程系统）",
+    "scenarios": [
+      "HR 专员为正式员工办理入职（3 步：基本信息/岗位与权限/复核提交）",
+      "管理员办理入职：可见薪资与预算字段，并含“审批人指定”步（4 步）",
+      "提交后查看入职流程状态反馈；提交失败需保留已填数据"
+    ]
+  },
+  "brand": {
+    "personality": ["克制", "高效", "可信"],
+    "references": ["企业内部系统（飞书/钉钉管理后台一类的密度与语气）"]
+  },
+  "style": {
+    "direction": "企业后台效率型：白卡浮于浅灰画布，hairline 分隔，单一低饱和钴蓝 accent 只用于主行动/当前步/链接；深度用表面阶梯不用阴影堆叠；紧凑密度对齐每天 8 小时使用",
+    "do_not": [
+      "紫蓝/紫粉渐变背景或按钮",
+      "玻璃拟态、彩色 glow、大面积彩色底",
+      "全大写+宽字距标签、标题 weight 800-900",
+      "animate-pulse 用于非骨架内容、庆祝性 toast"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#1D4ED8",
+      "primary_hover": "#1E40AF",
+      "primary_soft": "#EFF6FF",
+      "text_on_primary": "#FFFFFF",
+      "success": "#15803D",
+      "success_strong": "#166534",
+      "success_soft": "#F0FDF4",
+      "danger": "#B91C1C",
+      "danger_strong": "#991B1B",
+      "danger_soft": "#FEF2F2",
+      "warning": "#B45309",
+      "warning_soft": "#FFFBEB",
+      "neutrals": ["#0F172A", "#334155", "#64748B"],
+      "surface": "#FFFFFF",
+      "canvas": "#F1F5F9",
+      "fill_subtle": "#F8FAFC",
+      "hairline": "#E2E8F0",
+      "hairline_strong": "#CBD5E1"
+    },
+    "typography": {
+      "body": "-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, Noto Sans SC, sans-serif",
+      "display": "-apple-system, BlinkMacSystemFont, Segoe UI, PingFang SC, Microsoft YaHei, Noto Sans SC, sans-serif",
+      "scale": [12, 14, 16, 18, 20, 24]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 20, 24, 32, 40, 48, 64]
+    },
+    "radius": {
+      "sm": 4,
+      "md": 6,
+      "lg": 8,
+      "xl": 12
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(15,23,42,.06)",
+      "overlay": "0 4px 12px rgba(15,23,42,.10)"
+    }
+  },
+  "components": {
+    "button": {
+      "height": 36,
+      "radius": "md",
+      "rules": [
+        "主操作每屏唯一（下一步/提交）",
+        "提交中禁用 + 内联 loading 文案，防重复提交",
+        "危险操作二次确认；本页无危险操作"
+      ]
+    },
+    "input": {
+      "height": 36,
+      "radius": "md",
+      "rules": [
+        "错误消息在字段正下方，预留高度不引起布局跳动",
+        "placeholder 不替代标签；标签顶部对齐",
+        "失焦校验 + 下一步/提交兜底；aria-invalid + aria-describedby"
+      ]
+    },
+    "checkbox_card": {
+      "rules": ["整卡可点（label 包裹），焦点环可见", "默认项按字典 default 预勾"]
+    },
+    "step_indicator": {
+      "rules": ["当前步 aria-current=step；已完成步可点击回退且保留数据", "连接线纯装饰 aria-hidden"]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280
+    },
+    "density": "compact",
+    "shell": {
+      "sidebar_px": 240,
+      "topbar_px": 56,
+      "content_padding_px": 24,
+      "content_max_width_px": 896
+    }
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "真实分步：基本信息/岗位与权限/复核提交（管理员另含“审批人指定”步）；步骤指示标出当前步与已完成；上一步/回退后数据必须保留"
+    },
+    {
+      "id": "INV-002",
+      "type": "behavior",
+      "description": "校验失焦触发；错误消息在字段正下方；“下一步”与“提交”前校验阻断，展示顶部错误摘要（可聚焦、逐条链接定位字段）并聚焦首个错误"
+    },
+    {
+      "id": "INV-003",
+      "type": "functional",
+      "description": "权限差异在渲染层生效：HR 专员视角不渲染财务字段（薪资/档级/预算中心）与“审批人指定”步，DOM 不含财务数据（非 CSS/禁用隐藏）；管理员全字段可见"
+    },
+    {
+      "id": "INV-004",
+      "type": "behavior",
+      "description": "提交成功/失败均有驻留反馈与出口；失败不丢已填数据；成功/失败反馈仅来自 mock 请求的真实返回，不虚构结果"
+    },
+    {
+      "id": "INV-005",
+      "type": "behavior",
+      "description": "焦点环全局可见（focus-visible），焦点序=视觉序，错误字段可键盘触达；IME 组词期 Enter 不触发提交"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "技术栈固定 React + Tailwind（Vite），不引入 UI 组件库",
+      "部门/岗位/角色/审批人来自固定字典 mock，不接真实后端；mock 带 ?mock=slow|error|empty|submit-fail 开关用于触达各状态",
+      "不引入新字体文件，使用系统中文字体栈",
+      "4px 间距基线，只用契约 spacing.scale 档位"
+    ],
+    "pages": {
+      "onboarding-wizard": "单列表单（内容区最大 896px）；相关字段分组带小节标题；每屏主按钮唯一；复核页以只读定义列表分组呈现并提供“编辑”回跳"
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md"
+  }
+}

@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ===== 基础层：页面壳（颜色全部来自 tailwind.config 语义 token） ===== */
+@layer base {
+  html {
+    @apply h-full;
+  }
+  body {
+    @apply h-full bg-ink-50 font-sans text-ink-900 antialiased;
+  }
+  #root {
+    @apply h-full;
+  }
+}
+
+@layer components {
+  /* ===== 通用控件（focus-visible 环 + offset，CHK-05） ===== */
+  .btn {
+    @apply inline-flex h-8 select-none items-center justify-center gap-1 rounded-md border border-ink-300 bg-white px-3 text-sm text-ink-700 transition-colors motion-reduce:transition-none;
+  }
+  .btn:hover {
+    @apply border-ink-400 bg-ink-50 text-ink-900;
+  }
+  .btn:focus-visible {
+    @apply outline-none ring-2 ring-primary-600 ring-offset-1 ring-offset-white;
+  }
+  .btn[disabled] {
+    @apply cursor-not-allowed opacity-50;
+  }
+  .btn-primary {
+    @apply border-primary-600 bg-primary-600 text-white;
+  }
+  .btn-primary:hover {
+    @apply border-primary-700 bg-primary-700 text-white;
+  }
+  .btn-danger {
+    @apply border-danger-600 bg-danger-600 text-white;
+  }
+  .btn-danger:hover {
+    @apply border-danger-700 bg-danger-700 text-white;
+  }
+  .btn-ghost {
+    @apply border-transparent bg-transparent;
+  }
+
+  .tbx {
+    @apply h-8 w-full rounded-md border border-ink-300 bg-white px-3 text-sm text-ink-900 placeholder:text-ink-500;
+  }
+  .tbx:focus-visible {
+    @apply border-primary-600 outline-none ring-2 ring-primary-600 ring-offset-1 ring-offset-white;
+  }
+
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full border border-ink-200 bg-white px-2 py-0.5 text-xs text-ink-600;
+  }
+
+  .panel {
+    @apply rounded-lg border border-ink-200 bg-white shadow-overlay;
+  }
+
+  .sk-bar {
+    @apply h-3 flex-none rounded bg-ink-100 animate-pulse motion-reduce:animate-none;
+  }
+
+  /* ===== 数据表（contract components.table：无斑马纹、hairline 分行） ===== */
+  .dt-scroll {
+    @apply overflow-auto bg-white;
+  }
+
+  .dt-hrow {
+    @apply sticky top-0 z-30 flex w-max;
+  }
+  .dt-h {
+    @apply flex h-9 flex-none items-center overflow-hidden border-b border-ink-200 bg-ink-50 px-2 text-xs font-medium text-ink-700;
+  }
+  .dt-h.dt-fz {
+    @apply bg-ink-50;
+  }
+
+  .dt-row {
+    @apply flex w-max border-b border-ink-100;
+  }
+  .dt-c {
+    @apply flex h-full flex-none items-center overflow-hidden px-2 text-xs leading-4 text-ink-700;
+  }
+  [data-density='comfy'] .dt-c {
+    @apply text-sm leading-5;
+  }
+  .dt-num {
+    @apply justify-end tabular-nums;
+  }
+  .dt-host {
+    @apply font-medium text-ink-900;
+  }
+  .dt-dot {
+    @apply mr-1 inline-block h-2 w-2 flex-none rounded-full;
+  }
+  .dt-chk {
+    @apply h-4 w-4 cursor-pointer rounded-sm border-ink-400 accent-primary-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary-600 focus-visible:ring-offset-1 focus-visible:ring-offset-white;
+  }
+  .dt-chk:disabled {
+    @apply cursor-default opacity-60;
+  }
+
+  /* 冻结列：不透明底色 + 右侧 hairline，横向滚动时盖住下方滚动内容 */
+  .dt-fz {
+    @apply border-r border-ink-200 bg-white;
+  }
+  /* 行态：hover / 选中（选中持久），冻结列同步换底色（不透明） */
+  .dt-row:hover .dt-c {
+    @apply bg-ink-50;
+  }
+  .dt-row[data-sel='on'] .dt-c {
+    @apply bg-primary-50;
+  }
+  .dt-row[data-sel='on']:hover .dt-c {
+    @apply bg-primary-100;
+  }
+  .dt-row[data-sel='on'] .dt-host {
+    @apply text-primary-700;
+  }
+
+  /* 提示条（批量操作完成反馈） */
+  .toast {
+    @apply pointer-events-none flex items-center gap-2 rounded-lg border border-ink-200 bg-white px-4 py-2 text-sm text-ink-900 shadow-overlay;
+  }
+}

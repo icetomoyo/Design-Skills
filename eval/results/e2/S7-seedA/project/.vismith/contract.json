@@ -1,0 +1,85 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "admin-console",
+    "audience": "内部运维/客服坐席，键盘高频操作",
+    "scenarios": ["工单关键词筛选、查看匹配计数、导出确认"]
+  },
+  "brand": {
+    "personality": ["克制", "高效"],
+    "references": []
+  },
+  "style": {
+    "direction": "轻量后台工具风：ink 中性灰系 + accent 蓝主色，白底卡片列表与紧凑表单（既有视觉方向，refine 不改）",
+    "do_not": []
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#2563EB",
+      "primary_strong": "#1D4ED8",
+      "neutrals": ["#0F172A", "#475569"],
+      "surface": "#F8FAFC",
+      "surface_raised": "#FFFFFF",
+      "border": "#E2E8F0",
+      "text_on_primary": "#FFFFFF"
+    },
+    "typography": {
+      "body": "Inter, system-ui, sans-serif",
+      "display": "Inter, system-ui, sans-serif",
+      "scale": [14, 16, 18, 20]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 24]
+    },
+    "radius": {},
+    "shadow": {}
+  },
+  "components": {},
+  "layout": {
+    "breakpoints": {},
+    "density": "compact"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "关键词筛选与匹配计数联动行为保持不变（q 过滤 title、显示 N / M 条）"
+    },
+    {
+      "id": "INV-002",
+      "type": "behavior",
+      "description": "导出流程保留：导出结果 → 弹层确认 → 关闭；弹层内导出按钮存在且可用"
+    },
+    {
+      "id": "INV-003",
+      "type": "visual",
+      "description": "不改视觉方向与布局结构：ink/accent 配色、白卡片列表、4/8/12/16/24px 间距刻度与 DOM 布局顺序保持原样；仅允许为可访问性新增不可见属性与焦点样式"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "技术栈不变（React + Tailwind）",
+      "不重命名 Tailwind 数字间距键：4=4px 等映射的语义漂移已知，修复需改全站类名，超出本次 a11y refine 范围（见 decisions.log.md）"
+    ],
+    "pages": {}
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md",
+    "note": "由 extract 草稿转正（S7 a11y refine）：neutrals 仅收录文本用中性色，ink-50 定为 surface、ink-100 定为 border，避免 CHK-01 伪配对"
+  }
+}

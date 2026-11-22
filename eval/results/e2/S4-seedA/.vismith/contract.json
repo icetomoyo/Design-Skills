@@ -1,0 +1,108 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "data-intensive",
+    "audience": "运维/ SRE 平台工程师与值班同学，高频查资产、批量处置主机",
+    "scenarios": ["主机清单检索", "批量重启与打标签", "成本与负责人盘点"]
+  },
+  "brand": {
+    "personality": ["可靠", "高效", "克制"],
+    "references": []
+  },
+  "style": {
+    "direction": "运维数据密集风：浅色工作台、hairline 行分隔、无斑马纹、tabular-nums 数字、单一低饱和主色只做操作与焦点",
+    "do_not": ["斑马纹", "大面积渐变与玻璃拟态", "装饰性色块", "全屏 spinner"]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#2563EB",
+      "success": "#16A34A",
+      "danger": "#DC2626",
+      "warning": "#D97706",
+      "neutrals": ["#0F172A", "#334155", "#475569", "#64748B"],
+      "surface": "#FFFFFF",
+      "surface_muted": "#F8FAFC",
+      "line": "#CBD5E1",
+      "line_strong": "#94A3B8",
+      "text_on_primary": "#FFFFFF"
+    },
+    "typography": {
+      "body": "Inter, system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      "display": "Inter, system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      "scale": [12, 14, 16, 20, 24, 32]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 24, 32, 48]
+    },
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 12
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(15,23,42,.08)",
+      "overlay": "0 12px 32px rgba(15,23,42,.16)"
+    }
+  },
+  "components": {
+    "button": {
+      "height": 32,
+      "radius": "md",
+      "rules": [
+        "主操作唯一；危险操作需二次确认",
+        "focus-visible: ring-2 primary-600 + offset，不依赖颜色单通道"
+      ]
+    },
+    "table": {
+      "density": "compact",
+      "row_height": { "compact": 32, "comfy": 40 },
+      "rules": [
+        "数字右对齐 + tabular-nums，单位与千分位一致",
+        "禁用斑马纹，用 hairline 行分隔",
+        "长文本 ellipsis + title 提供完整值（展开途径）",
+        "首两列（主机名、内网 IP）冻结，冻结列不截断关键信息",
+        "默认列 < 视觉宽度上限，次要列收进列设置"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": { "sm": 640, "md": 768, "lg": 1024, "xl": 1280 },
+    "density": "compact"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    { "id": "INV-001", "type": "functional", "description": "1 万行主机表必须虚拟化渲染：DOM 行数由视口高度决定（+overscan），禁止一次性渲染全部行" },
+    { "id": "INV-002", "type": "functional", "description": "首两列（主机名、内网 IP）冻结左侧：横向滚动不位移、与表体行高对齐不错行" },
+    { "id": "INV-003", "type": "behavior", "description": "批量操作（重启/打标签）必须展示选中计数并经过确认步骤，禁止无确认直接执行" },
+    { "id": "INV-004", "type": "behavior", "description": "行多选可键盘触达（原生 checkbox），批量操作有完成反馈（aria-live 播报）" },
+    { "id": "INV-005", "type": "visual", "description": "状态不只靠颜色：圆点+文本；数字列右对齐 tabular-nums" },
+    { "id": "INV-006", "type": "behavior", "description": "密度切换即时生效并记忆，不引起冻结列/行高错位" }
+  ],
+  "constraints": {
+    "project": [
+      "技术栈 React 18 + Vite + Tailwind 3；不新增第三方 UI/虚拟滚动库，虚拟化自实现",
+      "不引入新字体文件，使用系统字体栈",
+      "颜色只经 tailwind.config 语义 token（ink/primary/success/danger/warn/info）使用，组件内禁写 hex"
+    ],
+    "pages": {
+      "hosts-table": {
+        "columns_total": 60,
+        "rows": 10000,
+        "virtualization": "固定行高 32/40 + 绝对定位 + overscan 6 + rAF 节流",
+        "page_overflow": "仅表格容器内部横滚，页面级无横向溢出；禁止 overflow:hidden 藏溢出",
+        "states": "loading 骨架 / error 可重试 / empty(真空+筛选无结果) / success，mock 开关 ?mock=ok|error|empty"
+      }
+    }
+  },
+  "precedence": ["invariants", "a11y_hard", "project_constraints", "tokens", "style_preferences"],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md"
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "saas-dashboard",
+    "audience": "客服/运营人员：在工单队列中按关键词过滤并导出结果",
+    "scenarios": ["关键词过滤工单队列", "导出匹配结果为 CSV"]
+  },
+  "brand": {
+    "personality": ["克制", "工具感", "高密度"],
+    "references": []
+  },
+  "style": {
+    "direction": "冷色调工具型界面：ink 中性色系 + accent 蓝主色，白卡片列表，紧凑间距（4/8/12/16/24px）",
+    "do_not": ["改变现有 ink/accent 配色方向", "改变布局结构与密度", "增加装饰性元素或动效"]
+  },
+  "tokens": {
+    "colors": {
+      "surface": "#F8FAFC",
+      "surface_raised": "#FFFFFF",
+      "neutrals": ["#0F172A", "#475569"],
+      "border": "#E2E8F0",
+      "primary": "#2563EB",
+      "primary_strong": "#1D4ED8",
+      "text_on_primary": "#FFFFFF"
+    },
+    "typography": {
+      "body": "Inter",
+      "display": "Inter",
+      "scale": [12, 14, 16, 18, 20, 24]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 24]
+    },
+    "radius": { "default": "rounded(4px)" },
+    "shadow": {}
+  },
+  "components": {
+    "button_primary": { "tokens": "bg accent-500 + text_on_primary", "contrast": "5.17:1" },
+    "list_card": { "tokens": "bg surface_raised + divide border" }
+  },
+  "layout": {
+    "breakpoints": {},
+    "density": "compact"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required",
+    "dialog": "role=dialog + aria-modal + Esc 关闭 + 焦点圈定与归还"
+  },
+  "invariants": [
+    {
+      "id": "visual-direction-frozen",
+      "type": "visual",
+      "description": "视觉方向不变：ink/accent 双色系、白卡片列表与 4/8/12/16/24px 间距节奏保持原样；本任务仅做可访问性修复（键盘/语义/对比/焦点），不改布局结构"
+    },
+    {
+      "id": "filter-export-behavior",
+      "type": "functional",
+      "description": "筛选与导出既有行为不变：关键词 filter 逻辑、导出确认弹层流程与文案不变，仅补充键盘与读屏可达性"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "Tailwind 工具类为唯一样式通道，禁止新增依赖或独立 CSS 文件",
+      "React 函数组件（useState/useRef/useEffect），保持零依赖"
+    ],
+    "pages": {
+      "TicketFilter": "单页结构：h1 标题 + 副题 + 筛选表单 + 结果计数 + 工单列表 + 导出确认弹层"
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md",
+    "note": "extract 草稿经复核转正；间距数字键漂移保留既有值（refine 红线：不改视觉节奏）"
+  },
+  "notes": [
+    "colors 映射自 tailwind.config.js（ink 50/100/600/900 + accent 500/600）， CHK-01 配对全部 >=4.5:1",
+    "typography.scale 收录页面在用档位 text-sm=14/text-lg=18/text-xl=20 及基础档 12/16/24",
+    "spacing 数字键（4=4px…24=24px）为既有刻度；消除漂移需改视觉，超出本任务范围，保留并在 decisions 记录"
+  ]
+}

@@ -1,0 +1,150 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "admin-console",
+    "audience": "B2B 员工入职流程系统「启程 HR」管理后台；主用户为 HR 专员，次级用户为系统管理员",
+    "scenarios": [
+      "新员工入职 3 步向导：基本信息 / 岗位与权限 / 复核提交（HR 视角）",
+      "管理员视角附加薪酬录入（岗位与权限步内）与「审批人指定」步骤（共 4 步）"
+    ]
+  },
+  "brand": {
+    "personality": ["高效", "克制", "可信"],
+    "references": ["Linear 式企业后台：低饱和灰阶 + 单一品牌蓝点缀，状态色仅用于语义"]
+  },
+  "style": {
+    "direction": "紧凑企业后台：4px 间距基线、单列表单、分组标题、单一品牌蓝 #2563EB，成功/危险/警告仅承载状态语义；密度对齐每日 8 小时使用场景",
+    "do_not": [
+      "营销式大标题、渐变横幅与玻璃拟态",
+      "庆祝性动效与弹窗式成功反馈",
+      "多列表单迷宫与占位装饰字段"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#2563EB",
+      "success": "#15803D",
+      "danger": "#B91C1C",
+      "warning": "#B45309",
+      "neutrals": ["#0F172A", "#334155", "#475569", "#64748B"],
+      "surface": "#FFFFFF",
+      "canvas": "#F1F5F9",
+      "border": "#E2E8F0",
+      "text_on_primary": "#FFFFFF"
+    },
+    "typography": {
+      "body": "system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      "display": "system-ui, -apple-system, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      "scale": [12, 14, 16, 18, 20]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 24, 32]
+    },
+    "radius": {
+      "sm": 4,
+      "md": 6,
+      "lg": 8
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(15,23,42,.06)"
+    }
+  },
+  "components": {
+    "button": {
+      "height": 32,
+      "radius": "md",
+      "rules": [
+        "每屏主按钮唯一",
+        "进行中禁用并防重复提交",
+        "focus-visible 焦点环必备"
+      ]
+    },
+    "input": {
+      "height": 32,
+      "radius": "md",
+      "rules": [
+        "label 顶部对齐且 htmlFor 绑定 id",
+        "错误信息位于字段正下方且预留高度，不挤压布局",
+        "aria-invalid 与 aria-describedby 联动错误节点"
+      ]
+    },
+    "stepper": {
+      "rules": [
+        "当前步 aria-current=\"step\"",
+        "已完成步可点击返回且不丢数据",
+        "步骤序号即 DOM 序，不使用 order/正 tabindex"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280
+    },
+    "density": "compact"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "权限差异必须以条件渲染实现：HR 视角不渲染薪酬/成本中心等财务字段与「审批人指定」步骤（DOM 中不存在对应节点与数据，而非 CSS 隐藏）；管理员视角渲染全部步骤与字段"
+    },
+    {
+      "id": "INV-002",
+      "type": "functional",
+      "description": "向导数据状态提升到页面级：任意前进/后退/切换视角后，已填数据与校验状态不丢失"
+    },
+    {
+      "id": "INV-003",
+      "type": "behavior",
+      "description": "校验失焦触发且错误信息显示在字段正下方；「下一步」校验当前步全部字段；最终提交校验当前角色全部可见步骤，失败时以错误汇总阻断并聚焦首个错误字段"
+    },
+    {
+      "id": "INV-004",
+      "type": "behavior",
+      "description": "提交反馈只能来自 mock 异步服务的真实返回：提交中禁用防重复；成功展示入职流程状态与出口；失败保留全部已填数据并提供重试出口；不得伪造成功（fake-send-ban）"
+    },
+    {
+      "id": "INV-005",
+      "type": "visual",
+      "description": "间距 4px 基线（Tailwind 1 单位 = 4px）；表单单列 + 分组标题；紧凑密度（输入 32px 高、正文 14px）；每屏唯一主按钮"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "技术栈固定 React 18 + Tailwind CSS 3（Vite 构建），不新增运行时依赖",
+      "部门/岗位/审批人等来自固定字典 mock（src/data/dict.js）",
+      "提交走本地 mock 异步服务（src/data/mockService.js），URL 带 ?mock=submit-error 时确定性失败",
+      "页面为演示环境：提交反馈须明示由本地 mock 处理、未连接真实后端"
+    ],
+    "pages": {
+      "onboarding-wizard": [
+        "骨架：侧栏 w-60（240px）+ 顶栏 h-14（56px）+ 内容区 px-6 py-6",
+        "表单区单列，max-width 720px",
+        "财务字段组（试用期月薪/转正月薪/成本中心）仅 role=admin 渲染",
+        "「审批人指定」步骤仅 role=admin 出现，HR 共 3 步、管理员共 4 步"
+      ]
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md",
+    "note": "S2 场景 seed B：由 vismith generate 流程建立（contract.md §2 引导创建，brief 可推断项未反问）"
+  }
+}

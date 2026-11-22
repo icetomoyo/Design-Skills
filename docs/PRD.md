@@ -187,7 +187,8 @@
 | Windows 兼容 | 风险 | 全程 | 只用跨平台 Node API；CI 双平台 [CI 待建] |
 | 知识库内容腐烂 | 风险 | v0.2 起 | 条目标注 principle/trend，trend 类定期复审 |
 | 评审遗留债务（v0.2） | 债务 | 双轴评审 2026-11-17（ Standards/Spec 报告 + 修复验证） | 未清项：lib/cli.mjs 抽取与 makeFinding 工厂（结构性重构）、扩展名过滤统一、检索 ndcg@k fixtures。已清：trigger 正反例（eval/trigger/，14/14）、E1 已执行（eval/results/E1-2026-11-17.md，含 4 项 v0.2 改进发现：extract 刻度去重/CHK 类名盲区/四态默认/错误态触达标准） |
-| E1 改进发现（v0.2） | 债务 | E1 报告 §5 | ①extract 与 Tailwind 默认刻度去重 ②CHK-02/04 扫 Tailwind 类名（text-lg/off-token 色类逃逸） ③数据页四态默认入 generate 协议 ④载入/错误态真实可触达标准 |
+| E1 改进发现（v0.2） | 债务 | E1 报告 §5 | ①~④ 已全部清偿（v0.2 波 1/2） |
+| E2 改进发现（v0.3） | 债务 | E2 报告 §5（2026-11-22，S2/S4/S7 ×2 seed + 仲裁首战） | ①CHK-01 neutrals 覆盖盲区（契约未登记色档→检查器全盲；extract 收全文本档或加类名×surface 交叉验证） ②弹层焦点三件套（圈定+Esc+归还）升为协议硬 checklist ③tokens 知识禁用 <4.5 边缘档承担正文 |
 
 ## 附录 A：contract 草案（下为 YAML 示意；v0.1 落地为 .vismith/contract.json，字段一致，见 HLD §3.2）
 

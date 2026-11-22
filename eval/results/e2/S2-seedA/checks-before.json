@@ -1,0 +1,32 @@
+{
+  "tool": "vismith-checks",
+  "version": 1,
+  "generated_at": "2026-11-22T02:46:41.876Z",
+  "target": [
+    "eval/results/e2/S2-seedA/src",
+    "eval/results/e2/S2-seedA/index.html"
+  ],
+  "contract_present": true,
+  "files_scanned": 21,
+  "summary": {
+    "error": 0,
+    "warning": 0,
+    "info": 1
+  },
+  "findings": [
+    {
+      "id": "CHK-01",
+      "severity": "info",
+      "confidence": "certain",
+      "rule": "contrast",
+      "evidence": {
+        "file": ".vismith/contract.json",
+        "line": 0,
+        "detail": "contract 颜色配对共 4 组，全部 >= 4.5:1"
+      },
+      "fix_hint": "",
+      "verify": "",
+      "tier": "reflex"
+    }
+  ]
+}

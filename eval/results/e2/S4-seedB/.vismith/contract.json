@@ -1,0 +1,146 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "data-intensive",
+    "audience": "运维工程师 / 资产管理员，桌面为主、偶发窄屏访问",
+    "scenarios": [
+      "主机清单表格：59 列数据列 + 选择列，列显隐、冻结前两列、1 万行虚拟滚动、批量重启/打标签（带确认）、密度切换（紧凑 32px / 舒适 44px）"
+    ]
+  },
+  "brand": {
+    "personality": ["克制", "精准", "可靠"],
+    "references": []
+  },
+  "style": {
+    "direction": "冷灰画布 + 靛蓝主色的数据密集控制台：hairline 分行、无斑马纹、数字 tabular-nums 右对齐、冻结身份列（选择框 + 主机名 + 内网IP）",
+    "do_not": [
+      "玻璃拟态",
+      "大面积渐变",
+      "斑马纹",
+      "全屏加载 spinner",
+      "一次性渲染全部 1 万行 DOM"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#4F46E5",
+      "success": "#15803D",
+      "warning": "#B45309",
+      "danger": "#DC2626",
+      "neutrals": ["#0F172A", "#334155", "#475569", "#64748B"],
+      "surface": "#FFFFFF",
+      "canvas": "#F8FAFC",
+      "line": "#E2E8F0",
+      "text_on_primary": "#FFFFFF"
+    },
+    "typography": {
+      "body": "Inter, system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      "display": "Inter, system-ui, 'PingFang SC', 'Microsoft YaHei', sans-serif",
+      "scale": [12, 14, 16, 20, 24, 32]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 24, 32, 48]
+    },
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 12
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(15,23,42,.08)"
+    }
+  },
+  "components": {
+    "button": {
+      "height": 32,
+      "radius": "md",
+      "rules": [
+        "主操作唯一",
+        "危险操作需二次确认",
+        "批量操作必须带确认对话框与完成反馈（成功/失败计数）"
+      ]
+    },
+    "table": {
+      "density": "compact",
+      "row_height": { "compact": 32, "comfy": 44 },
+      "rules": [
+        "数字右对齐 + tabular-nums",
+        "禁用斑马纹，用 hairline（border-b）分行",
+        "冻结列用 border-r 分隔，背景 bg-inherit 随行态",
+        "列显隐与密度记忆到 localStorage",
+        "超过 500 行必须虚拟滚动窗口化渲染"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280
+    },
+    "density": "compact"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "前两列数据列（主机名、内网IP）与行选择列冻结：横向滚动时不位移，表头与表体行高对齐不错行"
+    },
+    {
+      "id": "INV-002",
+      "type": "functional",
+      "description": "1 万行必须虚拟滚动（窗口化渲染可见行 + 上下 spacer），任何状态不整表渲染 DOM"
+    },
+    {
+      "id": "INV-003",
+      "type": "functional",
+      "description": "批量重启 / 打标签必须先弹出确认对话框（点名数量与对象），执行中禁用按钮并显示进度，完成后给成功/失败计数反馈"
+    },
+    {
+      "id": "INV-004",
+      "type": "behavior",
+      "description": "行选择控件为原生 checkbox 可键盘触达；弹层支持 Esc 关闭且关闭后焦点归还触发器；全部交互元素有 focus-visible 焦点环"
+    },
+    {
+      "id": "INV-005",
+      "type": "functional",
+      "description": "密度切换（紧凑/舒适）即时生效：行高、spacer 总高同刻度变化，列宽与冻结偏移不变不错位，滚动位置按比例保持"
+    },
+    {
+      "id": "INV-006",
+      "type": "visual",
+      "description": "单元格截断必须有展开途径：title 悬停完整值 + 点击主机名打开全字段详情抽屉；页面级不出现横向溢出（横向滚动收敛在表格容器内）"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "技术栈固定 React 18 + Tailwind CSS 3 + Vite，不更换",
+      "不引入新字体文件（系统字体栈）",
+      "不引入虚拟滚动第三方库，自实现窗口化（约 60 行）",
+      "只写 eval/results/e2/S4-seedB/ 目录"
+    ],
+    "pages": {
+      "hosts-inventory": "主机清单页：59 数据列（基础/环境/标签/规格/网络/费用/负责人/运行 8 组），默认全部显示；mock 数据含合法 IP、规范主机名、真实数量级月费"
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-15",
+    "updated": "2026-11-15",
+    "decisions": ".vismith/decisions.log.md",
+    "note": "vismith generate 流程建立：eval S4 数据密集型表格（E2 seedB）"
+  }
+}
