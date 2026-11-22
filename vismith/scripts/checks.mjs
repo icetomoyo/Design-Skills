@@ -2,12 +2,9 @@
 // Usage: node scripts/checks.mjs <paths...> [--contract F] [--json] [--rules a,b] [--config F] [--strict]
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
 import { walkFiles, readText, isUiSource, lineOfIndex } from './lib/fsutil.mjs';
 import { parseColor, contrastRatio, fmtRatio } from './lib/colors.mjs';
-
-const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
-const SKILL_ROOT = path.dirname(SCRIPTS_DIR);
+import { SKILL_ROOT, runMain } from './lib/cli.mjs';
 
 function parseArgs(argv) {
   const opts = { paths: [], rules: null, json: false, strict: false };
@@ -70,6 +67,20 @@ async function collectFiles(paths) {
 const HEX_RE = /#[0-9a-fA-F]{3,8}\b|rgba?\([\d.,\s%]+\)|hsla?\([\d.,\s%deg]+\)/g;
 const SPACING_RE = /(?:margin|padding|gap|margin-top|margin-bottom|margin-left|margin-right|padding-top|padding-bottom|padding-left|padding-right|row-gap|column-gap)[^:;{}]*:\s*[^;{}]*?(\d+(?:\.\d+)?)px/gi;
 const FONTSIZE_RE = /font-size\s*:\s*(\d+(?:\.\d+)?)px/gi;
+// v0.2 类名层（E1 发现 #2：Tailwind 类名逃逸 CSS 值扫描）
+const TW_TEXT_SIZE = { xs: 12, sm: 14, base: 16, lg: 18, xl: 20, '2xl': 24, '3xl': 30, '4xl': 36, '5xl': 48, '6xl': 60, '7xl': 72, '8xl': 96, '9xl': 128 };
+const TW_TEXT_CLASS_RE = /(?:^|[\s"'`:])text-(2xl|3xl|4xl|5xl|6xl|7xl|8xl|9xl|xs|sm|base|lg|xl)\b/g;
+// 带色号的颜色类：bg-emerald-600 / text-ink-900 / from-blue-500 …（中段 opacity 等非色工具排除）
+const TW_COLOR_CLASS_RE = /\b(?:bg|text|border|ring|fill|stroke|from|to|via|divide|accent|caret|decoration|outline|shadow)-([a-z][a-z0-9]*)-(\d{2,3})\b/g;
+const TW_NON_COLOR_MID = new Set(['opacity', 'indent', 'align', 'leading', 'tracking', 'basis', 'origin', 'offset', 'length', 'weight']);
+const TW_DEFAULT_PALETTE = new Set(['slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose']);
+const MARKUP_RE = /\.(html|vue|tsx|jsx|svelte|astro)$/i;
+const STYLE_MARKUP_RE = /\.(css|scss|vue|tsx|jsx|html|svelte)$/i;
+const WITH_JS_RE = /\.(css|scss|vue|tsx|jsx|ts|js|html|svelte|astro)$/i;
+
+function makeFinding(id, o) {
+  return { id, severity: o.severity, confidence: o.confidence || 'heuristic', rule: o.rule, evidence: { file: o.file || '-', line: o.line || 0, detail: o.detail }, fix_hint: o.fixHint || '', verify: o.verify || '' };
+}
 
 function ruleCHK01(ctx) {
   const findings = [];
@@ -92,7 +103,7 @@ function ruleCHK01(ctx) {
   }
   // no contract: line-level fg/bg pairing heuristic
   for (const f of ctx.files) {
-    if (!/\.(css|scss|vue|tsx|jsx|html)$/i.test(f.rel)) continue;
+    if (!STYLE_MARKUP_RE.test(f.rel)) continue;
     const lines = f.text.split('\n');
     let pairs = 0;
     for (let i = 0; i < lines.length && pairs < 50; i++) {
@@ -116,7 +127,7 @@ function ruleCHK02(ctx) {
   const findings = [];
   const scale = ctx.contract && ctx.contract.tokens && ctx.contract.tokens.spacing && Array.isArray(ctx.contract.tokens.spacing.scale) ? new Set(ctx.contract.tokens.spacing.scale.map(Number)) : null;
   for (const f of ctx.files) {
-    if (scale && !isTokenDefFile(f.rel) && /\.(css|scss|vue|tsx|jsx|html|svelte)$/i.test(f.rel)) {
+    if (scale && !isTokenDefFile(f.rel) && STYLE_MARKUP_RE.test(f.rel)) {
       let m0; SPACING_RE.lastIndex = 0;
       const off = [];
       while ((m0 = SPACING_RE.exec(f.text)) !== null) {
@@ -126,7 +137,17 @@ function ruleCHK02(ctx) {
       if (off.length) findings.push({ id: 'CHK-02', severity: 'warning', confidence: 'certain', rule: 'magic-spacing', evidence: { file: f.rel, line: off[0].line, detail: off.length + ' 处间距不在 contract spacing.scale（如 ' + off.slice(0, 3).map((b) => b.v + 'px').join(', ') + '）' }, fix_hint: '使用 scale 内档位；确需新档位先入契约', verify: '重跑 checks.mjs，CHK-02 magic-spacing 清零' });
     }
     if (isTokenDefFile(f.rel)) continue;
-    if (!/\.(css|scss|vue|tsx|jsx|ts|js|html|svelte|astro)$/i.test(f.rel)) continue;
+    // v0.2：契约存在时，直接使用 Tailwind 原生调色板类 = off-token（E1: bg-emerald-600 逃逸案例）
+    if (ctx.contract && MARKUP_RE.test(f.rel)) {
+      let cm; TW_COLOR_CLASS_RE.lastIndex = 0;
+      const raw = new Set();
+      while ((cm = TW_COLOR_CLASS_RE.exec(f.text)) !== null) {
+        if (!TW_NON_COLOR_MID.has(cm[1]) && TW_DEFAULT_PALETTE.has(cm[1])) raw.add(cm[1] + '-' + cm[2]);
+        if (raw.size >= 8) break;
+      }
+      if (raw.size) findings.push(makeFinding('CHK-02', { severity: 'warning', confidence: 'heuristic', rule: 'off-token-color-class', file: f.rel, line: 0, detail: 'Tailwind 原生调色板类 ' + [...raw].slice(0, 6).join(', ') + '（契约已定义颜色体系时应走语义 token）', fixHint: '映射到 contract tokens（如 success/primary/ink 系）或在契约显式登记该色', verify: '重跑 checks.mjs，CHK-02 off-token-color-class 清零或记例外' }));
+    }
+    if (!WITH_JS_RE.test(f.rel)) continue;
     let m, count = 0, firstLine = 0;
     HEX_RE.lastIndex = 0;
     while ((m = HEX_RE.exec(f.text)) !== null) {
@@ -143,7 +164,7 @@ function ruleCHK03(ctx) {
   const base = (ctx.contract && ctx.contract.tokens && ctx.contract.tokens.spacing && ctx.contract.tokens.spacing.base) || 4;
   const findings = [];
   for (const f of ctx.files) {
-    if (!/\.(css|scss|vue|tsx|jsx|html|svelte)$/i.test(f.rel)) continue;
+    if (!STYLE_MARKUP_RE.test(f.rel)) continue;
     let m; SPACING_RE.lastIndex = 0;
     const bad = [];
     while ((m = SPACING_RE.exec(f.text)) !== null) {
@@ -162,14 +183,26 @@ function ruleCHK04(ctx) {
   const allowed = new Set(scale.map(Number));
   const findings = [];
   for (const f of ctx.files) {
-    if (!/\.(css|scss|vue|tsx|jsx|html)$/i.test(f.rel)) continue;
+    if (isTokenDefFile(f.rel)) continue;
+    if (!STYLE_MARKUP_RE.test(f.rel)) continue;
     let m; FONTSIZE_RE.lastIndex = 0;
     const bad = [];
     while ((m = FONTSIZE_RE.exec(f.text)) !== null) {
       if (!allowed.has(parseFloat(m[1]))) bad.push({ v: m[1], line: lineOfIndex(f.text, m.index) });
       if (bad.length >= 10) break;
     }
-    if (bad.length) findings.push({ id: 'CHK-04', severity: 'warning', confidence: 'heuristic', rule: 'type-scale', evidence: { file: f.rel, line: bad[0].line, detail: bad.length + ' 处 font-size 不在 contract 阶梯（如 ' + bad.slice(0, 3).map((b) => b.v + 'px').join(', ') + '）' }, fix_hint: '使用 scale 内字号；新档位先进契约再使用', verify: '重跑 checks.mjs，CHK-04 通过' });
+    if (bad.length) findings.push(makeFinding('CHK-04', { severity: 'warning', rule: 'type-scale', file: f.rel, line: bad[0].line, detail: bad.length + ' 处 font-size 不在 contract 阶梯（如 ' + bad.slice(0, 3).map((b) => b.v + 'px').join(', ') + '）', fixHint: '使用 scale 内字号；新档位先进契约再使用', verify: '重跑 checks.mjs，CHK-04 通过' }));
+    // v0.2：Tailwind 字号类（text-lg=18px 等）对照阶梯（E1: text-lg 逃逸案例）
+    if (MARKUP_RE.test(f.rel)) {
+      let cm; TW_TEXT_CLASS_RE.lastIndex = 0;
+      const cbad = [];
+      while ((cm = TW_TEXT_CLASS_RE.exec(f.text)) !== null) {
+        const px = TW_TEXT_SIZE[cm[1]];
+        if (px && !allowed.has(px)) cbad.push({ v: 'text-' + cm[1] + '=' + px + 'px', line: lineOfIndex(f.text, cm.index) });
+        if (cbad.length >= 10) break;
+      }
+      if (cbad.length) findings.push(makeFinding('CHK-04', { severity: 'warning', confidence: 'heuristic', rule: 'type-scale', file: f.rel, line: cbad[0].line, detail: 'Tailwind 字号类 ' + cbad.slice(0, 3).map((b) => b.v).join(', ') + ' 不在 contract 阶梯', fixHint: '改用阶梯内档位（如 text-base/text-xl），或先在契约 scale 登记该字号', verify: '重跑 checks.mjs，CHK-04 通过' }));
+    }
   }
   return findings;
 }
@@ -191,7 +224,7 @@ function ruleCHK05(ctx) {
 function ruleCHK06(ctx) {
   const findings = [];
   for (const f of ctx.files) {
-    if (!/\.(html|vue|tsx|jsx|svelte|astro)$/i.test(f.rel)) continue;
+    if (!MARKUP_RE.test(f.rel)) continue;
     const lines = f.text.split('\n');
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
@@ -208,7 +241,7 @@ function ruleCHK07(ctx) {
   const findings = [];
   const widthRe = /(?:^|[^-])width\s*:\s*(\d{3,})px/gi;
   for (const f of ctx.files) {
-    if (!/\.(css|scss|vue|tsx|jsx|html)$/i.test(f.rel)) continue;
+    if (!STYLE_MARKUP_RE.test(f.rel)) continue;
     let m; widthRe.lastIndex = 0;
     while ((m = widthRe.exec(f.text)) !== null) {
       const line = f.text.slice(Math.max(0, m.index - 200), m.index + 200);
@@ -267,4 +300,4 @@ async function main() {
   return 0;
 }
 
-main().then((c) => process.exit(c)).catch((e) => { console.error('vismith-checks: ' + e.message); process.exit(2); });
+runMain(main, 'vismith-checks');

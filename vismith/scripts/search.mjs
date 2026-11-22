@@ -2,11 +2,9 @@
 // Usage: node scripts/search.mjs "<query>" [--category C] [--product-type P] [--tech T] [--kind K] [--top N] [--min-score S] [--json]
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { parseFrontmatter, validateEntryMeta, FrontmatterError } from './lib/frontmatter.mjs';
+import { parseFrontmatter, validateEntryMeta } from './lib/frontmatter.mjs';
+import { SKILL_ROOT, runMain } from './lib/cli.mjs';
 
-const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
-const SKILL_ROOT = path.dirname(SCRIPTS_DIR);
 const KNOWLEDGE_DIR = path.join(SKILL_ROOT, 'assets', 'knowledge');
 
 function usage() {
@@ -187,4 +185,4 @@ async function main() {
   return 0;
 }
 
-main().then((c) => process.exit(c)).catch((e) => { console.error('vismith-search: ' + e.message); process.exit(2); });
+runMain(main, 'vismith-search');

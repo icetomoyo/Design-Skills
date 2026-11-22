@@ -2,11 +2,9 @@
 // Commands: init --dir D | validate F | extract --dir D [--out F] | show F [--section S]
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
 import { walkFiles, readText } from './lib/fsutil.mjs';
+import { SKILL_ROOT, runMain } from './lib/cli.mjs';
 
-const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
-const SKILL_ROOT = path.dirname(SCRIPTS_DIR);
 const SCHEMA_PATH = path.join(SKILL_ROOT, 'assets', 'contract.schema.json');
 const TEMPLATE_PATH = path.join(SKILL_ROOT, 'assets', 'templates', 'contract.template.json');
 const CANON_PRECEDENCE = ['invariants', 'a11y_hard', 'project_constraints', 'tokens', 'style_preferences'];
@@ -98,7 +96,7 @@ function extractTailwindTheme(text) {
       if (c === '{') { depth++; started = true; }
       else if (c === '}') { depth--; if (started && depth === 0) { end = i; break; } }
     }
-    const block = text.slice(idx, end);
+    const block = text.slice(idx, end + 1); // 含闭合 }，否则块尾属性失去 [,}] 终止符被 propRe 丢弃（v0.1 off-by-one）
     const propRe = /([A-Za-z0-9_.\-]+)\s*:\s*('([^']*)'|"([^"]*)"|\[[^\]]{0,200}\])\s*[,}]/g;
     let m;
     while ((m = propRe.exec(block)) !== null) {
@@ -157,15 +155,32 @@ async function cmdExtract(dir, outFile) {
     const toPx = (v) => { const m2 = /^([\d.]+)(rem|px|em)?$/.exec(String(v).trim()); if (!m2) return NaN; const n2 = parseFloat(m2[1]); return (m2[2] === 'rem' || m2[2] === 'em') ? Math.round(n2 * 16 * 10) / 10 : n2; };
     if (Object.keys(theme.fontSize).length) { const sizes = Object.values(theme.fontSize).map(toPx).filter((n2) => !isNaN(n2) && n2 > 0).sort((a, b) => a - b); if (sizes.length) draft.tokens.typography.scale = [...new Set(sizes)]; }
     if (Object.keys(theme.borderRadius).length) { draft.tokens.radius = Object.fromEntries(Object.entries(theme.borderRadius).map(([k, v]) => [k, toPx(v)]).filter((pair) => !isNaN(pair[1]))); }
-    if (Object.keys(theme.spacing).length) { const s = Object.values(theme.spacing).map(toPx).filter((n2) => !isNaN(n2) && n2 > 0 && n2 <= 128); if (s.length) draft.tokens.spacing.scale = [...new Set(s)].sort((a, b) => a - b); }
+    if (Object.keys(theme.spacing).length) {
+      // v0.2 默认刻度判定（E1 发现 #1）：数字键 n 的 Tailwind 默认值 = n*0.25rem = 4n px
+      const vals = [], defaulted = [], drifted = [];
+      for (const [k, v] of Object.entries(theme.spacing)) {
+        const px = toPx(v);
+        if (isNaN(px) || px <= 0 || px > 128) continue;
+        const kn = parseFloat(k);
+        if (/^\d+(\.\d+)?$/.test(String(k).trim())) {
+          if (Math.abs(px - 4 * kn) < 0.01) { defaulted.push(k + '=' + px + 'px'); continue; }
+          drifted.push(k + '=' + v + '→' + px + 'px（默认键 ' + k + ' 应为 ' + 4 * kn + 'px）');
+        }
+        vals.push(px);
+      }
+      if (defaulted.length) notes.push('spacing：' + defaulted.length + ' 项与 Tailwind 默认刻度等值（键 n = n×0.25rem），视为未自定义剔除：' + defaulted.slice(0, 5).join(', '));
+      if (drifted.length) notes.push('spacing 语义漂移警告：' + drifted.slice(0, 5).join('；') + ' —— 数字键重定义默认刻度会改变 p-n 含义，建议语义键或标准 rem 公式（见 references/contract.md）');
+      if (vals.length) draft.tokens.spacing.scale = [...new Set(vals)].sort((a, b) => a - b);
+    }
   } else {
     notes.push('未找到 tailwind.config.*');
   }
   const cssVars = extractCssVars(read);
   if (Object.keys(cssVars.colors).length) { draft.tokens.colors = Object.assign({}, cssVars.colors, draft.tokens.colors); notes.push('CSS 变量颜色 ' + Object.keys(cssVars.colors).length + ' 个'); }
+  if (notes.length) draft.notes = notes; // 随草稿持久化，转正前人工审阅
   const out = JSON.stringify(draft, null, 2) + '\n';
   if (outFile) { await fs.writeFile(outFile, out, 'utf8'); console.log('草稿已写入 ' + outFile + '；' + notes.join('；')); }
-  else console.log(out);
+  else { console.log(out); if (notes.length) console.error('// notes: ' + notes.join('； ')); }
   return 0;
 }
 
@@ -188,4 +203,4 @@ async function main() {
   return cmd ? 2 : 0;
 }
 
-main().then((c) => process.exit(c)).catch((e) => { console.error('vismith-contract: ' + e.message); process.exit(2); });
+runMain(main, 'vismith-contract');

@@ -1,10 +1,7 @@
 // Vismith - token budget validation (ADR-13 / H6). Dev tool: exit 1 on violation.
 import path from 'node:path';
 import fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-
-const SCRIPTS_DIR = path.dirname(fileURLToPath(import.meta.url));
-const SKILL_ROOT = path.dirname(SCRIPTS_DIR);
+import { SKILL_ROOT, runMain } from './lib/cli.mjs';
 
 async function main() {
   const raw = JSON.parse(await fs.readFile(path.join(SKILL_ROOT, 'assets', 'budget.json'), 'utf8'));
@@ -46,4 +43,4 @@ async function main() {
   return 0;
 }
 
-main().then((c) => process.exit(c)).catch((e) => { console.error('vismith-budget: ' + e.message); process.exit(2); });
+runMain(main, 'vismith-budget');

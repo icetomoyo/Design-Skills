@@ -14,9 +14,22 @@
   结构化 JSON 输出，heuristic 与 certain 分级，支持豁免配置
 - **项目设计记忆**：.vismith/ 内契约、决策日志、例外、审查报告，git 可追踪
 
-## 安装（npx skills）
+## 安装
+
+### 方式一：本地 .skill 包（已实测）
+
+用 KodaX skill-creator 脚本打包并安装（`<dest>` 换成宿主 skills 目录；打包前先确保输出目录存在，脚本不会自动创建）：
+
+    node <kodax>/dist/builtin/skill-creator/scripts/package-skill.js vismith --output eval/dist/vismith.skill
+    node <kodax>/dist/builtin/skill-creator/scripts/install-skill.js eval/dist/vismith.skill --dest <宿主 skills 目录>
+
+实测记录（含隔离安装核对清单与已知问题）见 `eval/dist/install-test-report.md`。
+
+### 方式二：远程 npx skills add（[待验证]）
 
     npx skills add <owner>/Design-Skills/vismith
+
+依赖仓库推送到 GitHub（`<owner>/Design-Skills`），推送上线前此链路不可用，尚未实测。
 
 或直接复制 vismith/ 目录到宿主的 skills 目录。零 npm 运行时依赖，Node >= 18。
 
@@ -53,4 +66,4 @@
 
 已实现：路由、契约（init/extract/validate/show）、检索、7 条检查、记忆协议、token 预算、测试套件。
 未实现（路线图见 PRD §9）：ui-ux-pro-max 知识库改编扩容、视觉审查闭环（v0.3）、有界自动修复（v0.3）、
-跨页一致性（v0.4）、完整 A/B/C/D 对照评测（v0.4）。**本 README 的安装链路（npx skills add）尚未实测。**
+跨页一致性（v0.4）、完整 A/B/C/D 对照评测（v0.4）。**本地 .skill 打包/隔离安装链路已实测通过（见 `eval/dist/install-test-report.md`）；远程 `npx skills add` 在仓库推送 GitHub 前不可用，尚未实测 [待验证]。**

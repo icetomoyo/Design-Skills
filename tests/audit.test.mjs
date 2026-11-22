@@ -92,3 +92,34 @@ test('CHK-02 magic-spacing / CHK-04 type-scale / CHK-06 empty-label', async () =
   assert.ok(rules.has('type-scale'), '缺 type-scale：' + JSON.stringify([...rules]));
   assert.ok(rules.has('empty-label'), '缺 empty-label：' + JSON.stringify([...rules]));
 });
+
+test('v0.2: CHK-02 off-token-color-class 与 CHK-04 text-* 类名层', async () => {
+  const dir = await tmp();
+  const c = path.join(dir, 'c.json');
+  const c2 = { ...MIN_CONTRACT, tokens: { ...MIN_CONTRACT.tokens, typography: { scale: [12, 14, 16, 20, 24, 30] } } };
+  await fs.writeFile(c, JSON.stringify(c2));
+  const jsx = path.join(dir, 'App.jsx');
+  await fs.writeFile(jsx, 'export default () => (\n  <div className="p-4 bg-emerald-600 text-ink-600 text-lg text-base">x</div>\n);\n');
+  const r = await run(['scripts/checks.mjs', jsx, '--contract', c, '--json']);
+  const out = JSON.parse(r.stdout);
+  const rules = new Set(out.findings.map((f) => f.rule));
+  assert.ok(rules.has('off-token-color-class'), '应命中 bg-emerald-600：' + JSON.stringify([...rules]));
+  assert.ok(!out.findings.some((f) => f.rule === 'off-token-color-class' && f.evidence.detail.includes('ink-600')), '自定义语义名 bg-ink-600 不应误报');
+  assert.ok(out.findings.some((f) => f.rule === 'type-scale' && f.evidence.detail.includes('text-lg')), 'text-lg=18px 不在阶梯应命中');
+  assert.ok(!out.findings.some((f) => f.rule === 'type-scale' && f.evidence.detail.includes('text-base')), 'text-base=16px 在阶梯内不应命中');
+});
+
+test('v0.2: extract spacing 默认刻度判定与漂移警告', async () => {
+  const dir = await tmp();
+  const proj = path.join(dir, 'proj');
+  await fs.mkdir(proj, { recursive: true });
+  await fs.writeFile(path.join(proj, 'tailwind.config.js'), "export default { theme: { extend: { spacing: { 2: '0.5rem', 4: '4px', tight: '6px' } } } }\n");
+  const r = await run(['scripts/contract.mjs', 'extract', '--dir', proj]);
+  const txt = r.stdout;
+  assert.ok(txt.includes('等值') && txt.includes('2='), '应剔除默认刻度项 2=0.5rem：' + txt.slice(0, 300));
+  assert.ok(txt.includes('语义漂移'), '应对 4=4px 给漂移警告：' + txt.slice(0, 300));
+  const m = /"spacing"[\s\S]*?"scale"\s*:\s*\[([^\]]*)\]/.exec(txt);
+  assert.ok(m, 'draft 应含 spacing.scale');
+  assert.ok(m[1].includes('4') && m[1].includes('6'), '漂移值 4px 与语义键 6px 应保留在 scale：' + m[1]);
+  assert.ok(!/\b8\b/.test(m[1]), '默认等值项 8px（键2）应被剔除：' + m[1]);
+});

@@ -29,3 +29,9 @@ node scripts/contract.mjs extract --dir <项目> --out .vismith/contract.draft.j
 ## 5. 优先级（固定，不可配置）
 invariants > a11y 硬规则 > 项目约束 > tokens > 风格偏好
 冲突时高优先级胜出；胜负关系本身也是一条 decision。
+
+## 6. Tailwind 刻度纪律（v0.2，E1 发现）
+- **勿用数字键重定义默认刻度**：`spacing: { 4: '4px' }` 会把 p-4 从 16px 改成 4px（默认键 n = n×0.25rem）。自定义间距用语义键（tight/comfy/roomy）或保持标准 rem 公式。
+- extract 会对等值默认刻度项自动剔除并留 note；对语义漂移的数字键给警告 note——转正契约时应消除漂移（改语义键或改回标准值），不要原样收录。
+- 字号同理：代码中 `text-lg` 等类（=18px）必须能在 typography.scale 中对上；否则先在契约登记 18 或改用阶内档位（checks CHK-04 已扫类名）。
+- 颜色类同纪律：契约存在时直接用 Tailwind 原生调色板类（bg-emerald-600 等）视为 off-token（CHK-02 off-token-color-class），应映射语义 token 或在契约显式登记。
