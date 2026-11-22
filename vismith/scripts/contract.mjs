@@ -4,6 +4,7 @@ import path from 'node:path';
 import fs from 'node:fs/promises';
 import { walkFiles, readText } from './lib/fsutil.mjs';
 import { SKILL_ROOT, runMain } from './lib/cli.mjs';
+import { extractTailwindTheme } from './lib/twtheme.mjs';
 
 const SCHEMA_PATH = path.join(SKILL_ROOT, 'assets', 'contract.schema.json');
 const TEMPLATE_PATH = path.join(SKILL_ROOT, 'assets', 'templates', 'contract.template.json');
@@ -82,33 +83,7 @@ async function cmdInit(dir, force) {
   return 0;
 }
 
-// ---- heuristic extractors (text-only, never eval user code) ----
-function extractTailwindTheme(text) {
-  const out = { colors: {}, fontFamily: {}, fontSize: {}, borderRadius: {}, spacing: {} };
-  // simpler: find "key: {" blocks at any depth, then scan quoted props inside until matching close heuristically
-  const sections = { colors: out.colors, fontFamily: out.fontFamily, fontSize: out.fontSize, borderRadius: out.borderRadius, spacing: out.spacing };
-  for (const key of Object.keys(sections)) {
-    const idx = text.indexOf(key + ':');
-    if (idx === -1) continue;
-    let depth = 0, started = false, end = idx;
-    for (let i = idx; i < text.length && i < idx + 20000; i++) {
-      const c = text[i];
-      if (c === '{') { depth++; started = true; }
-      else if (c === '}') { depth--; if (started && depth === 0) { end = i; break; } }
-    }
-    const block = text.slice(idx, end + 1); // 含闭合 }，否则块尾属性失去 [,}] 终止符被 propRe 丢弃（v0.1 off-by-one）
-    const propRe = /([A-Za-z0-9_.\-]+)\s*:\s*('([^']*)'|"([^"]*)"|\[[^\]]{0,200}\])\s*[,}]/g;
-    let m;
-    while ((m = propRe.exec(block)) !== null) {
-      const name = m[1].replace(/^['"]|['"]$/g, '');
-      const val = (m[3] !== undefined ? m[3] : (m[4] !== undefined ? m[4] : m[2]));
-      if (name === key) continue;
-      if (sections[key] && !sections[key][name]) sections[key][name] = val.length > 80 ? val.slice(0, 80) : val;
-    }
-  }
-  return out;
-}
-
+// ---- heuristic extractors（extractTailwindTheme 已抽至 lib/twtheme.mjs 共享）----
 function extractCssVars(uiFiles) {
   const vars = { colors: {}, fonts: {}, radius: {}, spacing: {} };
   const varRe = /--([A-Za-z0-9-]+)\s*:\s*([^;]+);/g;

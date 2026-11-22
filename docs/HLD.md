@@ -116,3 +116,21 @@ P2（可延）：eval/ 场景集、检索回归基线固化
 ## 6. 兼容性
 - Node >= 18（fs/promises、URL、structuredClone）；Windows/Unix 路径均用 path.join/normalize；无 shebang
 - 安装链路：仓库根布局即 skills add 可消费形态（Phase 1 impeccable 实证：tracked 目录零构建可装）；skills CLI 子路径行为 W5 实测
+
+## 7. v0.3 capture.mjs 视觉闭环设计（草案，2026-11-22；行为借鉴 hallmark render 层，重写不抄代码）
+
+**定位**：可选渲染层检查器。无浏览器时全链路优雅降级（exit 0 + 明确声明），不阻塞静态流程。
+
+**技术路径**：puppeteer-core（devDependencies 不入 skill 包）+ 本机 Chrome 多路径探测（Windows 注册表/Program Files/Unix which；探测失败→降级）。启动参数固定 headless+--force-device-scale-factor=1，杜绝环境漂移。
+
+**采集**：对目标页面按 8 档宽度（320/375/480/768/1024/1280/1536/1920）截图 + DOM 度量（元素盒模型/文本节点前景背景），产物写目标项目 `.vismith/captures/<date>-<w>.png`（git 可追踪，供多模态复核）。
+
+**确定性视觉 gate**（把视觉问题转为可计算阈值，hallmark 思想）：
+- V-01 渲染对比度：文本节点 fg/bg 取 DOM 计算样式（隐藏文字取有效背景中位数）→ WCAG 实算（与 CHK-01 同数学）
+- V-02 hero 占比：首屏主视觉宽高比区间检查
+- V-03 fold 内容密度：首屏词数上限（按产品类别分档，marketing 宽/data-intensive 窄）
+- V-04 横向溢出：document.scrollWidth > viewport 视为失败（CHK-07 的渲染级版本）
+
+**输出协议**：与 checks.mjs 同构 findings schema（id V-xx/severity/confidence/tier/evidence{viewport+selector}/fix_hint/verify），复用 Floor/Reflex 豁免通道与 rules.json。
+
+**边界**：不开发视觉模型；截图仅供宿主多模态按 critique.md 协议复核；不做像素 diff 判设计好坏（只测可计算阈值）。实现排期 v0.3 波 2。

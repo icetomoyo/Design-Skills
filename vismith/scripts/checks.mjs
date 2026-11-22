@@ -5,6 +5,7 @@ import fs from 'node:fs/promises';
 import { walkFiles, readText, isUiSource, lineOfIndex } from './lib/fsutil.mjs';
 import { parseColor, contrastRatio, fmtRatio } from './lib/colors.mjs';
 import { SKILL_ROOT, runMain } from './lib/cli.mjs';
+import { flattenColorShades } from './lib/twtheme.mjs';
 
 function parseArgs(argv) {
   const opts = { paths: [], rules: null, json: false, strict: false };
@@ -110,7 +111,27 @@ function ruleCHK01(ctx) {
       const r = contrastRatio(a, b);
       if (r < th) findings.push({ id: 'CHK-01', severity: 'error', confidence: 'certain', rule: 'contrast', evidence: { file: '.vismith/contract.json', line: 0, detail: label + ' = ' + fmtRatio(r) + ' < ' + th }, fix_hint: '调整该 token 档位使对比度 >= 4.5:1（用更深的文本中性色或更浅背景）', verify: 'node scripts/contract.mjs validate 后重跑 checks.mjs，CHK-01 无 error' });
     }
-    if (!findings.length && pairs.length) findings.push({ id: 'CHK-01', severity: 'info', confidence: 'certain', rule: 'contrast', evidence: { file: '.vismith/contract.json', line: 0, detail: 'contract 颜色配对共 ' + pairs.length + ' 组，全部 >= ' + th + ':1' }, fix_hint: '', verify: '' });
+    // v0.3 类名×surface 交叉验证（E2 仲裁坐实：契约未登记的色档曾使检查器全盲）
+    const twFile = ctx.files.find((f) => /^tailwind\.config\.(js|ts|cjs|mjs)$/i.test(path.basename(f.rel)));
+    if (twFile) {
+      const shades = flattenColorShades(twFile.text);
+      const textClassRe = /(?:^|[\s"'`:])(?:placeholder:)?text-([a-z][a-z0-9]*?)-(\d{2,3})\b/g;
+      for (const f of ctx.files) {
+        if (!MARKUP_RE.test(f.rel) || f === twFile) continue;
+        let cm; textClassRe.lastIndex = 0;
+        const bad = new Map();
+        while ((cm = textClassRe.exec(f.text)) !== null) {
+          const hex = shades[cm[1] + '-' + cm[2]];
+          const col = hex ? parseColor(hex) : null;
+          if (!col) continue;
+          const r = contrastRatio(col, surface);
+          if (r < 4.5) bad.set(cm[1] + '-' + cm[2], Math.min(bad.get(cm[1] + '-' + cm[2]) ?? 99, r));
+          if (bad.size >= 8) break;
+        }
+        if (bad.size) findings.push(makeFinding('CHK-01', { severity: 'warning', confidence: 'heuristic', rule: 'contrast-class', file: f.rel, line: 0, detail: '文本色档类 ' + [...bad].map(([k, r]) => k + ' ' + fmtRatio(r)).join('；') + '（对 surface ' + (c.surface || '#FFFFFF') + ' < 4.5:1；若用于深色底可留痕豁免）', fixHint: '换更深文本档入契约，或该处确为深底/非正文场景时以具体理由豁免', verify: '重跑 checks.mjs，CHK-01 contrast-class 清零或已留痕' }));
+      }
+    }
+    if (!findings.length && pairs.length) findings.push(makeFinding('CHK-01', { severity: 'info', confidence: 'certain', rule: 'contrast', file: '.vismith/contract.json', line: 0, detail: 'contract 颜色配对共 ' + pairs.length + ' 组，全部 >= ' + th + ':1', fixHint: '', verify: '' }));
     return findings;
   }
   // no contract: line-level fg/bg pairing heuristic

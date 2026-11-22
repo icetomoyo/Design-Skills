@@ -135,6 +135,26 @@ test('v0.2 波2: tier 分级豁免（floor 拒绝 / reflex 理由不足无效 / 
   assert.ok(out2.findings.every((f) => typeof f.tier === 'string'), 'findings 应带 tier 字段');
 });
 
+test('v0.3: CHK-01 contrast-class 类名×surface 交叉验证（E2 盲区回归）', async () => {
+  const dir = await tmp();
+  const proj = path.join(dir, 'proj');
+  await fs.mkdir(proj, { recursive: true });
+  const c = { ...MIN_CONTRACT, tokens: { ...MIN_CONTRACT.tokens, colors: { neutrals: ['#475569'], surface: '#FFFFFF' } } };
+  const cpath = path.join(dir, 'c.json');
+  await fs.writeFile(cpath, JSON.stringify(c));
+  await fs.writeFile(path.join(proj, 'tailwind.config.js'), "export default { theme: { extend: { colors: { ink: { 400: '#94A3B8', 900: '#0F172A' } } } } }\n");
+  const jsx = path.join(proj, 'App.jsx');
+  await fs.writeFile(jsx, 'export default () => (\n  <div className="text-ink-400 text-ink-900">x</div>\n);\n');
+  const r = await run(['scripts/checks.mjs', jsx, path.join(proj, 'tailwind.config.js'), '--contract', cpath, '--json']);
+  const out = JSON.parse(r.stdout);
+  const hit = out.findings.find((f) => f.rule === 'contrast-class');
+  assert.ok(hit, 'text-ink-400 对白底 ~2.56:1 应命中（E2 盲区）：' + JSON.stringify(out.findings.map((f) => f.rule)));
+  assert.ok(hit.evidence.detail.includes('ink-400'), hit.evidence.detail);
+  assert.ok(!hit.evidence.detail.includes('ink-900'), 'ink-900 高对比不应命中');
+  assert.equal(hit.severity, 'warning');
+  assert.equal(hit.tier, 'reflex');
+});
+
 test('v0.2 波2: CHK-08/09/10 新规则正反例', async () => {
   const dir = await tmp();
   const bad = path.join(dir, 'bad.html');

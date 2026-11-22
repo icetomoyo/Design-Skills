@@ -21,6 +21,7 @@ node scripts/checks.mjs <目标> --contract .vismith/contract.json --json
 - 信息密度：与类别/意图轴匹配度（admin 过疏、营销页过密都是问题）
 - 一致性：同类组件样式/间距/文案语气一致；与 contract 偏离处列出
 - 状态完整性：空/载/错/成
+- 弹层焦点三件套（硬 checklist，E2 发现 #2）：凡 aria-modal/role="dialog" 弹层逐个键盘走查三项——Tab 圈定（焦点不逃逸出弹层，首尾循环互跳）、Esc 关闭、关闭后焦点归还触发器；缺一即缺陷，按"问题"报而非"建议"（E2 实证：S4-seedB 三处 aria-modal 仅 Esc+归还仍扣分）
 - 文案：与 copy-tone 知识对照（无 hype、有具体性）
 每条输出：发现 | 证据（文件:行 或 "视觉观察"）| 置信度（高/中/低）| 建议。
 低置信度纯审美判断必须写"建议"而非"问题"。
