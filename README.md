@@ -25,11 +25,11 @@
 
 实测记录（含隔离安装核对清单与已知问题）见 `eval/dist/install-test-report.md`。
 
-### 方式二：远程 npx skills add（[待验证]）
+### 方式二：远程 npx skills add（已实测）
 
-    npx skills add <owner>/Design-Skills/vismith
+    npx skills add icetomoyo/Design-Skills --agent claude-code -y
 
-依赖仓库推送到 GitHub（`<owner>/Design-Skills`），推送上线前此链路不可用，尚未实测。
+仓库已在 GitHub（icetomoyo/Design-Skills）；CLI 自动发现子目录中的 vismith。`--agent` 从其 79 个目标中选（claude-code/codex/cursor/opencode/windsurf/universal…；非交互必带 `-y`）。实测：克隆→发现→安装 68 文件，SKILL.md 与源逐字节一致（仅 LF→CRLF 规范化）。详见 `eval/dist/remote-install-test.md`。
 
 或直接复制 vismith/ 目录到宿主的 skills 目录。零 npm 运行时依赖，Node >= 18。
 
@@ -66,4 +66,4 @@
 
 已实现：路由、契约（init/extract/validate/show）、检索、10 条检查（含 Floor/Reflex 分级豁免）、记忆协议、token 预算、测试套件。
 未实现（路线图见 PRD §9）：ui-ux-pro-max 知识库改编扩容、视觉审查闭环（v0.3）、有界自动修复（v0.3）、
-跨页一致性（v0.4）、完整 A/B/C/D 对照评测（v0.4）。**本地 .skill 打包/隔离安装链路已实测通过（见 `eval/dist/install-test-report.md`）；远程 `npx skills add` 在仓库推送 GitHub 前不可用，尚未实测 [待验证]。**
+跨页一致性（v0.4）、完整 A/B/C/D 对照评测（v0.4，方案见 eval/E4-PLAN.md）。**本地 .skill 打包/隔离安装与远程 `npx skills add` 两条链路均已实测通过（见 `eval/dist/install-test-report.md` 与 `eval/dist/remote-install-test.md`）。**

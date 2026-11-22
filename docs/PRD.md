@@ -57,7 +57,7 @@
 | ADR-7 | description 写清触发边界：真实代码库 UI 工作，与一次性原型类技能区分 | 与既有 skill 共存，避免误触发 |
 | ADR-8 | 脚本跨平台（Windows/Unix；避免 bash-only 语法，只用跨平台 Node API） | 宿主环境含 Windows |
 | ADR-9 | 评测诚实原则：未跑即标注未跑；对照实验锁定上游版本号；公开对比结论需多 grader + 不确定性声明 | 可信度 |
-| ADR-10 | 仓库布局：skill 置于 vismith/ 子目录，评测资产独立 eval/ | 支持 npx skills add <owner>/Design-Skills/vismith [待验证：skills CLI 子路径安装行为，W5 实测] |
+| ADR-10 | 仓库布局：skill 置于 vismith/ 子目录，评测资产独立 eval/ | npx skills add icetomoyo/Design-Skills 已实测（2026-11-22）：CLI 自动发现子目录 skill，68 文件安装，内容逐字节一致（仅 EOL 规范化）；报告 eval/dist/remote-install-test.md |
 | ADR-11 | 知识策略=四源精选改造：ui-ux-pro-max data/（MIT）+ unslop 全库（CC BY 4.0）+ impeccable 规则行为研究（Apache-2.0）+ hallmark 规则/模式研究（MIT）；ui-styling 子目录（授权链不清）排除；hallmark 图片库不引入 | Phase 1 审计 + hallmark 审计（docs/research/{phase1-synthesis,hallmark}-report.md §2） |
 | ADR-14 | hallmark 精选借鉴（分期落地）：v0.2 检查豁免通道升级为 tier 分级（Floor/Reflex 式）+ 意图轴细化 job 解剖层；v0.3 渲染层确定性几何阈值；v0.4 记忆防趋同（rotation 思想）；E1 评测采用其 harness 模式（expect 块/拒绝正例/repair loop）；budget.mjs 扩展为知识库一致性校验（refcheck 思想） | docs/research/hallmark-report.md §4/§7（MIT，行为借鉴为主） |
 | ADR-12 | 路由二维化：产品类别（六类）x 访客意图（persuade/operate/read/experience，吸收 impeccable Modes） | impeccable 报告 §9：两轴正交互补 |
