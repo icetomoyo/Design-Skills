@@ -66,4 +66,4 @@
 
 已实现：路由、契约（init/extract/validate/show）、检索、10 条检查（含 Floor/Reflex 分级豁免）、记忆协议、token 预算、测试套件。
 未实现（路线图见 PRD §9）：ui-ux-pro-max 知识库改编扩容、视觉审查闭环（v0.3）、有界自动修复（v0.3）、
-跨页一致性（v0.4）。**本地 .skill 打包/隔离安装与远程 `npx skills add` 两条链路均已实测通过；A/B/C/D 四臂对照评测已执行（eval/results/E4-2026-11-22.md：Vismith 臂均 21.75 领先，唯一确定性 12/12 全零）。**
+跨页一致性（v0.4）。**本地 .skill 打包/隔离安装与远程 `npx skills add` 两条链路均已实测通过；两轮四臂对照评测已执行：E4 完备任务书（eval/results/E4-2026-11-22.md，Vismith 21.75 居首、唯一确定性全零）与 E5 极简提示（eval/results/E5-2026-11-23.md，impeccable 23.75 微胜 Vismith 22.88——两轮合并结论见 E5 报告 §3）。**

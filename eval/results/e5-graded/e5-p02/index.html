@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>马尔可夫链 · 概率观测年鉴</title>
+<meta name="description" content="一页讲透马尔可夫链：无记忆性、转移矩阵、随机游走观测台与平稳分布。全部数值由本页实时计算，零外部请求。">
+<style>
+:root{
+  --paper:#edf0ee; --paper-2:#e4eae6; --paper-3:#dae2dd;
+  --ink:#20313e; --ink-2:#48596a; --rule:#b6c2ba; --rule-strong:#8fa198;
+  --verm:#b23a26; --verm-deep:#93301f; --verm-soft:rgba(178,58,38,.30); --verm-faint:rgba(178,58,38,.14);
+  --prussian:#27548d; --ochre:#8a5a1c;
+  --serif:Georgia,"Noto Serif SC","Source Han Serif SC","思源宋体","Songti SC","STSong","SimSun",serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--serif); font-size:17px; line-height:1.92;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+::selection{background:var(--verm); color:var(--paper)}
+:focus{outline:none}
+:focus-visible{outline:2px solid var(--verm); outline-offset:3px; border-radius:2px}
+a{color:var(--ink); text-decoration-color:rgba(32,49,62,.45); text-decoration-thickness:1px; text-underline-offset:.18em}
+  a:hover{color:var(--verm-deep); text-decoration-color:var(--verm)}
+  /* ---------- 滚动条等浏览器表面 ---------- */
+  html{scrollbar-color:var(--rule) transparent; scrollbar-width:thin}::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--paper-3); border:1px solid var(--rule); border-radius:6px}
+::-webkit-scrollbar-thumb:hover{background:var(--rule)}
+input,button,select{font-family:inherit; color:inherit; caret-color:var(--verm)}
+
+/* ---------- 刊头 ---------- */
+.masthead{
+  position:sticky; top:0; z-index:40;
+  background:var(--paper);
+  border-bottom:3px double var(--rule-strong);
+  padding:.55rem 1.25rem .5rem;
+}
+.masthead-in{max-width:1040px; margin:0 auto; display:flex; align-items:baseline; gap:1rem; flex-wrap:wrap}
+.wordmark{font-weight:700; letter-spacing:.14em; font-size:.92rem; white-space:nowrap}
+.wordmark .vol{color:var(--ink-2); font-weight:400; letter-spacing:.08em; margin-left:.6em; font-size:.8rem}
+.toc{margin-left:auto; display:flex; gap:.15rem .9rem; flex-wrap:wrap; font-size:.86rem}
+.toc a{text-decoration:none; color:var(--ink-2); padding:.05rem .1rem}
+.toc a:hover{color:var(--verm-deep); text-decoration:underline; text-underline-offset:.2em}
+
+/* ---------- 版面 ---------- */
+.page{max-width:1040px; margin:0 auto; padding:0 1.25rem}
+.column{max-width:40em; margin:0 auto}
+.breakout{max-width:860px; margin:2.2rem auto}
+.hero{padding:3.2rem 0 1.6rem}
+h1{
+  font-size:clamp(2.5rem,5.2vw,4rem); line-height:1.28; font-weight:700;
+  letter-spacing:.03em; margin:0 0 .4rem;
+}
+.hero-motto{font-size:1.22rem; color:var(--verm-deep); letter-spacing:.06em; margin:0 0 1.6rem; font-weight:400}
+.hero p.lede{font-size:1.06rem}
+h2{
+  font-size:1.62rem; font-weight:700; letter-spacing:.05em;
+  margin:0; line-height:1.4;
+}
+h3{font-size:1.12rem; font-weight:700; letter-spacing:.03em; margin:2.2em 0 .55em}
+section.chapter{padding:3.4rem 0 1rem; border-top:1px solid var(--rule)}
+.ch-head{display:flex; align-items:center; gap:1rem; margin-bottom:1.6rem}
+.seal{
+  flex:none; display:inline-flex; align-items:center; justify-content:center;
+  border:2px solid var(--verm); color:var(--verm);
+  font-size:.98rem; font-weight:700; letter-spacing:.18em;
+  padding:.28rem .6rem .28rem .78rem; border-radius:3px;
+  transform:rotate(-2deg);
+  box-shadow:1px 2px 4px rgba(32,49,62,.16);
+  background:var(--paper);
+  text-indent:.18em;
+}
+p{margin:.9em 0}
+.note{color:var(--ink-2); font-size:.92rem}
+.margin-note{
+  font-size:.86rem; color:var(--ink-2); line-height:1.75;
+  border:1px solid var(--rule); background:var(--paper-2);
+  padding:.7rem .9rem; margin:1.1rem 0;
+}
+@media (min-width:1460px){
+  .page{position:relative}
+  .margin-note{
+    float:right; clear:right; width:15.5rem; margin:1.2rem -14.5rem 1.2rem 1.6rem;
+  }
+}
+
+/* ---------- 图版（plates） ---------- */
+figure.plate{
+  margin:2.2rem 0; background:var(--paper-2);
+  border:1px solid var(--rule-strong);
+  padding:1.4rem 1.4rem 1rem;
+  box-shadow:2px 3px 10px rgba(32,49,62,.08);
+}
+figure.plate figcaption,
+.plate-cap{
+  font-size:.88rem; color:var(--ink-2); margin-top:.9rem;
+  border-top:1px solid var(--rule); padding-top:.6rem; line-height:1.7;
+}
+.plate-no{color:var(--verm-deep); font-weight:700; letter-spacing:.1em; margin-right:.5em}
+figure.plate svg{display:block; width:100%; height:auto}
+@media (max-width:640px){
+  figure.plate svg text{font-size:20px}
+  figure.plate svg text.svg-note{font-size:15px}
+}
+
+/* ---------- 朱丝栏表格 ---------- */
+.table-scroll{overflow-x:auto; margin:1.6rem 0}
+table.led{
+  border-collapse:collapse; min-width:100%;
+  font-size:.95rem; line-height:1.6;
+}
+table.led caption{
+  caption-side:top; text-align:left; font-size:.9rem; color:var(--ink-2);
+  padding-bottom:.5rem; letter-spacing:.02em;
+}
+table.led th,table.led td{
+  border:1px solid var(--verm-soft);
+  padding:.42rem .8rem; text-align:right; white-space:nowrap;
+}
+table.led th{background:var(--paper-2); font-weight:700; text-align:center; letter-spacing:.04em}
+table.led th[scope="row"],table.led td.rowhead{text-align:left; font-weight:700; background:var(--paper-2)}
+table.led td{font-variant-numeric:tabular-nums}
+table.led tbody tr:hover td{background:var(--verm-faint)}
+
+/* ---------- 观测台 ---------- */
+.lab{display:grid; grid-template-columns:1fr; gap:1.4rem}
+@media (min-width:780px){.lab{grid-template-columns:minmax(0,1fr) minmax(0,1.15fr)}}
+.panel{
+  border:1px solid var(--rule-strong); background:var(--paper);
+  padding:1.2rem 1.2rem 1.1rem;
+}
+.panel h3{margin:0 0 1rem; font-size:1rem; letter-spacing:.08em; color:var(--ink)}
+.ctl{display:flex; align-items:center; gap:.8rem; margin:.85rem 0; flex-wrap:wrap}
+@media (max-width:520px){
+  .ctl label{flex:1 1 100%}
+}
+.ctl output{flex:none; width:4.2em; text-align:right; font-weight:700; color:var(--verm-deep); font-variant-numeric:tabular-nums}
+input[type="range"]{
+  flex:1; appearance:none; -webkit-appearance:none; height:22px; background:transparent; min-width:6rem;
+}
+input[type="range"]::-webkit-slider-runnable-track{height:2px; background:var(--verm-soft)}
+input[type="range"]::-moz-range-track{height:2px; background:var(--verm-soft)}
+input[type="range"]::-webkit-slider-thumb{
+  appearance:none; -webkit-appearance:none; width:16px; height:16px; margin-top:-7px;
+  background:var(--verm); border:1px solid var(--verm-deep); border-radius:3px;
+  box-shadow:1px 1px 3px rgba(32,49,62,.3); transform:rotate(-4deg); cursor:grab;
+}
+input[type="range"]::-moz-range-thumb{
+  width:16px; height:16px; background:var(--verm); border:1px solid var(--verm-deep);
+  border-radius:3px; box-shadow:1px 1px 3px rgba(32,49,62,.3); cursor:grab;
+}
+.btnrow{display:flex; gap:.7rem; flex-wrap:wrap; margin-top:1.1rem; align-items:center}
+button.stampbtn{
+  font-size:.95rem; letter-spacing:.12em; font-weight:700;
+  padding:.5rem 1.05rem .5rem 1.15rem; text-indent:.1em;
+  background:var(--paper); border:1px solid var(--rule-strong); border-radius:3px;
+  cursor:pointer; transition:background .15s ease-out, border-color .15s ease-out, transform .12s ease-out;
+}
+button.stampbtn:hover{border-color:var(--verm); color:var(--verm-deep); background:var(--verm-faint)}
+button.stampbtn:active{transform:translateY(1px)}
+button.stampbtn.primary{background:var(--verm); border-color:var(--verm-deep); color:#f6f1ea}
+button.stampbtn.primary:hover{background:var(--verm-deep); color:#f6f1ea}
+select#speed{
+  font-size:.9rem; background:var(--paper); border:1px solid var(--rule-strong); border-radius:3px; padding:.35rem .5rem;
+}
+.readout{
+  margin-top:1rem; font-size:.92rem; color:var(--ink-2);
+  border-top:1px solid var(--rule); padding-top:.7rem; min-height:2.6em;
+}
+.readout b{color:var(--ink)}
+.log-empty{color:var(--ink-2); font-style:normal; padding:.4rem 0}
+.ledger{
+  display:flex; flex-wrap:wrap; gap:6px; min-height:58px; align-content:flex-start;
+}
+.cell{
+  width:40px; height:52px; border:1px solid var(--rule);
+  display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
+  background:var(--paper); position:relative;
+}
+.cell svg{width:20px; height:20px}
+.cell .cname{font-size:.68rem; letter-spacing:.15em; line-height:1}
+.cell.sun .cname{color:var(--ochre)}
+.cell.rain .cname{color:var(--prussian)}
+.cell.sun{box-shadow:inset 0 -3px 0 var(--ochre)}
+.cell.rain{box-shadow:inset 0 -3px 0 var(--prussian)}
+.cell.latest{border-color:var(--verm); border-width:2px}
+.cell.latest::after{
+  content:"记"; position:absolute; top:-9px; right:-9px;
+  width:20px; height:20px; background:var(--verm); color:#f6f1ea;
+  font-size:.62rem; display:flex; align-items:center; justify-content:center;
+  border-radius:50%; transform:rotate(8deg);
+  box-shadow:1px 1px 3px rgba(32,49,62,.35);
+}
+.cell.stampin{animation:stampin .3s cubic-bezier(.2,.9,.3,1) both}
+@keyframes stampin{from{transform:scale(1.16) rotate(-5deg); opacity:.35}to{transform:scale(1) rotate(0); opacity:1}}
+@media (prefers-reduced-motion:reduce){
+  .cell.stampin{animation:none}
+  button.stampbtn{transition:none}
+}
+.freq{margin-top:.4rem}
+.freq .frow{display:grid; grid-template-columns:3.2em 1fr 5.4em; gap:.7rem; align-items:center; margin:.7rem 0; font-size:.92rem}
+.freq .track{
+  position:relative; height:20px; background:var(--paper);
+  border:1px solid var(--rule); border-left:none; border-right:none;
+}
+.freq .fill{position:absolute; inset:0 auto 0 0; width:0%; transition:width .4s cubic-bezier(.2,.9,.3,1)}
+@media (prefers-reduced-motion:reduce){.freq .fill{transition:none}}
+.freq .fill.f-sun{background:var(--ochre)}
+.freq .fill.f-rain{background:var(--prussian)}
+.freq .piline{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--verm)}
+.freq .piline::after{
+  content:attr(data-label); position:absolute; top:-1.45em; left:-1.2em;
+  font-size:.68rem; color:var(--verm-deep); white-space:nowrap; letter-spacing:.05em;
+}
+.freq .fval{font-variant-numeric:tabular-nums; text-align:right}
+
+/* ---------- 尾注 ---------- */
+.foot{border-top:3px double var(--rule-strong); margin-top:3.6rem; padding:2.2rem 0 3.4rem}
+.foot h2{font-size:1.3rem}
+.colophon{margin-top:2.4rem; font-size:.86rem; color:var(--ink-2); line-height:1.8}
+.colophon .seal-mini{
+  display:inline-block; border:1.5px solid var(--verm); color:var(--verm);
+  font-size:.72rem; letter-spacing:.2em; padding:.15rem .45rem .15rem .6rem; border-radius:2px;
+  transform:rotate(-3deg); margin-right:.6em; text-indent:.2em;
+}
+.skiplink{position:absolute; left:-999px; top:0; background:var(--paper); padding:.5rem 1rem; z-index:99}
+.skiplink:focus-visible{left:.5rem; top:.5rem}
+.topline{display:flex; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin:0 0 2.6rem}
+.nextprev{display:flex; justify-content:space-between; gap:1rem; margin-top:3rem; font-size:.95rem}
+.nextprev a{text-decoration:none; border-bottom:1px solid var(--rule)}
+.nextprev a:hover{border-color:var(--verm)}
+.katexish{white-space:nowrap; font-family:var(--serif)}
+.katexish sub{font-size:.72em}
+.formula{
+  margin:1.4rem 0; padding:1rem 1.2rem;
+  border:1px solid var(--rule); background:var(--paper-2);
+  font-size:1.04rem; overflow-x:auto;
+}
+</style>
+</head>
+<body>
+<a class="skiplink" href="#main">跳到正文</a>
+
+<header class="masthead">
+  <div class="masthead-in">
+    <div class="wordmark">概率观测年鉴<span class="vol">随机过程观测记录 · 一九〇六年起</span></div>
+    <nav class="toc" aria-label="目次">
+      <a href="#intro">引言</a>
+      <a href="#ch1">状态与转移</a>
+      <a href="#ch2">转移矩阵</a>
+      <a href="#ch3">随机游走观测台</a>
+      <a href="#ch4">平稳分布</a>
+      <a href="#ch5">边界与应用</a>
+      <a href="#notes">尾注</a>
+    </nav>
+  </div>
+</header>
+
+<main id="main" class="page">
+
+  <!-- ================= 卷首 ================= -->
+  <section id="intro" class="hero">
+    <div class="topline">
+      <span class="note">观测对象：有限状态·时齐·离散时间马尔可夫链</span>
+      <span class="note">记录人：本页读者</span>
+    </div>
+    <h1>马尔可夫链</h1>
+    <p class="hero-motto">只看现在，不问过去。</p>
+    <div class="column">
+      <p class="lede">明天的天气几乎只取决于今天：今天晴，明日多半仍晴；今天雨，明日转晴的机会也有限。更早以前的阴晴，影响小到可以忽略。<strong>下一步去哪，只由当前状态和一组固定概率决定</strong>，这类随机过程叫<em>马尔可夫链</em>。它没有记性，长期运行却会安顿进一个确定的比例。本页是一座小型观测台：你可以亲手掷这条链，看频率如何在格线里沉淀成理论值。</p>
+      <aside class="margin-note">1906 年，A. A. 马尔可夫研究普希金《叶甫盖尼·奥涅金》中元音与辅音的交替序列，用它说明了"下一步只依赖当前状态"的模型并不需要各步独立。</aside>
+      <p>全页数值均由页内脚本即时计算：你调整任何概率，矩阵、收敛表与理论值同步重算，不依赖任何外部服务。</p>
+    </div>
+
+    <figure class="plate breakout">
+      <svg viewBox="0 0 760 320" role="img" aria-labelledby="plate1-title plate1-desc">
+        <title id="plate1-title">图版一：两态马尔可夫链「晴/雨」转移图</title>
+        <desc id="plate1-desc">两个状态节点：晴与雨。晴天以 0.90 的概率留在晴、0.10 转雨；雨天以 0.50 留在雨、0.50 转晴。箭头上标注的数值随正文滑杆变化。</desc>
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#20313e"/>
+          </marker>
+          <marker id="arrO" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#8a5a1c"/>
+          </marker>
+          <marker id="arrB" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#27548d"/>
+          </marker>
+        </defs>
+        <!-- 朱丝栏底格 -->
+        <g stroke="rgba(178,58,38,.12)"><line x1="0" y1="60" x2="760" y2="60"/><line x1="0" y1="130" x2="760" y2="130"/><line x1="0" y1="200" x2="760" y2="200"/><line x1="0" y1="270" x2="760" y2="270"/></g>
+        <!-- 自环：晴→晴（上） -->
+        <path id="loop-sun" d="M 218 122 C 200 60, 310 60, 292 122" fill="none" stroke="#8a5a1c" stroke-width="2.2" marker-end="url(#arrO)"/>
+        <text id="lbl-aa" x="255" y="40" text-anchor="middle" font-size="17" font-weight="700" fill="#8a5a1c">晴→晴 a = 0.90</text>
+        <!-- 自环：雨→雨（下） -->
+        <path id="loop-rain" d="M 428 202 C 410 264, 520 264, 502 202" fill="none" stroke="#27548d" stroke-width="2.2" marker-end="url(#arrB)"/>
+        <text id="lbl-rr" x="500" y="298" text-anchor="middle" font-size="17" font-weight="700" fill="#27548d">雨→雨 = 0.50</text>
+        <!-- 交叉：晴→雨（上弧） -->
+        <path id="x-sr" d="M 306 134 C 366 100, 380 96, 432 116" fill="none" stroke="#20313e" stroke-width="2.2" marker-end="url(#arr)"/>
+        <text id="lbl-sr" x="384" y="86" text-anchor="middle" font-size="15.5" fill="#20313e">转雨 = 0.10</text>
+        <!-- 交叉：雨→晴（下弧） -->
+        <path id="x-rs" d="M 432 206 C 380 236, 330 232, 285 206" fill="none" stroke="#20313e" stroke-width="2.2" marker-end="url(#arr)"/>
+        <text id="lbl-rs" x="379" y="256" text-anchor="middle" font-size="15.5" fill="#20313e">转晴 b = 0.50</text>
+        <!-- 节点：晴 -->
+        <g id="node-sun">
+          <circle cx="255" cy="162" r="52" fill="#edf0ee" stroke="#8a5a1c" stroke-width="2.5"/>
+          <g stroke="#8a5a1c" stroke-width="2.4" stroke-linecap="round" fill="none">
+            <circle cx="255" cy="162" r="15" fill="#8a5a1c" stroke="none"/>
+            <line x1="255" y1="132" x2="255" y2="141"/><line x1="255" y1="183" x2="255" y2="192"/>
+            <line x1="225" y1="162" x2="234" y2="162"/><line x1="276" y1="162" x2="285" y2="162"/>
+            <line x1="234" y1="141" x2="240" y2="147"/><line x1="270" y1="177" x2="276" y2="183"/>
+            <line x1="276" y1="141" x2="270" y2="147"/><line x1="240" y1="177" x2="234" y2="183"/>
+          </g>
+          <text x="255" y="240" text-anchor="middle" font-size="18" font-weight="700" fill="#8a5a1c">晴（状态 0）</text>
+        </g>
+        <!-- 节点：雨 -->
+        <g id="node-rain">
+          <circle cx="465" cy="162" r="52" fill="#edf0ee" stroke="#27548d" stroke-width="2.5"/>
+          <g stroke="#27548d" stroke-width="2.4" stroke-linecap="round" fill="none">
+            <path d="M 440 166 a 12 12 0 0 1 3 -23 a 15 15 0 0 1 29 -4 a 12 12 0 0 1 9 21 z" fill="#27548d" stroke="none" transform="translate(-8,-14)"/>
+            <line x1="448" y1="170" x2="444" y2="180"/><line x1="462" y1="170" x2="458" y2="180"/><line x1="476" y1="170" x2="472" y2="180"/>
+          </g>
+          <text x="465" y="240" text-anchor="middle" font-size="18" font-weight="700" fill="#27548d">雨（状态 1）</text>
+        </g>
+        <text x="18" y="306" class="svg-note" font-size="13" fill="#48596a" letter-spacing="2">图版一 · 两态链：四条转移概率之和，每态各自为 1</text>
+      </svg>
+      <figcaption><span class="plate-no">图版一</span>两态马尔可夫链。每个状态出发的箭头概率合计为 1；箭头上的数值由<a href="#ch3">第三章观测台</a>的滑杆驱动，此处即时同步。</figcaption>
+    </figure>
+    <div class="nextprev"><span></span><a href="#ch1">第一章 · 状态与转移 ↓</a></div>
+  </section>
+
+  <!-- ================= 第一章 ================= -->
+  <section id="ch1" class="chapter">
+    <div class="ch-head"><span class="seal" aria-hidden="true">第壹章</span><h2>状态与转移：无记忆性</h2></div>
+    <div class="column">
+      <p>把系统在每个时刻所处的"情况"叫<strong>状态</strong>：天气的{晴, 雨}、掷硬币的{正, 反}、页面上读者的{阅读, 离开}。一条马尔可夫链就是一串随机状态 <span class="katexish">X₀, X₁, X₂, …</span>，它只遵守一条规则：</p>
+      <div class="formula" role="math" aria-label="马尔可夫性公式">
+        P( X<sub>n+1</sub> = j | X<sub>n</sub> = i, X<sub>n−1</sub>, …, X₀ ) = P( X<sub>n+1</sub> = j | X<sub>n</sub> = i )
+      </div>
+      <p>给定"现在"，"过去"对"未来"不再提供任何额外信息。这条性质叫<strong>马尔可夫性</strong>，或<strong>无记忆性</strong>。它比"独立"弱得多：独立序列连今天都不看；马尔可夫链认真地看今天，只是看完就翻篇。</p>
+      <aside class="margin-note">"时齐"指这些概率不随日期改变：一年后的"晴→晴"与今天的"晴→晴"是同一个数。若概率随时间变化，则是非时齐链，本页不展开。</aside>
+      <p>本页只讨论<strong>有限状态、时齐</strong>的链：状态数目有限（图版一是 2 个），转移概率固定不变。这两条限制换来极强的结论：第四章的平稳分布必然存在且可达。</p>
+      <h3>它与独立序列差在哪</h3>
+      <p>每天独立掷一枚偏币：无论今天结果如何，"明日晴"永远是同一个概率，历史被完全无视。而图版一的链里，"明日晴"在晴天是 <b id="ch1-a">0.90</b>、在雨天是 <b id="ch1-b">0.50</b>：链条通过"当前状态"记住了一步历史。这正是它能产生趋势与周期的原因。</p>
+    </div>
+    <div class="nextprev"><a href="#intro">↑ 引言</a><a href="#ch2">第二章 · 转移矩阵 ↓</a></div>
+  </section>
+
+  <!-- ================= 第二章 ================= -->
+  <section id="ch2" class="chapter">
+    <div class="ch-head"><span class="seal" aria-hidden="true">第贰章</span><h2>转移矩阵：把整条链写成一张表</h2></div>
+    <div class="column">
+      <p>把所有转移概率排成矩阵 <b>P</b>：第 i 行第 j 列填"从状态 i 一步到状态 j 的概率"。行的意义是"出发"，列的意义是"到达"。</p>
+    </div>
+    <div class="table-scroll breakout">
+      <table class="led" id="tbl-P">
+        <caption>表 1 · 两态链的转移矩阵（行列顺序均为 晴、雨；随观测台滑杆即时重算）</caption>
+        <thead><tr><th scope="col">今 ⁄ 明</th><th scope="col">晴</th><th scope="col">雨</th><th scope="col">行和</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">晴</th><td class="pv aa">0.9000</td><td class="pv as">0.1000</td><td>1.0000</td></tr>
+          <tr><th scope="row">雨</th><td class="pv bs">0.5000</td><td class="pv br">0.5000</td><td>1.0000</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="column">
+      <h3>读矩阵的三件事</h3>
+      <p><strong>每行之和恒为 1</strong>：明天总要落在某个状态里（表 1 末列是页内校验）。<strong>行就是信念</strong>：读第"晴"行，即已知今天晴时对明日的完整预测。<strong>元素非负</strong>：概率没有负数。反之，任何每行为 1 的非负方阵，都是一条合法马尔可夫链。</p>
+      <p>矩阵还能回答"后天"：两步转移概率是矩阵自乘的积 <b>P</b>²，其 (i,j) 元 = Σ<sub>k</sub> P(i,k)·P(k,j)，也就是把所有可能的中间状态加权求和。</p>
+    </div>
+    <div class="table-scroll breakout">
+      <table class="led" id="tbl-P2">
+        <caption>表 2 · Pⁿ 的行随幂次迅速趋同（数值即时计算；n 为转移步数）</caption>
+        <thead><tr><th scope="col">n</th><th scope="col">自晴→晴</th><th scope="col">自晴→雨</th><th scope="col">自雨→晴</th><th scope="col">自雨→雨</th></tr></thead>
+        <tbody id="p2-body"></tbody>
+      </table>
+    </div>
+    <div class="column">
+      <p class="note">注意表 2 的方向：无论从晴还是从雨出发，各行的两个数随 n 增大走向同一对值。这不是巧合，是第四章的主题。</p>
+    </div>
+    <div class="nextprev"><a href="#ch1">↑ 第一章</a><a href="#ch3">第三章 · 随机游走观测台 ↓</a></div>
+  </section>
+
+  <!-- ================= 第三章 ================= -->
+  <section id="ch3" class="chapter">
+    <div class="ch-head"><span class="seal" aria-hidden="true">第叁章</span><h2>随机游走观测台</h2></div>
+    <div class="column">
+      <p>概率说了不算，掷出来才算。下方观测台把图版一的链交给随机数运行：<strong>掷一步</strong>按当前状态的转移概率抽取明日；<strong>自动运行</strong>按所选节奏连续观测。观测记录逐格盖印，频数板实时累计经验频率，朱红细线是第四章将推导的理论值 π。先跑起来，看它靠近。</p>
+    </div>
+    <figure class="plate breakout" id="lab-plate">
+      <div class="lab">
+        <div class="panel">
+          <h3>控制台</h3>
+          <div class="ctl">
+            <label for="sl-a">晴→晴 概率 a</label>
+            <input type="range" id="sl-a" min="0.05" max="0.95" step="0.01" value="0.90">
+            <output id="ov-a" for="sl-a">0.90</output>
+          </div>
+          <div class="ctl">
+            <label for="sl-b">雨→晴 概率 b</label>
+            <input type="range" id="sl-b" min="0.05" max="0.95" step="0.01" value="0.50">
+            <output id="ov-b" for="sl-b">0.50</output>
+          </div>
+          <div class="btnrow">
+            <button class="stampbtn primary" id="btn-step" type="button">掷一步</button>
+            <button class="stampbtn" id="btn-run" type="button" aria-pressed="false">自动运行</button>
+            <button class="stampbtn" id="btn-reset" type="button">重置观测</button>
+            <label class="note" for="speed" style="margin-left:auto">节奏</label>
+            <select id="speed" aria-label="自动运行节奏">
+              <option value="600" selected>慢</option>
+              <option value="240">中</option>
+              <option value="80">快</option>
+            </select>
+          </div>
+          <p class="readout" id="readout" aria-live="polite">尚无观测记录，掷出第一步。</p>
+        </div>
+        <div class="panel">
+          <h3>频数板</h3>
+          <div class="freq">
+            <div class="frow"><span id="fn-sun">晴</span>
+              <div class="track"><div class="fill f-sun" id="fill-sun"></div><div class="piline" id="pil-sun" data-label="π"></div></div>
+              <span class="fval" id="fv-sun">·</span></div>
+            <div class="frow"><span id="fn-rain">雨</span>
+              <div class="track"><div class="fill f-rain" id="fill-rain"></div><div class="piline" id="pil-rain" data-label="π"></div></div>
+              <span class="fval" id="fv-rain">·</span></div>
+          </div>
+          <p class="note" id="freq-note">频数按本页你亲手掷出的序列累计；朱红线为理论平稳分布（见<a href="#ch4">第四章</a>）。</p>
+          <h3 style="margin-top:1.4rem">观测记录（最近 48 步）</h3>
+          <div class="ledger" id="ledger" aria-hidden="true"><span class="log-empty">空</span></div>
+        </div>
+      </div>
+      <figcaption><span class="plate-no">图版二</span>观测台。记录格以字形与文字标注状态（晴=日轮、雨=雨云，底边色条与位置辅助），不单靠颜色区分；最新一步加盖"记"章。</figcaption>
+    </figure>
+    <div class="column">
+      <h3>两个值得亲手验证的现象</h3>
+      <p><strong>起点会被遗忘</strong>：重置后改为"自动运行"，无论序列从晴还是从雨开始，频数板两条横条最终停在差不多同一处。<strong>参数改变归宿</strong>：把 a 拉到 0.30、b 拉到 0.80，晴雨易势，朱红线随矩阵整体平移：链的长期行为完全写在这两个数里。</p>
+    </div>
+    <div class="nextprev"><a href="#ch2">↑ 第二章</a><a href="#ch4">第四章 · 平稳分布 ↓</a></div>
+  </section>
+
+  <!-- ================= 第四章 ================= -->
+  <section id="ch4" class="chapter">
+    <div class="ch-head"><span class="seal" aria-hidden="true">第肆章</span><h2>平稳分布：无记忆，却有归宿</h2></div>
+    <div class="column">
+      <p>存在这样的概率分布 π：以 π 的比例看今日，明日按 <b>P</b> 转移后比例不变：<span class="katexish">πP = π</span>。它叫<strong>平稳分布</strong>：一旦链条的总体比例到达 π，转移只是保持，不再改变。对两态链可以解出闭式：</p>
+      <div class="formula" role="math" aria-label="两态链平稳分布公式">
+        π<sub>晴</sub> = b ⁄ (1 − a + b) = <b id="pi-sun-f">0.8333</b>，π<sub>雨</sub> = (1 − a) ⁄ (1 − a + b) = <b id="pi-rain-f">0.1667</b>
+      </div>
+      <p class="note">（代入当前滑杆的 a、b；公式推导：令 π₁ = π₁·a + π₂·b 且 π₁ + π₂ = 1。）</p>
+      <p>更惊人的是<strong>收敛</strong>：只要链不困死在某一部分状态里（本页的链做不到这一点：每个状态都能到达彼此），无论从哪个起点出发，n 步后的分布 <b>P</b>ⁿ 都趋于 π，表 2 的行趋同正是它。频数也一样：跑得足够久，晴天占比停在 π<sub>晴</sub> 附近。下表是一次 10,000 步的真实模拟（页内计算，可在调整 a、b 后重跑）。</p>
+    </div>
+    <div class="table-scroll breakout">
+      <table class="led" id="tbl-long">
+        <caption>表 3 · 一次 10,000 步模拟：两条起点不同的序列，经验频率同归于 π（重算按钮在表下）</caption>
+        <thead><tr><th scope="col">步数 n</th><th scope="col">起点晴 · 晴占比</th><th scope="col">起点雨 · 晴占比</th><th scope="col">理论 π<sub>晴</sub></th></tr></thead>
+        <tbody id="long-body"></tbody>
+      </table>
+    </div>
+    <div class="column">
+      <p class="btnrow"><button class="stampbtn" id="btn-rerun" type="button">重跑 10,000 步</button><span class="note" id="long-note">新随机种子，重算全表。</span></p>
+      <h3>归宿为何值得记</h3>
+      <p>单步结局完全随机，无法预测；千万步的<em>比例</em>却几乎注定。随机过程的短期不可测与长期可测并存，是马尔可夫链最有用的性格：搜索引擎不必知道你会点哪个页面，只需知道链接结构，就能算出长期停留比例（这即 PageRank 的骨架）。</p>
+    </div>
+    <div class="nextprev"><a href="#ch3">↑ 第三章</a><a href="#ch5">第五章 · 边界与应用 ↓</a></div>
+  </section>
+
+  <!-- ================= 第五章 ================= -->
+  <section id="ch5" class="chapter">
+    <div class="ch-head"><span class="seal" aria-hidden="true">第伍章</span><h2>边界与应用</h2></div>
+    <div class="column">
+      <h3>三条边界</h3>
+      <p><strong>无记忆 ≠ 独立</strong>：链"记得"今天；连今天都不看的是独立序列。<strong>状态须穷举</strong>：若明天实际依赖前两天的天气，两态链就是错误模型，需要把状态扩成"今昨组合"（晴晴、晴雨……）来恢复马尔可夫性。<strong>时齐是假设</strong>：气候漂移会让转移概率本身移动，此时本页结论只对慢变近似成立。</p>
+      <h3>把状态加到三个</h3>
+      <p>加入"多云"，矩阵变 3×3，读法不变：每行和为 1。平稳分布一般没有两态那样的闭式，实践中用<strong>幂法</strong>迭代：任取初始分布反复左乘 <b>P</b>，200 次迭代后已稳定到小数四位。</p>
+    </div>
+    <div class="table-scroll breakout">
+      <table class="led" id="tbl-p3">
+        <caption>表 4 · 三态链（晴 / 多云 / 雨）及其平稳分布 π（幂法迭代 200 次，页内计算）</caption>
+        <thead><tr><th scope="col">今 ⁄ 明</th><th scope="col">晴</th><th scope="col">多云</th><th scope="col">雨</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">晴</th><td>0.50</td><td>0.30</td><td>0.20</td></tr>
+          <tr><th scope="row">多云</th><td>0.30</td><td>0.40</td><td>0.30</td></tr>
+          <tr><th scope="row">雨</th><td>0.10</td><td>0.30</td><td>0.60</td></tr>
+          <tr><th scope="row">π</th><td class="p3v" id="p3-pi0">·</td><td class="p3v" id="p3-pi1">·</td><td class="p3v" id="p3-pi2">·</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="column">
+      <h3>它们都在用马尔可夫链</h3>
+    </div>
+    <div class="table-scroll breakout">
+      <table class="led">
+        <caption>表 5 · 应用一瞥：同一数学骨架，不同状态的解释</caption>
+        <thead><tr><th scope="col">领域</th><th scope="col">状态是什么</th><th scope="col">链算什么</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">搜索排序</th><td style="text-align:left;font-weight:400">随机跳转者所在网页</td><td style="text-align:left;font-weight:400">长期停留比例 = PageRank</td></tr>
+          <tr><th scope="row">语言模型</th><td style="text-align:left;font-weight:400">前 n−1 个词的组合</td><td style="text-align:left;font-weight:400">n-gram：下一个词的分布</td></tr>
+          <tr><th scope="row">遗传学</th><td style="text-align:left;font-weight:400">下一代等位基因频率</td><td style="text-align:left;font-weight:400">Wright–Fisher 随机漂变</td></tr>
+          <tr><th scope="row">排队论</th><td style="text-align:left;font-weight:400">队列当前长度</td><td style="text-align:left;font-weight:400">生灭过程与等待时间</td></tr>
+          <tr><th scope="row">信用评级</th><td style="text-align:left;font-weight:400">机构当前评级档位</td><td style="text-align:left;font-weight:400">评级迁移矩阵与违约概率</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="nextprev"><a href="#ch4">↑ 第四章</a><a href="#notes">尾注 ↓</a></div>
+  </section>
+
+  <!-- ================= 尾注 ================= -->
+  <section id="notes" class="chapter foot">
+    <div class="ch-head"><span class="seal" aria-hidden="true">尾注</span><h2>术语对照与延伸阅读</h2></div>
+    <div class="table-scroll breakout">
+      <table class="led">
+        <caption>表 6 · 本页术语对照</caption>
+        <thead><tr><th scope="col">中文</th><th scope="col">英文</th><th scope="col">一句话释义</th></tr></thead>
+        <tbody>
+          <tr><th scope="row">马尔可夫性（无记忆性）</th><td style="text-align:left;font-weight:400">Markov property</td><td style="text-align:left;font-weight:400">给定现在，过去不增信息</td></tr>
+          <tr><th scope="row">转移矩阵</th><td style="text-align:left;font-weight:400">transition matrix</td><td style="text-align:left;font-weight:400">第 i 行 j 列 = 一步 i→j 的概率</td></tr>
+          <tr><th scope="row">平稳分布</th><td style="text-align:left;font-weight:400">stationary distribution</td><td style="text-align:left;font-weight:400">满足 πP = π 的分布；长跑比例的归宿</td></tr>
+          <tr><th scope="row">遍历</th><td style="text-align:left;font-weight:400">ergodic</td><td style="text-align:left;font-weight:400">互通且非周期：起点被遗忘，频率归于 π</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="column">
+      <h3>延伸阅读</h3>
+      <p>J. R. Norris, <em>Markov Chains</em>, Cambridge University Press, 1997.<br>
+      J. G. Kemeny &amp; J. L. Snell, <em>Finite Markov Chains</em>, Van Nostrand, 1960.<br>
+      S. M. Ross, <em>Introduction to Probability Models</em>, Academic Press.</p>
+    </div>
+    <p class="colophon"><span class="seal-mini">观测毕</span>本页为自包含单文件：样式与脚本全部内联，零外部请求，离线可开。所有数值（矩阵幂、π、频数、三态迭代）由页内脚本实时计算，图与图标为手绘 SVG。装帧体例仿气象台观测年册与朱丝栏账簿；一九〇六年，马尔可夫正是从一行诗的元音序列开始了这条链的历史。</p>
+  </section>
+</main>
+
+<script>
+(function(){
+"use strict";
+var $=function(id){return document.getElementById(id);};
+var A=$("sl-a"),B=$("sl-b");
+function a(){return parseFloat(A.value);}
+function b(){return parseFloat(B.value);}
+function P(){var x=a(),y=b();return[[x,1-x],[1-y,y]];}
+function pi(){var x=a(),y=b(),d=1-x+y;return[y/d,(1-x)/d];}
+function mul(M,N){var R=[[0,0],[0,0]];for(var i=0;i<2;i++)for(var j=0;j<2;j++)R[i][j]=M[i][0]*N[0][j]+M[i][1]*N[1][j];return R;}
+function fmt(v){return v.toFixed(4);}
+
+/* ---- 图版一 / 第一章 / 矩阵 / π 同步 ---- */
+function syncStatic(){
+  var x=a(),y=b();
+  $("lbl-aa").textContent="晴→晴 a = "+x.toFixed(2);
+  $("lbl-sr").textContent="转雨 = "+(1-x).toFixed(2);
+  $("lbl-rs").textContent="转晴 b = "+y.toFixed(2);
+  $("lbl-rr").textContent="雨→雨 = "+(1-y).toFixed(2);
+  $("ch1-a").textContent=x.toFixed(2);
+  $("ch1-b").textContent=y.toFixed(2);
+  document.querySelector("#tbl-P .aa").textContent=fmt(x);
+  document.querySelector("#tbl-P .as").textContent=fmt(1-x);
+  document.querySelector("#tbl-P .bs").textContent=fmt(y);
+  document.querySelector("#tbl-P .br").textContent=fmt(1-y);
+  $("ov-a").textContent=x.toFixed(2);
+  $("ov-b").textContent=y.toFixed(2);
+  var p=pi();
+  $("pi-sun-f").textContent=fmt(p[0]);
+  $("pi-rain-f").textContent=fmt(p[1]);
+}
+
+/* ---- 表 2：Pⁿ 收敛 ---- */
+function syncP2(){
+  var M=P(),rows="",n=1,Mn=M.slice();
+  var Ns=[1,2,4,8,16,32];
+  for(var k=0;k<Ns.length;k++){
+    while(n<Ns[k]){Mn=mul(Mn,M);n++;}
+    rows+="<tr><th scope='row'>"+Ns[k]+"</th><td>"+fmt(Mn[0][0])+"</td><td>"+fmt(Mn[0][1])+
+      "</td><td>"+fmt(Mn[1][0])+"</td><td>"+fmt(Mn[1][1])+"</td></tr>";
+  }
+  $("p2-body").innerHTML=rows;
+}
+
+/* ---- 表 3：双起点 10,000 步长跑 ---- */
+var CHECKPOINTS=[10,100,1000,10000];
+function runLong(){
+  var p=P(),res=[[ ],[ ]];
+  for(var s=0;s<2;s++){
+    var st=s,cSun=0,rec={};
+    for(var t=1;t<=10000;t++){
+      st=(Math.random()<p[st][st])?st:1-st;
+      if(st===0)cSun++;
+      if(CHECKPOINTS.indexOf(t)>=0)rec[t]=cSun/t;
+    }
+    res[s]=rec;
+  }
+  var rows="";
+  for(var i=0;i<CHECKPOINTS.length;i++){
+    var n0=CHECKPOINTS[i];
+    rows+="<tr><th scope='row'>"+n0.toLocaleString('en-US')+"</th><td>"+fmt(res[0][n0])+
+      "</td><td>"+fmt(res[1][n0])+"</td><td>"+fmt(pi()[0])+"</td></tr>";
+  }
+  $("long-body").innerHTML=rows;
+}
+
+/* ---- 表 4：三态幂法 ---- */
+function syncP3(){
+  var P3=[[0.5,0.3,0.2],[0.3,0.4,0.3],[0.1,0.3,0.6]];
+  var v=[1/3,1/3,1/3];
+  for(var it=0;it<200;it++){
+    var w=[0,0,0];
+    for(var i=0;i<3;i++)for(var j=0;j<3;j++)w[j]+=v[i]*P3[i][j];
+    v=w;
+  }
+  $("p3-pi0").textContent=fmt(v[0]);
+  $("p3-pi1").textContent=fmt(v[1]);
+  $("p3-pi2").textContent=fmt(v[2]);
+}
+
+/* ---- 观测台 ---- */
+var state=0,counts=[0,0],steps=0,timer=null,LOG=48,hist=[];
+var SVG_SUN='<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#8a5a1c" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="4.4" fill="#8a5a1c" stroke="none"/><line x1="12" y1="2.6" x2="12" y2="5.4"/><line x1="12" y1="18.6" x2="12" y2="21.4"/><line x1="2.6" y1="12" x2="5.4" y2="12"/><line x1="18.6" y1="12" x2="21.4" y2="12"/><line x1="5.3" y1="5.3" x2="7.2" y2="7.2"/><line x1="16.8" y1="16.8" x2="18.7" y2="18.7"/><line x1="18.7" y1="5.3" x2="16.8" y2="7.2"/><line x1="7.2" y1="16.8" x2="5.3" y2="18.7"/></g></svg>';
+var SVG_RAIN='<svg viewBox="0 0 24 24" aria-hidden="true"><g fill="none" stroke="#27548d" stroke-width="2" stroke-linecap="round"><path d="M6.5 11.5 a3.4 3.4 0 0 1 .9-6.7 a4.6 4.6 0 0 1 8.9-1 a3.6 3.6 0 0 1 1.2 7" fill="#27548d" stroke="none"/><line x1="8" y1="15.5" x2="6.8" y2="19.5"/><line x1="12.5" y1="15.5" x2="11.3" y2="19.5"/><line x1="17" y1="15.5" x2="15.8" y2="19.5"/></g></svg>';
+var reduceMotion=window.matchMedia&&window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function renderFreq(){
+  var p=pi();
+  var fs=steps?counts[0]/steps:0, fr=steps?counts[1]/steps:0;
+  $("fill-sun").style.width=(fs*100)+"%";
+  $("fill-rain").style.width=(fr*100)+"%";
+  $("pil-sun").style.left=(p[0]*100)+"%";
+  $("pil-rain").style.left=((1-p[0])*100)+"%";
+  $("fv-sun").textContent=steps?fmt(fs):"—";
+  $("fv-rain").textContent=steps?fmt(fr):"—";
+  $("fn-sun").textContent="晴 ×"+counts[0];
+  $("fn-rain").textContent="雨 ×"+counts[1];
+}
+function renderLog(){
+  var led=$("ledger");
+  var show=hist.slice(-LOG);
+  var html="";
+  for(var i=0;i<show.length;i++){
+    var s=show[i],latest=(i===show.length-1);
+    html+="<div class='cell "+(s?"rain":"sun")+(latest?" latest":"")+(latest&&!reduceMotion?" stampin":"")+"'>"+
+      (s?SVG_RAIN:SVG_SUN)+"<span class='cname'>"+(s?"雨":"晴")+"</span></div>";
+  }
+  led.innerHTML=html||"<span class='log-empty'>尚无观测记录，掷出第一步。</span>";
+}
+function renderReadout(){
+  if(!steps){$("readout").innerHTML="尚无观测记录，掷出第一步。";return;}
+  var p=pi();
+  $("readout").innerHTML="第 <b>"+steps+"</b> 步 · 当前：<b>"+(state?"雨":"晴")+
+    "</b> · 晴出现 <b>"+counts[0]+"</b> 次（"+(counts[0]/steps*100).toFixed(1)+
+    "%）· 理论 π<sub>晴</sub>="+(p[0]*100).toFixed(1)+"%";
+}
+function step(){
+  var p=P();
+  state=(Math.random()<p[state][state])?state:1-state;
+  steps++;counts[state]++;hist.push(state);
+  renderLog();renderFreq();renderReadout();
+}
+function reset(){
+  stopRun();
+  state=0;counts=[0,0];steps=0;hist=[];
+  renderLog();renderFreq();renderReadout();
+}
+function stopRun(){
+  if(timer){clearInterval(timer);timer=null;}
+  var btn=$("btn-run");btn.textContent="自动运行";btn.setAttribute("aria-pressed","false");
+}
+function toggleRun(){
+  if(timer){stopRun();return;}
+  var ms=parseInt($("speed").value,10);
+  timer=setInterval(step,ms);
+  var btn=$("btn-run");btn.textContent="暂停";btn.setAttribute("aria-pressed","true");
+}
+
+/* ---- 联动 ---- */
+function onSlide(){
+  syncStatic();syncP2();runLong();syncP3();renderFreq();renderReadout();
+  $("long-note").textContent="参数已变，长跑表已按新矩阵重算。";
+}
+A.addEventListener("input",onSlide);
+B.addEventListener("input",onSlide);
+$("btn-step").addEventListener("click",step);
+$("btn-run").addEventListener("click",toggleRun);
+$("btn-reset").addEventListener("click",reset);
+$("btn-rerun").addEventListener("click",function(){runLong();$("long-note").textContent="新随机种子，重算全表。";});
+
+syncStatic();syncP2();runLong();syncP3();renderFreq();renderLog();renderReadout();
+})();
+</script>
+</body>
+</html>

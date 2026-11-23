@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>马尔可夫链 · 下一步只取决于现在</title>
+<meta name="description" content="交互式讲解马尔可夫链：马尔可夫性质、转移矩阵、状态模拟、平稳分布与真实应用。单文件、零外部依赖。">
+<style>
+/* ---------- 1. tokens ---------- */
+:root{
+  --paper:#F3F0E8; --paper-2:#FBF9F3; --ink:#131311; --ink-2:#4A4A44; --ink-3:#6B6960;
+  --rule:#DCD6C7; --accent:#B23A20; --accent-soft:#F0DCD4;
+  --data-a:#1F4E5A; --data-b:#8A6A2F; --ok:#2F6B4F;
+  --sun:#B23A20; --cloud:#1F4E5A; --rain:#8A6A2F;
+  --s1:4px; --s2:8px; --s3:12px; --s4:16px; --s5:24px; --s6:32px; --s7:48px; --s8:72px; --s9:104px;
+  --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Songti SC","Noto Serif CJK SC",Georgia,serif;
+  --sans:ui-sans-serif,"Segoe UI Variable Text","Segoe UI","PingFang SC","Microsoft YaHei",Roboto,system-ui,sans-serif;
+  --mono:ui-monospace,"Cascadia Mono","Cascadia Code",Consolas,"SFMono-Regular",monospace;
+  --shadow:0 1px 0 var(--rule);
+}
+[data-theme="dark"]{
+  --paper:#141412; --paper-2:#1C1C19; --ink:#F1EEE4; --ink-2:#C9C5B7; --ink-3:#96938a;
+  --rule:#33322C; --accent:#E0674A; --accent-soft:#3A211A;
+  --data-a:#69A9B6; --data-b:#C9A35B; --ok:#6FBF95;
+  --sun:#E0674A; --cloud:#69A9B6; --rain:#C9A35B;
+}
+/* ---------- 2. reset + base ---------- */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{
+  margin:0; background:var(--paper); color:var(--ink);
+  font-family:var(--sans); font-size:17px; line-height:1.7;
+  font-kerning:normal; text-rendering:optimizeLegibility;
+  -webkit-font-smoothing:antialiased;
+}
+img,svg{display:block; max-width:100%}
+a{color:inherit; text-decoration-color:var(--ink-3); text-underline-offset:3px}
+a:hover{text-decoration-color:var(--accent)}
+button,input,select{font:inherit; color:inherit}
+h1,h2,h3,h4{margin:0; font-family:var(--serif); font-weight:600; line-height:1.12; letter-spacing:-0.012em}
+p{margin:0 0 var(--s4)}
+::selection{background:var(--accent); color:var(--paper-2)}
+:focus-visible{outline:2px solid var(--accent); outline-offset:3px; border-radius:2px}
+.skip{
+  position:absolute; left:var(--s4); top:-60px; z-index:60; padding:10px 14px;
+  background:var(--ink); color:var(--paper); text-decoration:none; transition:top .15s ease;
+}
+.skip:focus{top:var(--s3)}
+/* ---------- 3. shell ---------- */
+.wrap{max-width:1180px; margin:0 auto; padding:0 clamp(18px,4vw,40px)}
+.progress{position:fixed; inset:0 0 auto 0; height:3px; z-index:50; background:transparent}
+.progress i{display:block; height:100%; width:0; background:var(--accent); transition:width .1s linear}
+.masthead{
+  position:sticky; top:0; z-index:40; background:var(--paper);
+  background:color-mix(in srgb,var(--paper) 88%,transparent);
+  backdrop-filter:blur(6px); border-bottom:1px solid var(--rule);
+}
+.masthead .bar{display:flex; align-items:center; justify-content:space-between; gap:var(--s4); height:58px}
+.brand{display:flex; align-items:center; gap:10px; font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-2)}
+.brand b{display:grid; place-items:center; width:22px; height:22px; border:1px solid var(--ink); border-radius:2px; font-size:11px; color:var(--ink)}
+.brand span{color:var(--ink-3)}
+.tools{display:flex; align-items:center; gap:var(--s2)}
+.tbtn{
+  display:inline-flex; align-items:center; gap:8px; padding:7px 12px; background:transparent;
+  border:1px solid var(--rule); border-radius:2px; color:var(--ink-2); font-size:13px; cursor:pointer;
+  transition:border-color .16s ease, color .16s ease, background .16s ease;
+}
+.tbtn:hover{border-color:var(--ink-3); color:var(--ink)}
+.tbtn svg{width:14px; height:14px}
+/* ---------- 4. hero ---------- */
+.hero{padding:clamp(40px,7vw,80px) 0 clamp(32px,5vw,56px); border-bottom:1px solid var(--rule)}
+.hero-grid{display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,.85fr); gap:clamp(24px,4vw,56px); align-items:center}
+.eyebrow{
+  display:flex; align-items:center; gap:10px; margin:0 0 var(--s4);
+  font-family:var(--mono); font-size:11.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--ink-3);
+}
+.eyebrow::before{content:""; width:26px; height:1px; background:var(--accent)}
+h1{font-size:clamp(2.5rem,6vw,4.4rem); line-height:.98; letter-spacing:-0.03em; text-wrap:balance}
+h1 em{font-style:normal; color:var(--accent)}
+.dek{max-width:46ch; margin:var(--s5) 0 var(--s6); font-size:clamp(1rem,1.4vw,1.12rem); color:var(--ink-2); text-wrap:pretty}
+.hero-cta{display:flex; flex-wrap:wrap; gap:var(--s3); align-items:center}
+.btn{
+  display:inline-flex; align-items:center; gap:9px; padding:11px 18px; border-radius:2px 2px 2px 0;
+  border:1px solid var(--ink); background:var(--ink); color:var(--paper); font-size:14px; cursor:pointer;
+  text-decoration:none; transition:transform .16s ease, background .16s ease, color .16s ease;
+}
+.btn:hover{background:var(--accent); border-color:var(--accent); color:var(--paper)}
+.btn.ghost{background:transparent; color:var(--ink)}
+.btn.ghost:hover{background:var(--ink); color:var(--paper)}
+.btn-arrow::after{content:"↓"; font-family:var(--mono); font-size:12px; opacity:.7}
+.hero-meta{display:flex; flex-wrap:wrap; gap:var(--s4); margin-top:var(--s6); padding-top:var(--s4); border-top:1px solid var(--rule); font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; color:var(--ink-3)}
+.hero-meta b{color:var(--ink); font-weight:600}
+/* ---------- 5. hero chain panel ---------- */
+.panel{background:var(--paper-2); border:1px solid var(--rule); padding:var(--s4)}
+.panel-head{display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3); margin-bottom:var(--s2)}
+.panel-head span{font-family:var(--mono); font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--ink-3)}
+.panel-head strong{font-family:var(--mono); font-size:11px; font-weight:500; color:var(--ink-2)}
+#chain{width:100%; height:auto}
+.node rect{fill:var(--paper-2); stroke:var(--rule); stroke-width:1.5; transition:stroke .2s ease, fill .2s ease}
+.node text{font-family:var(--mono); font-size:11px; fill:var(--ink-2); text-anchor:middle; letter-spacing:.06em}
+.node.active rect{stroke-width:2.5}
+.node.active text{fill:var(--ink); font-weight:600}
+.edge{fill:none; stroke:var(--rule); stroke-width:1.25}
+.edge.hot{stroke:var(--accent); stroke-width:2}
+.edge-label{font-family:var(--mono); font-size:10px; fill:var(--ink-3); text-anchor:middle}
+#token{fill:var(--accent); transition:transform .42s cubic-bezier(.34,.01,.2,1)}
+.hero-read{display:flex; align-items:baseline; justify-content:space-between; gap:var(--s3); margin-top:var(--s2); padding-top:var(--s3); border-top:1px solid var(--rule); font-family:var(--mono); font-size:11.5px; color:var(--ink-3)}
+.hero-read b{font-size:15px; color:var(--ink); letter-spacing:.02em}
+/* ---------- 6. contents strip ---------- */
+.contents{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:1px; margin:0; padding:0; list-style:none; background:var(--rule); border-bottom:1px solid var(--rule)}
+.contents a{display:flex; align-items:baseline; gap:10px; padding:var(--s4) var(--s4) var(--s4) 0; background:var(--paper); text-decoration:none; transition:background .16s ease}
+.contents a:hover{background:var(--paper-2)}
+.contents a:hover .c-num{color:var(--accent)}
+.c-num{font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.12em}
+.c-txt{font-size:14.5px; color:var(--ink); line-height:1.35}
+.c-txt small{display:block; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; color:var(--ink-3); text-transform:uppercase; margin-top:3px}
+/* ---------- 7. sections ---------- */
+.sec{display:grid; grid-template-columns:84px minmax(0,1fr); gap:0 clamp(16px,3vw,32px); padding:clamp(40px,6vw,72px) 0; border-bottom:1px solid var(--rule)}
+.sec:last-of-type{border-bottom:0}
+.sec-num{position:sticky; top:86px; align-self:start; font-family:var(--mono); font-size:12px; letter-spacing:.14em; color:var(--ink-3); padding-top:8px}
+.sec-num::after{content:""; display:block; width:18px; height:1px; margin-top:8px; background:var(--accent)}
+.sec-body{max-width:68ch}
+h2{font-size:clamp(1.6rem,3vw,2.25rem); letter-spacing:-0.02em; text-wrap:balance; margin-bottom:var(--s4)}
+h3{font-size:1.08rem; letter-spacing:0; margin:var(--s6) 0 var(--s2); font-family:var(--sans); font-weight:650}
+.sec-body > p:first-of-type{font-size:1.06rem; color:var(--ink-2)}
+p code,li code,td code{font-family:var(--mono); font-size:.88em; background:var(--paper-2); border:1px solid var(--rule); border-radius:2px; padding:1px 5px; overflow-wrap:anywhere}
+/* ---------- 8. formula ---------- */
+.formula{display:block; margin:var(--s5) 0; padding:var(--s4) var(--s5); background:var(--paper-2); border-left:3px solid var(--accent); font-family:var(--mono); font-size:clamp(12.5px,1.6vw,14.5px); line-height:1.9; overflow-x:auto; color:var(--ink); white-space:pre}
+.formula em{font-style:italic; color:var(--accent)}
+.formula small{display:block; margin-top:6px; font-size:11.5px; color:var(--ink-3); letter-spacing:.02em; white-space:normal}
+.fnote{font-family:var(--mono); font-size:11px; letter-spacing:.04em; color:var(--ink-3); margin-top:-8px}
+/* ---------- 9. callout ---------- */
+.callout{display:grid; grid-template-columns:22px minmax(0,1fr); gap:var(--s3); margin:var(--s6) 0; padding:var(--s4) var(--s5); background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 28%,transparent)}
+.callout p{margin:0; font-size:15px; color:var(--ink)}
+.callout p strong{font-family:var(--mono); font-size:12px; letter-spacing:.1em; text-transform:uppercase; display:block; margin-bottom:4px; color:var(--accent)}
+.callout .ic{font-family:var(--mono); color:var(--accent); font-weight:700}
+/* ---------- 10. compare table ---------- */
+.compare{width:100%; border-collapse:collapse; margin:var(--s5) 0; font-size:14.5px}
+.compare caption{text-align:left; font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-3); padding-bottom:var(--s2)}
+.compare th,.compare td{text-align:left; padding:10px 12px 10px 0; border-bottom:1px solid var(--rule); vertical-align:top}
+.compare thead th{font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); font-weight:500}
+.compare tbody th{font-weight:600; color:var(--ink); white-space:nowrap}
+.compare td.yes{color:var(--ok)}
+.compare td.no{color:var(--ink-3)}
+/* ---------- 11. matrix ---------- */
+.mx-box{margin:var(--s5) 0 var(--s6); background:var(--paper-2); border:1px solid var(--rule)}
+.mx-head{display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--s3); padding:var(--s3) var(--s4); border-bottom:1px solid var(--rule)}
+.mx-head span{font-family:var(--mono); font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)}
+.mx-presets{display:flex; flex-wrap:wrap; gap:6px}
+.chip{padding:4px 10px; border:1px solid var(--rule); background:transparent; border-radius:999px; font-size:12px; color:var(--ink-2); cursor:pointer; transition:all .15s ease}
+.chip:hover{border-color:var(--ink-3); color:var(--ink)}
+.chip[aria-pressed="true"]{background:var(--ink); border-color:var(--ink); color:var(--paper)}
+.mx-scroll{overflow-x:auto; padding:var(--s4)}
+.mx{width:100%; min-width:340px; border-collapse:separate; border-spacing:3px; font-size:13px}
+.mx caption{text-align:left; font-family:var(--mono); font-size:11px; color:var(--ink-3); letter-spacing:.06em; padding-bottom:var(--s3)}
+.mx th{font-family:var(--mono); font-size:10.5px; font-weight:500; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-3); padding:4px 2px; text-align:center}
+.mx tbody th{text-align:left; white-space:nowrap; padding-left:6px; color:var(--ink-2)}
+.mx td{padding:0; text-align:center; background:color-mix(in srgb,var(--data-a) var(--heat,6%),transparent); border:1px solid var(--rule); transition:background .2s ease, border-color .2s ease}
+.mx td:focus-within{border-color:var(--accent); background:color-mix(in srgb,var(--accent) 10%,transparent)}
+.mx input{width:100%; min-width:60px; padding:9px 4px; border:0; background:transparent; text-align:center; font-family:var(--mono); font-size:13px; font-variant-numeric:tabular-nums; -moz-appearance:textfield; appearance:textfield}
+.mx input::-webkit-outer-spin-button,.mx input::-webkit-inner-spin-button{-webkit-appearance:none; margin:0}
+.mx .sum{font-family:var(--mono); font-size:11.5px; color:var(--ok); font-variant-numeric:tabular-nums}
+.mx .sum.bad{color:var(--accent)}
+.mx-note{margin:0; padding:0 var(--s4) var(--s4); font-size:13px; color:var(--ink-3)}
+/* ---------- 12. simulator ---------- */
+.sim{display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.05fr); gap:var(--s4); margin:var(--s5) 0 var(--s6)}
+.sim-card{padding:var(--s4) var(--s5); background:var(--paper-2); border:1px solid var(--rule)}
+.sim-state{display:flex; align-items:center; gap:var(--s3); margin-bottom:var(--s2)}
+.dot{width:12px; height:12px; border-radius:50%; background:var(--accent); flex:none; transition:background .2s ease}
+.sim-state b{font-family:var(--serif); font-size:26px; font-weight:600; letter-spacing:-.01em}
+.sim-state small{margin-left:auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; color:var(--ink-3); text-transform:uppercase}
+.log{display:flex; flex-wrap:wrap; gap:5px; min-height:62px; align-content:flex-start; padding:var(--s3) 0 0; border-top:1px solid var(--rule)}
+.log i{font-style:normal; font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; padding:3px 7px; border:1px solid var(--rule); color:var(--ink-2); background:var(--paper); animation:pop .22s ease both}
+.log i.now{border-color:var(--accent); color:var(--accent); font-weight:600}
+@keyframes pop{from{opacity:0; transform:translateY(3px)}to{opacity:1; transform:none}}
+.sim-actions{display:flex; flex-wrap:wrap; gap:var(--s2); margin-top:var(--s4); padding-top:var(--s4); border-top:1px solid var(--rule)}
+.sim-actions .btn{padding:8px 15px; font-size:13px}
+.bars{display:grid; gap:9px; margin:0}
+.bar-row{display:grid; grid-template-columns:60px minmax(0,1fr) 78px; align-items:center; gap:10px; font-size:12.5px}
+.bar-row span{font-family:var(--mono); font-size:11px; color:var(--ink-2); letter-spacing:.04em}
+.bar-row em{font-style:normal; font-family:var(--mono); font-size:10.5px; color:var(--ink-3); text-align:right; font-variant-numeric:tabular-nums}
+.track{position:relative; height:16px; background:var(--paper); border:1px solid var(--rule)}
+.fill{position:absolute; inset:0 auto 0 0; width:0; background:var(--data-a); transition:width .3s ease}
+.ghost{position:absolute; top:-4px; bottom:-4px; width:2px; background:var(--accent); left:0; transition:left .3s ease}
+.legend{display:flex; flex-wrap:wrap; gap:12px; margin-top:var(--s3); font-family:var(--mono); font-size:10.5px; color:var(--ink-3); letter-spacing:.04em}
+.legend i{display:inline-block; width:10px; height:3px; margin-right:5px; vertical-align:middle; background:var(--data-a)}
+.legend i.acc{background:var(--accent); width:2px; height:12px}
+/* ---------- 13. chart ---------- */
+.chart-box{margin:var(--s5) 0; padding:var(--s4) var(--s4) var(--s3); background:var(--paper-2); border:1px solid var(--rule)}
+.chart-title{display:flex; justify-content:space-between; align-items:baseline; gap:var(--s3); margin-bottom:var(--s2); font-family:var(--mono); font-size:10.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--ink-3)}
+.chart-title b{color:var(--ink); letter-spacing:.04em}
+#conv{width:100%; height:auto}
+.axis{stroke:var(--rule); stroke-width:1}
+.grid-line{stroke:var(--rule); stroke-width:1; stroke-dasharray:2 4; opacity:.75}
+.axis-label{font-family:var(--mono); font-size:9px; fill:var(--ink-3); letter-spacing:.04em}
+.series{fill:none; stroke-width:2; stroke-linecap:round; stroke-linejoin:round}
+/* ---------- 14. generator ---------- */
+.gen{margin:var(--s5) 0; border:1px solid var(--rule); background:var(--paper-2)}
+.gen-out{min-height:104px; padding:var(--s5); border-bottom:1px solid var(--rule); font-family:var(--serif); font-size:19px; line-height:1.6; color:var(--ink)}
+.gen-out .blank{color:var(--ink-3); font-family:var(--sans); font-size:14px; font-style:italic}
+.gen-out mark{background:transparent; color:var(--accent); font-style:normal; transition:color .3s ease}
+.gen-foot{display:flex; flex-wrap:wrap; align-items:center; gap:var(--s2); padding:var(--s3) var(--s4)}
+.gen-foot .mono{margin-left:auto; font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--ink-3)}
+/* ---------- 15. app cards ---------- */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(210px,1fr)); gap:1px; margin:var(--s5) 0; background:var(--rule); border:1px solid var(--rule)}
+.card{padding:var(--s4); background:var(--paper-2); transition:background .16s ease}
+.card:hover{background:var(--paper)}
+.card .k{font-family:var(--mono); font-size:10px; letter-spacing:.16em; color:var(--accent); text-transform:uppercase}
+.card h4{margin:8px 0 6px; font-size:15.5px; font-family:var(--sans); font-weight:650; letter-spacing:0}
+.card p{margin:0; font-size:13.5px; line-height:1.6; color:var(--ink-2)}
+/* ---------- 16. appendix ---------- */
+.steps{margin:var(--s4) 0; padding:0; list-style:none; counter-reset:st; display:grid; gap:10px}
+.steps li{display:grid; grid-template-columns:26px minmax(0,1fr); gap:10px; font-size:14.5px; color:var(--ink-2); counter-increment:st}
+.steps li::before{content:counter(st); font-family:var(--mono); font-size:11px; color:var(--accent); padding-top:2px}
+.steps li b{color:var(--ink); font-weight:600}
+.kbd{display:inline-block; min-width:20px; padding:1px 5px; border:1px solid var(--rule); border-bottom-width:2px; border-radius:2px; font-family:var(--mono); font-size:11px; color:var(--ink-2); background:var(--paper)}
+/* ---------- 17. responsive ---------- */
+@media (max-width:980px){
+  .hero-grid{grid-template-columns:1fr}
+  .hero .panel{max-width:520px}
+  .contents{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .sim{grid-template-columns:1fr}
+}
+@media (max-width:720px){
+  body{font-size:16px}
+  .sec{grid-template-columns:1fr; gap:0}
+  .sec-num{position:static; padding:0 0 var(--s2); display:flex; align-items:center; gap:10px}
+  .sec-num::after{display:none}
+  .sec-body{max-width:none}
+  .brand span{display:none}
+  .tools .tbtn{padding:7px 9px}
+  #themeLabel{display:none}
+  .formula{padding:var(--s3) var(--s4); font-size:12px}
+  .compare{font-size:13.5px}
+  .compare tbody th{white-space:normal}
+  .bar-row{grid-template-columns:48px minmax(0,1fr) 64px}
+}
+@media (max-width:520px){
+  .contents{grid-template-columns:1fr}
+  .contents a{padding:var(--s3) 0}
+  .mx input{min-width:48px; padding:7px 2px}
+}
+/* ---------- 18. utilities ---------- */
+html{scroll-behavior:smooth}
+#main,.sec{scroll-margin-top:76px}
+/* ---------- 19. reduced motion ---------- */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.001ms !important; animation-iteration-count:1 !important; transition-duration:.001ms !important; scroll-behavior:auto !important}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+<div class="progress" aria-hidden="true"><i id="bar"></i></div>
+
+<header class="masthead">
+  <div class="wrap bar">
+    <div class="brand"><b>M</b> Markov&nbsp;Chains <span>/ 交互式讲解</span></div>
+    <div class="tools">
+      <button class="tbtn" id="themeBtn" type="button" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M2.5 12h2.2M19.3 12h2.2M5.2 5.2l1.6 1.6M17.2 17.2l1.6 1.6M18.8 5.2l-1.6 1.6M6.8 17.2l-1.6 1.6"/></svg>
+        <span id="themeLabel">暗色</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<section class="wrap hero">
+  <div class="hero-grid">
+    <div>
+      <p class="eyebrow">概率 · 随机过程 · 06 节</p>
+      <h1>下一步，<br>只取决于<em>现在</em>。</h1>
+      <p class="dek">一个过程如果对未来“失忆”，它就成了马尔可夫链。听起来是限制，实际上是最有用的一种简化：天气预报、网页排名、文本生成、排队系统，都靠它运转。</p>
+      <div class="hero-cta">
+        <a class="btn btn-arrow" href="#matrix">亲手改概率</a>
+        <a class="btn ghost" href="#appendix">看数学附录</a>
+      </div>
+      <div class="hero-meta">
+        <span>阅读 <b>约 10 分钟</b></span>
+        <span>交互 <b>4 处</b></span>
+        <span>依赖 <b>0</b></span>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><span>实时状态机</span><strong>3 状态 · 一阶</strong></div>
+      <svg id="chain" viewBox="0 0 400 300" role="img" aria-labelledby="chainTitle chainDesc">
+        <title id="chainTitle">三状态马尔可夫链的转移图</title>
+        <desc id="chainDesc">晴天、多云、雨天三个状态之间带箭头的转移边；圆点标出当前所处状态，边上的百分比是转移概率。</desc>
+        <defs>
+          <marker id="arw" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0 0 L8 4 L0 8 z" fill="currentColor"></path>
+          </marker>
+        </defs>
+        <g id="edges" style="color:var(--ink-3)"></g>
+        <g id="nodes">
+          <g class="node" data-i="0" transform="translate(200,58)">
+            <rect x="-42" y="-19" width="84" height="38" rx="2"></rect>
+            <text y="4">晴 SUN</text>
+          </g>
+          <g class="node" data-i="1" transform="translate(72,236)">
+            <rect x="-42" y="-19" width="84" height="38" rx="2"></rect>
+            <text y="4">云 CLOUD</text>
+          </g>
+          <g class="node" data-i="2" transform="translate(328,236)">
+            <rect x="-42" y="-19" width="84" height="38" rx="2"></rect>
+            <text y="4">雨 RAIN</text>
+          </g>
+        </g>
+        <circle id="token" r="6" cx="0" cy="0"></circle>
+      </svg>
+      <div class="hero-read" aria-live="polite"><span>当前状态</span><b id="heroState">晴 SUN</b><span>第 <span id="heroStep">0</span> 步</span></div>
+    </div>
+  </div>
+</section>
+
+<main id="main" class="wrap">
+<nav class="contents" aria-label="章节导航">
+  <a href="#define"><span class="c-num">01</span><span class="c-txt">只看现在<small>The property</small></span></a>
+  <a href="#matrix"><span class="c-num">02</span><span class="c-txt">转移矩阵<small>Transition matrix</small></span></a>
+  <a href="#walk"><span class="c-num">03</span><span class="c-txt">走一条路径<small>Simulate</small></span></a>
+  <a href="#limit"><span class="c-num">04</span><span class="c-txt">最终会去哪<small>Stationary</small></span></a>
+  <a href="#world"><span class="c-num">05</span><span class="c-txt">真实世界<small>In the wild</small></span></a>
+  <a href="#appendix"><span class="c-num">06</span><span class="c-txt">数学附录<small>Appendix</small></span></a>
+</nav>
+
+<section class="sec" id="define">
+  <div class="sec-num" aria-hidden="true">01</div>
+  <div class="sec-body">
+    <h2>什么叫“下一步只看现在”</h2>
+    <p>想象你每天记录天气：晴、云、雨。要猜明天的天气，你会去翻三年前的记录吗？不会。你只会看今天是什么天。这种“对未来失忆”的假设，就是马尔可夫链的全部前提。</p>
+    <p>把它写成式子：未来的分布只与当前状态有关，与“怎么走到今天的”无关。</p>
+    <div class="formula">P( X<sub>n+1</sub> = j | X<sub>n</sub> = i, X<sub>n-1</sub> = i<sub>n-1</sub>, …, X<sub>0</sub> = i<sub>0</sub> )
+   =  P( X<sub>n+1</sub> = j | X<sub>n</sub> = i )
+   =  <em>P<sub>ij</sub></em><small>右边那个数就是“从 i 跳到 j 的转移概率”。它不随 n 变化，所以叫时齐（time-homogeneous）马尔可夫链。</small></div>
+    <p>满足这个条件的随机过程叫马尔可夫过程；如果它的状态只有有限或可数个，并且时间是离散的一步一步，那就是<strong>马尔可夫链</strong>。上面这三个状态，正好是最小、也最直观的例子。</p>
+    <div class="callout">
+      <span class="ic" aria-hidden="true">!</span>
+      <p><strong>常见误解</strong>“无记忆”不是说历史不重要，而是说历史的信息已经被压缩进了“当前状态”里。状态选得不对（比如只记“今天下没下雨”而不记“已经连下几天”），链就不再马尔可夫。</p>
+    </div>
+    <h3>和无记忆的抛硬币，差在哪里</h3>
+    <table class="compare">
+      <caption>两种随机过程的区别</caption>
+      <thead><tr><th scope="col">性质</th><th scope="col">独立抛硬币</th><th scope="col">马尔可夫链</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">下一步依赖</th><td class="no">不依赖任何东西</td><td class="yes">只依赖当前状态</td></tr>
+        <tr><th scope="row">状态会不会“粘住”</th><td class="no">不会，永远 50/50</td><td class="yes">会，晴天更容易接着晴</td></tr>
+        <tr><th scope="row">长期行为</th><td class="no">平凡，不变</td><td class="yes">可能收敛到一个平稳分布</td></tr>
+      </tbody>
+    </table>
+    <p>换句话说：抛硬币是马尔可夫链的一个退化特例（每行都一样），而马尔可夫链能做的是“根据你现在在哪，改变你下一步去哪的概率”。</p>
+  </div>
+</section>
+<section class="sec" id="matrix">
+  <div class="sec-num" aria-hidden="true">02</div>
+  <div class="sec-body">
+    <h2>把规则写成一个矩阵</h2>
+    <p>三个状态的转移概率一共 9 个，正好摆成一个 3×3 矩阵。第 <code>i</code> 行第 <code>j</code> 列的数，就是“今天在 i，明天去 j”的概率。因为“明天总得在某个状态”，所以<strong>每一行加起来必须是 1</strong>。</p>
+    <div class="formula">P = [ P<sub>00</sub>  P<sub>01</sub>  P<sub>02</sub> ]      Σ<sub>j</sub> P<sub>ij</sub> = 1  (i = 0,1,2)
+    [ P<sub>10</sub>  P<sub>11</sub>  P<sub>12</sub> ]      P<sub>ij</sub> ≥ 0
+    [ P<sub>20</sub>  P<sub>21</sub>  P<sub>22</sub> ]<small>这种“每行和为 1”的矩阵叫随机矩阵（stochastic matrix）。下面这 9 个格子可直接改。</small></div>
+
+    <div class="mx-box">
+      <div class="mx-head">
+        <span>转移矩阵 P · 行=今天 / 列=明天</span>
+        <div class="mx-presets" role="group" aria-label="预设矩阵">
+          <button class="chip" type="button" data-preset="calm" aria-pressed="true">温和天气</button>
+          <button class="chip" type="button" data-preset="rainy" aria-pressed="false">雨季</button>
+          <button class="chip" type="button" data-preset="sticky" aria-pressed="false">粘性很大</button>
+          <button class="chip" type="button" data-preset="random" aria-pressed="false">随机</button>
+        </div>
+      </div>
+      <div class="mx-scroll" tabindex="0" role="region" aria-label="可编辑的转移矩阵">
+        <table class="mx">
+          <caption>编辑后失焦会自动按行归一化，保证矩阵始终合法。</caption>
+          <thead>
+            <tr><th scope="col">今天 \ 明天</th><th scope="col">晴</th><th scope="col">云</th><th scope="col">雨</th><th scope="col">行和</th></tr>
+          </thead>
+          <tbody id="mxBody"><!-- filled by JS --></tbody>
+        </table>
+      </div>
+      <p class="mx-note" id="mxStory">&#160;</p>
+    </div>
+
+    <p>试着把晴→晴拉到 0.95，再看下一节：链会长时间停在晴天，但不可能永远不出门。反过来，把对角全压到 0，链就会变成严格的周期循环，长期频率不再收敛——这是马尔可夫链少数会“失效”的情形。</p>
+  </div>
+</section>
+<section class="sec" id="walk">
+  <div class="sec-num" aria-hidden="true">03</div>
+  <div class="sec-body">
+    <h2>走一条路径</h2>
+    <p>规则有了，剩下的就是运气。从某个状态出发，每步按当前行掷一次“加权骰子”。下面的模拟器用的是你刚在 02 节改的那个矩阵——改完回来，结果会立刻不一样。</p>
+
+    <div class="sim">
+      <div class="sim-card">
+        <div class="sim-state" aria-live="polite" aria-atomic="true">
+          <span class="dot" id="dot" aria-hidden="true"></span>
+          <b id="curState">晴</b>
+          <small id="stepLabel">第 0 步</small>
+        </div>
+        <div class="log" id="log" aria-label="走过的状态序列"></div>
+        <div class="sim-actions">
+          <button class="btn" type="button" id="btnStep">单步 →</button>
+          <button class="btn ghost" type="button" id="btnRun" aria-pressed="false">连续运行</button>
+          <button class="tbtn" type="button" id="btnReset">重置</button>
+        </div>
+        <div class="sim-actions" style="border-top:0; padding-top:0; margin-top:8px">
+          <span class="c-num">起点</span>
+          <button class="chip" type="button" data-start="0" aria-pressed="true">晴</button>
+          <button class="chip" type="button" data-start="1" aria-pressed="false">云</button>
+          <button class="chip" type="button" data-start="2" aria-pressed="false">雨</button>
+        </div>
+      </div>
+
+      <div class="sim-card">
+        <div class="sim-state" style="margin-bottom:14px">
+          <b style="font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--ink-3)">实测频率 vs 平稳分布</b>
+          <small id="sampleLabel">n = 1</small>
+        </div>
+        <div class="bars">
+          <div class="bar-row"><span>晴 SUN</span><div class="track"><i class="fill" data-fill="0"></i><i class="ghost" data-ghost="0"></i></div><em data-pct="0">—</em></div>
+          <div class="bar-row"><span>云 CLOUD</span><div class="track"><i class="fill" data-fill="1"></i><i class="ghost" data-ghost="1"></i></div><em data-pct="1">—</em></div>
+          <div class="bar-row"><span>雨 RAIN</span><div class="track"><i class="fill" data-fill="2"></i><i class="ghost" data-ghost="2"></i></div><em data-pct="2">—</em></div>
+        </div>
+        <div class="legend">
+          <span><i></i>实测频率</span>
+          <span><i class="acc"></i>平稳分布 π</span>
+        </div>
+      </div>
+    </div>
+
+    <p>跑上几百步，你会发现两件事：单看每一步完全不可预测，可是每种天气停留的<strong>比例</strong>却越来越稳定；而且不管从晴、云还是雨出发，最后都跑到同一组数字上。这就是下一节要说的平稳分布。</p>
+    <p class="fnote">提示：键盘 Tab 到按钮，回车即可推进；<span class="kbd">单步</span> 每次只走一步，适合逐步核对自己的手算。</p>
+  </div>
+</section>
+<section class="sec" id="limit">
+  <div class="sec-num" aria-hidden="true">04</div>
+  <div class="sec-body">
+    <h2>它最终会去哪</h2>
+    <p>把当前分布写成一行向量 <code>v</code>。走一步，就是 <code>vP</code>；走 n 步，就是 <code>vP<sup>n</sup></code>。大多数情况下，不管 v 初始长什么样，乘着乘着它就停在一个不再变化的向量上。</p>
+    <div class="formula">π P = π    且    Σ<sub>i</sub> π<sub>i</sub> = 1<small>这个 π 就是平稳分布（stationary distribution）：把它当作今天的分布，明天还是它。等价地说，π 是 P 的特征值 1 的左特征向量。</small></div>
+
+    <div class="chart-box">
+      <div class="chart-title"><span>分布逐步收敛</span><b id="piOut">π = —</b></div>
+      <svg id="conv" viewBox="0 0 640 250" role="img" aria-labelledby="convT convD">
+        <title id="convT">三个状态的概率步数变化折线图</title>
+        <desc id="convD">横轴为步数 0 到 24，纵轴为概率 0 到 1；三条线分别对应晴、云、雨，逐渐趋于各自的平稳值。</desc>
+        <g id="convAxes"></g>
+        <g id="convSeries"></g>
+        <g id="convLegend"></g>
+      </svg>
+      <p class="fnote" style="margin:6px 0 0">纵轴：处于该状态的概率 · 横轴：步数</p>
+    </div>
+
+    <p>这个结论有个名字：<strong>遍历定理</strong>。只要链是“不可约”（任意两状态都能互相到达）且“非周期”（不会只按固定节拍循环），它就一定收敛，而且极限与起点无关。</p>
+    <div class="callout">
+      <span class="ic" aria-hidden="true">i</span>
+      <p><strong>平稳 ≠ 停在原地</strong>π 描述的是长期停留的时间比例，不是“链最后停在哪”。链一直会跳，只是每个状态被访问的份额固定了。</p>
+    </div>
+    <h3>怎么真的算出来</h3>
+    <ol class="steps">
+      <li><b>解方程</b>：把 πP = π 展开成 3 个方程，加一个 Σπ = 1，解 4 个方程取 3 个未知数。</li>
+      <li><b>幂迭代</b>：随便拿一个分布乘 P，反复 50 次。本页的三根折线就是这么算的（下方小字里能看到迭代次数）。</li>
+      <li><b>检查条件</b>：若矩阵某行全挤在同一个下一状态、或整体呈确定性循环，则平稳分布可能不唯一或不收敛。</li>
+    </ol>
+    <p class="fnote" id="iterNote">—</p>
+  </div>
+</section>
+<section class="sec" id="world">
+  <div class="sec-num" aria-hidden="true">05</div>
+  <div class="sec-body">
+    <h2>真实世界里的它</h2>
+    <p>把“状态”从天气换成字，奇迹就发生了：当前字是状态，下一个字是转移。不需要懂语法，只要统计语料里“某个字后面跟着什么字”，就能造出读起来像样的句子。下面的生成器只用了一段不到 150 字的语料。</p>
+
+    <div class="gen">
+      <div class="gen-out" id="genOut" aria-live="polite"><span class="blank">点击下方按钮：这段语料会被拆成一个一阶马尔可夫链，再重新采样成新句子。</span></div>
+      <div class="gen-foot">
+        <button class="btn" type="button" id="btnGen">生成一句</button>
+        <button class="tbtn" type="button" id="btnGenStep">续一个字</button>
+        <button class="tbtn" type="button" id="btnGenReset">清空</button>
+        <span class="mono" id="genMeta">order-1 · 待启动</span>
+      </div>
+    </div>
+    <details style="margin:0 0 var(--s5)">
+      <summary style="cursor:pointer; font-family:var(--mono); font-size:11.5px; letter-spacing:.06em; color:var(--ink-3)">查看使用的语料</summary>
+      <p style="margin:10px 0 0; font-size:14px; color:var(--ink-2); line-height:1.8" id="corpusView"></p>
+    </details>
+
+    <p>它当然不懂意思——句子可能中途拐弯，因为链只看上一个字。这恰好解释了为什么更大的语言模型需要把上下文变长：上下文越长，“状态”编码的信息越多，链就越接近真正的语言。而“上下文”本身，也就是所谓的 n 阶马尔可夫链。</p>
+
+    <h3>同样的结构，出现在很多地方</h3>
+    <div class="cards">
+      <div class="card"><div class="k">Web</div><h4>PageRank</h4><p>把网页当状态、链接当转移，随机游走者的长期停留比例就是网页的排名分数。</p></div>
+      <div class="card"><div class="k">NLP</div><h4>文本与代码生成</h4><p>n-gram 语言模型、拼写纠错、中文分词，骨子里都是一阶或多阶马尔可夫链。</p></div>
+      <div class="card"><div class="k">Signal</div><h4>语音与隐状态</h4><p>隐马尔可夫模型（HMM）假设“真正的声音状态看不到”，只能从观测反推。</p></div>
+      <div class="card"><div class="k">Queue</div><h4>排队与可靠性</h4><p>顾客数、机器是否故障，都是状态；到达率与修复率构成转移矩阵。</p></div>
+      <div class="card"><div class="k">Stats</div><h4>MCMC 采样</h4><p>Metropolis–Hastings 构造一条链，让它的平稳分布恰好是你想采样的后验。</p></div>
+      <div class="card"><div class="k">Finance</div><h4>信用评级迁移</h4><p>AAA 到违约的年度迁移矩阵，是银行做减值准备的基础工具之一。</p></div>
+    </div>
+  </div>
+</section>
+<section class="sec" id="appendix">
+  <div class="sec-num" aria-hidden="true">06</div>
+  <div class="sec-body">
+    <h2>数学附录</h2>
+    <p>以下三件东西，足够支撑你把上面所有东西手算一遍。</p>
+
+    <h3>一、查普曼–科尔莫戈罗夫等式</h3>
+    <p>走 n 步的转移概率，就是把 P 自己乘 n 次。想拆成两段（先走 n 步，再走 m 步）也行，因为中间状态会被求和“边缘化”掉。</p>
+    <div class="formula">P<sup>(n+m)</sup> = P<sup>(n)</sup> · P<sup>(m)</sup>       且       P<sup>(0)</sup> = I ,   P<sup>(1)</sup> = P
+
+P( X<sub>n</sub> = j | X<sub>0</sub> = i )  =  ( P<sup>n</sup> )<sub>ij</sub></div>
+
+    <h3>二、两状态算一遍</h3>
+    <p>取 P = [[0.9, 0.1], [0.2, 0.8]]，即：晴天 90% 接着晴，雨天 20% 转晴。设 π = (x, 1−x)：</p>
+    <div class="formula">0.9x + 0.2(1−x) = x      ⟹      0.9x + 0.2 − 0.2x = x
+                                      0.7x + 0.2 = x
+                                            x = 0.667<small>所以 π ≈ (0.667, 0.333)：长期看，三分之二的日子是晴天。可以拿本页 02 节把矩阵改成这组数核对。</small></div>
+    <p>再算一步收敛速度：这个矩阵的特征值是 1 和 0.7，所以每一步误差都乘上 0.7。大约 10 步后，误差就降到 0.7<sup>10</sup> ≈ 2.8%——这就是“收敛很快”的数学含义。</p>
+
+    <h3>三、术语表</h3>
+    <table class="compare">
+      <caption>读论文时最常撞见的几个词</caption>
+      <thead><tr><th scope="col">中文</th><th scope="col">English</th><th scope="col">标记</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">状态空间</th><td>state space</td><td><code>S</code></td></tr>
+        <tr><th scope="row">转移矩阵</th><td>transition matrix</td><td><code>P</code></td></tr>
+        <tr><th scope="row">平稳分布</th><td>stationary distribution</td><td><code>π</code></td></tr>
+        <tr><th scope="row">不可约 / 非周期</th><td>irreducible / aperiodic</td><td>—</td></tr>
+        <tr><th scope="row">吸收态</th><td>absorbing state</td><td><code>P<sub>ii</sub> = 1</code></td></tr>
+        <tr><th scope="row">细致平稳</th><td>detailed balance</td><td><code>π<sub>i</sub>P<sub>ij</sub> = π<sub>j</sub>P<sub>ji</sub></code></td></tr>
+      </tbody>
+    </table>
+
+    <div class="callout">
+      <span class="ic" aria-hidden="true">!</span>
+      <p><strong>什么时候它就不成立了</strong>如果状态定义漏掉了关键信息（比如只记“下不下雨”而不记“已连下几天”），或者过程有长期趋势（气候在变），一阶马尔可夫假设就会失真。这不是数学错，而是建模选择错。</p>
+    </div>
+    <p>到这里你已经拥有一个完整的工具链：定义状态 → 估矩阵 → 模拟 → 求平稳分布。剩下的事，就是把它用到你的那三个状态上。</p>
+  </div>
+</section>
+</main>
+
+<footer class="wrap" style="padding:var(--s6) 0 var(--s9); border-top:1px solid var(--rule); margin-top:var(--s8)">
+  <div style="display:flex; flex-wrap:wrap; gap:var(--s6); justify-content:space-between; align-items:flex-start">
+    <div style="max-width:36ch">
+      <p style="font-family:var(--mono); font-size:11px; letter-spacing:.18em; color:var(--ink-3); margin:0 0 8px">MARKOV CHAINS · EXPLAINER</p>
+      <p style="font-size:14px; color:var(--ink-2); margin:0">全部内容在一个 HTML 文件里：内联 CSS、内联 JS、无字体下载、无图片、无第三方脚本。断网也能完整使用。</p>
+    </div>
+    <div>
+      <p style="font-family:var(--mono); font-size:11px; letter-spacing:.14em; color:var(--ink-3); margin:0 0 8px">操作</p>
+      <p style="font-size:13.5px; color:var(--ink-2); margin:0; line-height:2">
+        <span class="kbd">Tab</span> 在控件间移动　<span class="kbd">Enter</span> / <span class="kbd">Space</span> 触发<br>
+        开启系统“减少动效”后，所有过渡自动关闭
+      </p>
+    </div>
+  </div>
+</footer>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ================= 模型 ================= */
+  var NAMES = ['晴', '云', '雨'];
+  var EN = ['SUN', 'CLOUD', 'RAIN'];
+  var VARS = ['--sun', '--cloud', '--rain'];
+  var PRESETS = {
+    calm:   [[0.70, 0.20, 0.10], [0.25, 0.55, 0.20], [0.15, 0.35, 0.50]],
+    rainy:  [[0.45, 0.30, 0.25], [0.25, 0.30, 0.45], [0.20, 0.40, 0.40]],
+    sticky: [[0.84, 0.11, 0.05], [0.10, 0.82, 0.08], [0.07, 0.15, 0.78]]
+  };
+  var P = clone(PRESETS.calm);
+
+  function clone(m) { return m.map(function (r) { return r.slice(); }); }
+  function rowSum(row) { return row.reduce(function (a, b) { return a + b; }, 0); }
+  function normalize(row) {
+    var s = rowSum(row);
+    if (!(s > 0)) return [1 / 3, 1 / 3, 1 / 3];
+    return row.map(function (v) { return v / s; });
+  }
+  function mulVec(v, M) {
+    var out = [0, 0, 0];
+    for (var i = 0; i < 3; i++) for (var j = 0; j < 3; j++) out[j] += v[i] * M[i][j];
+    return out;
+  }
+  function maxDiff(a, b) {
+    return Math.max(Math.abs(a[0] - b[0]), Math.abs(a[1] - b[1]), Math.abs(a[2] - b[2]));
+  }
+  /* 幂迭代求平稳分布；同时检测周期振荡
+     起点用确定分布 [1,0,0]：均匀分布对任何双随机矩阵都是不动点，会掩盖周期行为 */
+  function stationary(M, start) {
+    var v = (start || [1, 0, 0]).slice();
+    var hist = [v.slice()];
+    var periodic = false, converged = false, period = 0, it = 0;
+    for (it = 0; it < 500; it++) {
+      var nv = mulVec(v, M);
+      var stepDiff = maxDiff(nv, v);
+      if (stepDiff < 1e-11) { v = nv; converged = true; break; }
+      if (stepDiff > 1e-6) {
+        for (var k = hist.length - 2; k >= 0; k--) {
+          if (maxDiff(nv, hist[k]) < 1e-9) { periodic = true; period = hist.length - k; break; }
+        }
+      }
+      if (periodic) { v = nv; break; }
+      hist.push(nv);
+      v = nv;
+    }
+    return { pi: v, iters: it, periodic: periodic, period: period, converged: converged };
+  }
+  function sampleNext(row) {
+    var r = Math.random(), acc = 0;
+    for (var j = 0; j < 3; j++) { acc += row[j]; if (r <= acc) return j; }
+    return 2;
+  }
+  function fmt(x, d) { return Number(x).toFixed(d === undefined ? 2 : d); }
+
+  /* ================= 矩阵表 ================= */
+  var mxBody = document.getElementById('mxBody');
+
+  function buildTable() {
+    mxBody.textContent = '';
+    for (var i = 0; i < 3; i++) {
+      var tr = document.createElement('tr');
+      var th = document.createElement('th');
+      th.scope = 'row'; th.textContent = NAMES[i]; tr.appendChild(th);
+      for (var j = 0; j < 3; j++) {
+        var td = document.createElement('td');
+        var inp = document.createElement('input');
+        inp.type = 'number'; inp.min = '0'; inp.max = '1'; inp.step = '0.01';
+        inp.value = fmt(P[i][j]); inp.setAttribute('inputmode', 'decimal');
+        inp.setAttribute('aria-label', '从' + NAMES[i] + '转移到' + NAMES[j] + '的概率');
+        inp.dataset.r = i; inp.dataset.c = j;
+        td.appendChild(inp); tr.appendChild(td);
+      }
+      var sum = document.createElement('td');
+      sum.className = 'sum'; sum.dataset.sum = i; sum.textContent = '1.00';
+      tr.appendChild(sum);
+      mxBody.appendChild(tr);
+    }
+    paintHeat();
+  }
+
+  function cellInputs(i) {
+    return Array.prototype.slice.call(mxBody.querySelectorAll('input[data-r="' + i + '"]'));
+  }
+  function paintHeat() {
+    Array.prototype.forEach.call(mxBody.querySelectorAll('input'), function (inp) {
+      var v = parseFloat(inp.value);
+      if (isNaN(v) || v < 0) v = 0; if (v > 1) v = 1;
+      inp.parentNode.style.setProperty('--heat', Math.round(4 + v * 30) + '%');
+    });
+  }
+  function paintSums() {
+    for (var i = 0; i < 3; i++) {
+      var s = rowSum(cellInputs(i).map(function (x) { return Math.max(0, Math.min(1, parseFloat(x.value) || 0)); }));
+      var el = mxBody.querySelector('[data-sum="' + i + '"]');
+      el.textContent = fmt(s);
+      el.classList.toggle('bad', Math.abs(s - 1) > 0.001);
+    }
+  }
+
+  mxBody.addEventListener('input', function (e) {
+    if (e.target.tagName !== 'INPUT') return;
+    paintHeat(); paintSums();
+  });
+  mxBody.addEventListener('change', function (e) {
+    if (e.target.tagName !== 'INPUT') return;
+    commit();
+  });
+  mxBody.addEventListener('keydown', function (e) {
+    if (e.target.tagName === 'INPUT' && e.key === 'Enter') { e.preventDefault(); e.target.blur(); }
+  });
+
+  function commit() {
+    var next = [[], [], []];
+    for (var i = 0; i < 3; i++) {
+      var row = cellInputs(i).map(function (x) {
+        var v = parseFloat(x.value);
+        if (isNaN(v) || v < 0) v = 0;
+        return Math.min(1, v);
+      });
+      next[i] = normalize(row);
+    }
+    P = next;
+    for (var i2 = 0; i2 < 3; i2++) {
+      var ins = cellInputs(i2);
+      for (var j = 0; j < 3; j++) ins[j].value = fmt(P[i2][j]);
+    }
+    paintHeat(); paintSums();
+    onMatrixChange();
+  }
+
+  function setMatrix(m) {
+    P = clone(m);
+    for (var i = 0; i < 3; i++) {
+      var ins = cellInputs(i);
+      for (var j = 0; j < 3; j++) ins[j].value = fmt(P[i][j]);
+    }
+    paintHeat(); paintSums();
+    onMatrixChange();
+  }
+  /* ================= 转移图（Hero） ================= */
+  var NODE = [[200, 58], [72, 236], [328, 236]];
+  var edgesG = document.getElementById('edges');
+  var token = document.getElementById('token');
+  var heroStateEl = document.getElementById('heroState');
+  var heroStepEl = document.getElementById('heroStep');
+  var edgeEls = {};
+
+  function quad(a, b) {
+    var dx = b[0] - a[0], dy = b[1] - a[1], len = Math.sqrt(dx * dx + dy * dy) || 1;
+    var ox = -dy / len * 26, oy = dx / len * 26;
+    var c = [(a[0] + b[0]) / 2 + ox, (a[1] + b[1]) / 2 + oy];
+    var d1 = [c[0] - a[0], c[1] - a[1]], d2 = [c[0] - b[0], c[1] - b[1]];
+    var l1 = Math.sqrt(d1[0] * d1[0] + d1[1] * d1[1]) || 1, l2 = Math.sqrt(d2[0] * d2[0] + d2[1] * d2[1]) || 1;
+    var p0 = [a[0] + d1[0] / l1 * 34, a[1] + d1[1] / l1 * 34];
+    var p1 = [b[0] + d2[0] / l2 * 34, b[1] + d2[1] / l2 * 34];
+    return { d: 'M' + p0[0].toFixed(1) + ' ' + p0[1].toFixed(1) + ' Q' + c[0].toFixed(1) + ' ' + c[1].toFixed(1) + ' ' + p1[0].toFixed(1) + ' ' + p1[1].toFixed(1), label: [(p0[0] + 2 * c[0] + p1[0]) / 4, (p0[1] + 2 * c[1] + p1[1]) / 4] };
+  }
+
+  function buildGraph() {
+    edgesG.textContent = '';
+    edgesG.style.color = 'var(--rule)';
+    for (var i = 0; i < 3; i++) {
+      for (var j = 0; j < 3; j++) {
+        if (i === j) continue;
+        var q = quad(NODE[i], NODE[j]);
+        var p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+        p.setAttribute('d', q.d);
+        p.setAttribute('class', 'edge');
+        p.setAttribute('marker-end', 'url(#arw)');
+        edgesG.appendChild(p);
+        edgeEls[i + '-' + j] = p;
+        var t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+        t.setAttribute('x', q.label[0].toFixed(1));
+        t.setAttribute('y', q.label[1].toFixed(1));
+        t.setAttribute('class', 'edge-label');
+        t.setAttribute('dy', '3');
+        t.dataset.edge = i + '-' + j;
+        edgesG.appendChild(t);
+      }
+    }
+    paintEdgeLabels();
+  }
+
+  function paintEdgeLabels() {
+    Array.prototype.forEach.call(edgesG.querySelectorAll('[data-edge]'), function (t) {
+      var parts = t.dataset.edge.split('-');
+      var v = P[+parts[0]][+parts[1]];
+      t.textContent = (v * 100).toFixed(0) + '%';
+    });
+  }
+
+  var heroCur = 0, heroStep = 0;
+  function placeToken(i, instant) {
+    var n = NODE[i];
+    token.style.transition = instant ? 'none' : '';
+    token.style.transform = 'translate(' + n[0] + 'px,' + (n[1] - 30) + 'px)';
+    if (instant) { void token.getBoundingClientRect(); token.style.transition = ''; }
+  }
+
+  function heroAdvance() {
+    var from = heroCur, to = sampleNext(P[from]);
+    heroCur = to; heroStep++;
+    var hot = edgeEls[from + '-' + to];
+    if (hot) {
+      hot.classList.add('hot');
+      setTimeout(function () { hot.classList.remove('hot'); }, 700);
+    }
+    placeToken(to);
+    heroStateEl.textContent = NAMES[to] + ' ' + EN[to];
+    heroStepEl.textContent = heroStep;
+    Array.prototype.forEach.call(document.querySelectorAll('#nodes .node'), function (g) {
+      g.classList.toggle('active', +g.dataset.i === to);
+    });
+  }
+
+  /* ================= 状态共享与矩阵变更 ================= */
+  var STAT = { pi: [1 / 3, 1 / 3, 1 / 3], iters: 0, periodic: false };
+
+  function updateStory() {
+    var row = P[0], best = 0;
+    for (var j = 1; j < 3; j++) if (row[j] > row[best]) best = j;
+    var txt = '从晴天出发：' + (row[0] * 100).toFixed(0) + '% 仍是晴天，' +
+      (row[1] * 100).toFixed(0) + '% 转为多云，' + (row[2] * 100).toFixed(0) + '% 会下雨。';
+    if (best === 0) txt += '最可能的去向是“继续晴”。';
+    else txt += '最可能的去向是“' + NAMES[best] + '”（' + (row[best] * 100).toFixed(0) + '%）。';
+    if (!STAT.periodic) {
+      txt += '长期来看，晴天的份额稳定在 ' + (STAT.pi[0] * 100).toFixed(0) + '%。';
+    } else {
+      txt += '注意：这个矩阵呈周期性振荡，长期份额不收敛。';
+    }
+    document.getElementById('mxStory').textContent = txt;
+  }
+
+  function onMatrixChange() {
+    var s = stationary(P);
+    STAT = { pi: s.pi, iters: s.iters, periodic: s.periodic, period: s.period, converged: s.converged };
+    paintEdgeLabels();
+    updateStory();
+    drawChart();
+    resetSim();
+  }
+  /* ================= 模拟器 ================= */
+  var sim = { cur: 0, start: 0, counts: [1, 0, 0], steps: 0, log: [0], timer: null, running: false };
+  var LOG_MAX = 44;
+  var elCur = document.getElementById('curState');
+  var elStep = document.getElementById('stepLabel');
+  var elLog = document.getElementById('log');
+  var elSample = document.getElementById('sampleLabel');
+  var elDot = document.getElementById('dot');
+  var btnStep = document.getElementById('btnStep');
+  var btnRun = document.getElementById('btnRun');
+  var btnReset = document.getElementById('btnReset');
+  var fills = document.querySelectorAll('[data-fill]');
+  var ghosts = document.querySelectorAll('[data-ghost]');
+  var pcts = document.querySelectorAll('[data-pct]');
+
+  function renderSim() {
+    elCur.textContent = NAMES[sim.cur];
+    elDot.style.background = 'var(' + VARS[sim.cur] + ')';
+    elStep.textContent = '第 ' + sim.steps + ' 步';
+    var shown = sim.log.slice(-LOG_MAX);
+    elLog.innerHTML = shown.map(function (i) { return '<i>' + NAMES[i] + '</i>'; }).join('');
+    var last = elLog.lastElementChild;
+    if (last) last.className = 'now';
+
+    var total = sim.counts[0] + sim.counts[1] + sim.counts[2];
+    elSample.textContent = 'n = ' + total;
+    for (var j = 0; j < 3; j++) {
+      var emp = total ? sim.counts[j] / total : 0;
+      fills[j].style.width = (emp * 100).toFixed(1) + '%';
+      fills[j].style.background = 'var(' + VARS[j] + ')';
+      if (j < ghosts.length) {
+        ghosts[j].style.left = (STAT.pi[j] * 100).toFixed(1) + '%';
+        ghosts[j].style.background = 'var(' + VARS[j] + ')';
+      }
+      pcts[j].textContent = (emp * 100).toFixed(0) + '%';
+      pcts[j].title = '平稳分布 ' + (STAT.pi[j] * 100).toFixed(1) + '%';
+    }
+  }
+
+  function simStep(silent) {
+    var to = sampleNext(P[sim.cur]);
+    sim.cur = to; sim.steps++; sim.counts[to]++;
+    sim.log.push(to);
+    if (!silent) renderSim();
+  }
+
+  function stopRun() {
+    if (sim.timer) { clearInterval(sim.timer); sim.timer = null; }
+    sim.running = false;
+    btnRun.setAttribute('aria-pressed', 'false');
+    btnRun.textContent = '连续运行';
+  }
+
+  function resetSim() {
+    stopRun();
+    sim.cur = sim.start; sim.steps = 0;
+    sim.counts = [0, 0, 0]; sim.counts[sim.start] = 1;
+    sim.log = [sim.start];
+    renderSim();
+  }
+
+  btnStep.addEventListener('click', function () {
+    stopRun();
+    simStep();
+  });
+
+  btnRun.addEventListener('click', function () {
+    if (sim.running) { stopRun(); return; }
+    sim.running = true;
+    btnRun.setAttribute('aria-pressed', 'true');
+    btnRun.textContent = '暂停';
+    sim.timer = setInterval(function () {
+      simStep();
+      if (sim.steps > 3000) stopRun();
+    }, 380);
+  });
+
+  btnReset.addEventListener('click', resetSim);
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-start]'), function (b) {
+    b.addEventListener('click', function () {
+      sim.start = +b.dataset.start;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-start]'), function (o) {
+        o.setAttribute('aria-pressed', o === b ? 'true' : 'false');
+      });
+      resetSim();
+    });
+  });
+  /* ================= 收敛图 ================= */
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var STEPS = 25;
+
+  function svgEl(tag, attrs) {
+    var el = document.createElementNS(SVGNS, tag);
+    for (var k in attrs) if (Object.prototype.hasOwnProperty.call(attrs, k)) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+
+  function drawChart() {
+    var ax = document.getElementById('convAxes');
+    var se = document.getElementById('convSeries');
+    var lg = document.getElementById('convLegend');
+    ax.textContent = ''; se.textContent = ''; lg.textContent = '';
+
+    var L = 46, T = 18, W = 574, H = 186, BOT = T + H;
+    var i, t;
+
+    for (i = 0; i <= 4; i++) {
+      var p = i / 4, y = T + H * (1 - p);
+      ax.appendChild(svgEl('line', { x1: L, y1: y, x2: L + W, y2: y, 'class': i === 0 ? 'axis' : 'grid-line' }));
+      var lab = svgEl('text', { x: L - 8, y: y + 3, 'class': 'axis-label', 'text-anchor': 'end' });
+      lab.textContent = (p * 100).toFixed(0) + '%';
+      ax.appendChild(lab);
+    }
+    for (i = 0; i < STEPS; i += 6) {
+      var x = L + W * (i / (STEPS - 1));
+      ax.appendChild(svgEl('line', { x1: x, y1: BOT, x2: x, y2: BOT + 4, 'class': 'axis' }));
+      var lb = svgEl('text', { x: x, y: BOT + 17, 'class': 'axis-label', 'text-anchor': 'middle' });
+      lb.textContent = i;
+      ax.appendChild(lb);
+    }
+    var xl = svgEl('text', { x: L + W, y: BOT + 17, 'class': 'axis-label', 'text-anchor': 'end' });
+    xl.textContent = '步数 n';
+    ax.appendChild(xl);
+
+    /* 从晴天出发的分布序列 */
+    var dist = [1, 0, 0];
+    var series = [[dist[0]], [dist[1]], [dist[2]]];
+    for (t = 1; t < STEPS; t++) {
+      dist = mulVec(dist, P);
+      series[0].push(dist[0]); series[1].push(dist[1]); series[2].push(dist[2]);
+    }
+    var dash = ['', '5 4', '2 3'];
+    for (i = 0; i < 3; i++) {
+      var pts = series[i].map(function (val, k) {
+        var xx = L + W * (k / (STEPS - 1));
+        var yy = T + H * (1 - Math.max(0, Math.min(1, val)));
+        return xx.toFixed(1) + ',' + yy.toFixed(1);
+      }).join(' ');
+      var line = svgEl('polyline', { points: pts, 'class': 'series', stroke: 'var(' + VARS[i] + ')' });
+      if (dash[i]) line.setAttribute('stroke-dasharray', dash[i]);
+      se.appendChild(line);
+    }
+
+    /* 图例（带当前 π 值） */
+    var lx = L + 8;
+    for (i = 0; i < 3; i++) {
+      var y0 = BOT + 40;
+      lg.appendChild(svgEl('line', { x1: lx, y1: y0, x2: lx + 16, y2: y0, stroke: 'var(' + VARS[i] + ')', 'stroke-width': 2, 'stroke-dasharray': dash[i] || 'none' }));
+      var txt = svgEl('text', { x: lx + 23, y: y0 + 3, 'class': 'axis-label' });
+      txt.textContent = NAMES[i] + '  ' + (STAT.periodic ? '—' : (STAT.pi[i] * 100).toFixed(1) + '%');
+      lg.appendChild(txt);
+      lx += 118;
+    }
+
+    var piOut = document.getElementById('piOut');
+    piOut.textContent = STAT.periodic
+      ? 'π 不收敛'
+      : 'π = (' + STAT.pi.map(function (x) { return x.toFixed(3); }).join(', ') + ')';
+
+    var note = document.getElementById('iterNote');
+    note.textContent = STAT.periodic
+      ? '检测到周期振荡（周期 ' + STAT.period + '）：这个链不满足非周期条件，从步数图上也能看到它不会停到一个值上。'
+      : (STAT.converged
+        ? '幂迭代从“必然晴天”出发，在第 ' + STAT.iters + ' 步达到 1e-11 精度；曲线只画 25 步。'
+        : '这个矩阵收敛很慢（对角概率接近 1）：500 步幂迭代仍未到 1e-11，π 为当前近似值。');
+  }
+  /* ================= 字级生成器 ================= */
+  var CORPUS = '马尔可夫链只关心现在。天气预报是它最常见的例子：今天的天气只决定明天的天气，去年的记录帮不上忙。把状态换成字，同样的结构也能造句子：每个字后面跟着什么字，完全由语料里的频率决定。它不懂意思，只知道概率。';
+  var trans = {};
+  var starts = [];
+  var nTrans = 0;
+  (function buildTrans() {
+    for (var i = 0; i < CORPUS.length - 1; i++) {
+      var a = CORPUS[i], b = CORPUS[i + 1];
+      if (!trans[a]) trans[a] = [];
+      trans[a].push(b); nTrans++;
+      if (a === '。' && !starts.length) starts.push(b);
+      if (a === '。' && starts.indexOf(b) < 0) starts.push(b);
+    }
+  })();
+
+  var genOut = document.getElementById('genOut');
+  var genMeta = document.getElementById('genMeta');
+  var genText = '';
+  var genCur = null;
+  document.getElementById('corpusView').textContent = CORPUS;
+
+  function genRender(highlight) {
+    if (!genText) {
+      genOut.innerHTML = '<span class="blank">点击下方按钮：这段语料会被拆成一个一阶马尔可夫链，再重新采样成新句子。</span>';
+      return;
+    }
+    var head = genText.slice(0, -1), tail = genText.slice(-1);
+    if (highlight) genOut.innerHTML = head + '<mark>' + tail + '</mark>';
+    else genOut.textContent = genText;
+  }
+
+  function genStep() {
+    if (!genCur) {
+      genCur = starts[Math.floor(Math.random() * starts.length)] || '马';
+      genText = genCur;
+      return true;
+    }
+    var arr = trans[genCur];
+    if (!arr || !arr.length) return false;
+    genCur = arr[Math.floor(Math.random() * arr.length)];
+    genText += genCur;
+    return true;
+  }
+
+  function genSentence() {
+    genText = ''; genCur = null;
+    var guard = 0;
+    while (genText.length < 26 && guard++ < 200) {
+      if (!genStep()) break;
+      if (genText.length > 12 && genCur === '。') break;
+    }
+    genRender(true);
+    genMeta.textContent = 'order-1 · 字符级 · ' + genText.length + ' 字';
+  }
+
+  document.getElementById('btnGen').addEventListener('click', genSentence);
+  document.getElementById('btnGenStep').addEventListener('click', function () {
+    if (!genText) { genStep(); }
+    else { genStep(); }
+    genRender(true);
+    genMeta.textContent = 'order-1 · 字符级 · ' + genText.length + ' 字';
+  });
+  document.getElementById('btnGenReset').addEventListener('click', function () {
+    genText = ''; genCur = null; genRender(false);
+    genMeta.textContent = 'order-1 · 待启动';
+  });
+  genMeta.textContent = 'order-1 · 字符级 · ' + nTrans + ' 个转移';
+  /* ================= 主题 / 进度 / 预设 ================= */
+  var root = document.documentElement;
+  var themeBtn = document.getElementById('themeBtn');
+  var themeLabel = document.getElementById('themeLabel');
+
+  function applyTheme(t) {
+    root.setAttribute('data-theme', t);
+    themeBtn.setAttribute('aria-pressed', t === 'dark' ? 'true' : 'false');
+    themeLabel.textContent = t === 'dark' ? '亮色' : '暗色';
+    themeBtn.setAttribute('aria-label', t === 'dark' ? '切换到亮色主题' : '切换到暗色主题');
+    try { localStorage.setItem('mk-theme', t); } catch (e) { /* file:// 可能禁用存储 */ }
+  }
+
+  var saved = null;
+  try { saved = localStorage.getItem('mk-theme'); } catch (e) { saved = null; }
+  if (!saved && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) saved = 'dark';
+  applyTheme(saved === 'dark' ? 'dark' : 'light');
+
+  themeBtn.addEventListener('click', function () {
+    applyTheme(root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark');
+  });
+
+  var bar = document.getElementById('bar');
+  function onScroll() {
+    var doc = document.documentElement;
+    var max = doc.scrollHeight - window.innerHeight;
+    var r = max > 0 ? Math.min(1, Math.max(0, window.scrollY / max)) : 0;
+    bar.style.width = (r * 100).toFixed(2) + '%';
+  }
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+
+  Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function (btn) {
+    btn.addEventListener('click', function () {
+      var key = btn.dataset.preset;
+      Array.prototype.forEach.call(document.querySelectorAll('[data-preset]'), function (o) {
+        o.setAttribute('aria-pressed', o === btn ? 'true' : 'false');
+      });
+      if (key === 'random') {
+        var m = [];
+        for (var i = 0; i < 3; i++) {
+          var raw = [Math.random(), Math.random(), Math.random()];
+          m.push(normalize(raw));
+        }
+        setMatrix(m);
+      } else {
+        setMatrix(PRESETS[key]);
+      }
+    });
+  });
+
+  /* ================= 初始化 ================= */
+  buildTable();
+  buildGraph();
+  placeToken(0, true);
+  var firstNode = document.querySelector('#nodes .node[data-i="0"]');
+  if (firstNode) firstNode.classList.add('active');
+  onMatrixChange();
+  onScroll();
+
+  setInterval(function () {
+    if (document.hidden) return;
+    heroAdvance();
+  }, 1600);
+})();
+</script>
+</body>
+</html>

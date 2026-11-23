@@ -1,0 +1,104 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "marketing-site",
+    "audience": "对概率与算法感兴趣的一般读者、初学学生",
+    "scenarios": ["单页科普阅读", "课堂或自学的互动演示", "断网离线浏览"]
+  },
+  "brand": {
+    "personality": ["严谨", "温和", "可动手"],
+    "references": ["纸面数学讲义的版面节奏"]
+  },
+  "style": {
+    "direction": "纸面讲义风：暖纸底 + 墨蓝正文 + 衬线大标题；数据色仅两枚（琥珀=晴、蓝=雨）；非对称 hero；每节一个论点配一个视觉",
+    "do_not": [
+      "玻璃拟态",
+      "大面积渐变",
+      "发光 blob/orb 背景",
+      "头像点阵与无来源五星",
+      "hype 文案（赋能/无缝/革命性）",
+      "非实时内容的脉冲动画"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#2C4BD8",
+      "primary_strong": "#2239A8",
+      "text_on_primary": "#FFFFFF",
+      "neutrals": ["#1B2230", "#39435A", "#566179", "#5F6B85"],
+      "surface": "#FBFAF7",
+      "surface_alt": "#F2EEE3",
+      "surface_tint": "#F5EBD8",
+      "line": "#D8D2C4",
+      "data_sun": "#B45309",
+      "data_sun_soft": "#F6E8CE",
+      "data_rain": "#1D4ED8",
+      "data_rain_soft": "#E2E9F9",
+      "ink_on_dark": "#EDEAE3",
+      "ink_on_dark_dim": "#B9BCC8",
+      "link_on_dark": "#F0C987"
+    },
+    "typography": {
+      "body": "system-ui, 'Segoe UI', 'Microsoft YaHei', sans-serif",
+      "display": "Georgia, 'Times New Roman', 'SimSun', serif",
+      "mono": "Consolas, 'Courier New', monospace",
+      "scale": [12, 14, 16, 18, 20, 24, 32, 44]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 24, 32, 48, 64]
+    },
+    "radius": { "sm": 4, "md": 8, "lg": 12, "pill": 999 },
+    "shadow": { "card": "0 1px 2px rgba(27,34,48,0.08)" }
+  },
+  "components": {
+    "button": {
+      "height": 40,
+      "radius": "md",
+      "rules": [
+        "主操作唯一（进入互动实验）",
+        "切换类按钮用 aria-pressed 表达状态",
+        "按压反馈 0.98 缩放，120-180ms"
+      ]
+    },
+    "table": {
+      "density": "compact",
+      "rules": [
+        "数字右对齐并使用 mono 字体",
+        "表是图的可访问事实源：每个图配可见数据表"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": { "sm": 640, "md": 768, "lg": 1024 },
+    "density": "airy"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required"
+  },
+  "invariants": [
+    { "id": "INV-001", "type": "functional", "description": "零外部请求：全部 CSS/JS/图形内联于单个 index.html，断网可完整阅读与交互" },
+    { "id": "INV-002", "type": "functional", "description": "两个互动演示纯客户端运行；任意滑杆取值下转移矩阵行和恒等于 1" },
+    { "id": "INV-003", "type": "behavior", "description": "每个示意图/图表配可见数据表与一句话结论（可访问的事实源）" },
+    { "id": "INV-004", "type": "visual", "description": "正文及次级文本对 surface 对比度 >= 4.5:1；焦点可见；尊重 prefers-reduced-motion" },
+    { "id": "INV-005", "type": "visual", "description": "全站唯一缓动 cubic-bezier(0.22,1,0.36,1)；只动 color/opacity/transform，禁动布局属性" }
+  ],
+  "constraints": {
+    "project": [
+      "自包含单文件：全部 CSS/JS 内联，无构建、无外部字体与图片",
+      "图形一律内联 SVG，不用位图",
+      "桌面优先，768px 以下降为单列仍可用"
+    ],
+    "pages": {
+      "index.html": "单页讲义：hero + 7 个内容节 + 页脚；互动实验是唯一签名元素"
+    }
+  },
+  "precedence": ["invariants", "a11y_hard", "project_constraints", "tokens", "style_preferences"],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md"
+  }
+}

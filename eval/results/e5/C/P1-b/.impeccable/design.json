@@ -1,0 +1,113 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-02-14T00:00:00Z",
+  "title": "Design System: 概率观测年鉴（马尔可夫链讲解页）",
+  "extensions": {
+    "colorMeta": {
+      "vermilion": { "role": "primary", "displayName": "朱砂", "canonical": "#b23a26", "tonalRamp": ["#4a150c", "#6b1f12", "#8b2a18", "#a33420", "#b23a26", "#c96a54", "#dfa294", "#f2d7cf"] },
+      "prussian": { "role": "secondary", "displayName": "普鲁士蓝", "canonical": "#27548d", "tonalRamp": ["#0f2340", "#173660", "#1f4376", "#27548d", "#4d6f9e", "#7b93b5", "#a9bdd2", "#d7e2ec"] },
+      "ochre": { "role": "tertiary", "displayName": "赭金", "canonical": "#8a5a1c", "tonalRamp": ["#33200a", "#4d300f", "#684214", "#8a5a1c", "#a3743a", "#bd935e", "#d6b690", "#ecdac2"] },
+      "ink": { "role": "neutral", "displayName": "青墨", "canonical": "#20313e", "tonalRamp": ["#0b1218", "#141d26", "#1c2733", "#20313e", "#45535f", "#6c7983", "#98a3aa", "#c5ccd1"] },
+      "paper": { "role": "neutral", "displayName": "观测纸", "canonical": "#edf0ee", "tonalRamp": ["#7f8d86", "#9aa8a1", "#b4c0ba", "#ccd6d1", "#dfe5e2", "#e8ede9", "#edf0ee", "#f6f8f7"] },
+      "ink-2": { "role": "neutral", "displayName": "青墨·淡", "canonical": "#48596a", "tonalRamp": ["#1d242b", "#262f38", "#303a44", "#3a4753", "#48596a", "#6d7d8c", "#95a3af", "#bcc7cf"] },
+      "rule": { "role": "neutral", "displayName": "栏线", "canonical": "#b6c2ba", "tonalRamp": ["#5c6a63", "#75837c", "#8fa198", "#a2afa8", "#b6c2ba", "#c7d0cb", "#d9dfdb", "#ecefec"] },
+      "paper-2": { "role": "neutral", "displayName": "纸·二", "canonical": "#e4eae6", "tonalRamp": ["#6f7d76", "#8b9992", "#a6b3ac", "#bfcbc4", "#d3dcd6", "#dce3df", "#e4eae6", "#f0f3f1"] },
+      "paper-3": { "role": "neutral", "displayName": "纸·三", "canonical": "#dae2dd", "tonalRamp": ["#5f6d66", "#7b897f", "#96a399", "#aebbb1", "#c3cdc6", "#ced7d2", "#dae2dd", "#e9eeeb"] },
+      "vermilion-deep": { "role": "primary", "displayName": "朱砂·深", "canonical": "#93301f", "tonalRamp": ["#3c110a", "#591a0f", "#752515", "#872b1a", "#93301f", "#aa5a48", "#c28d7e", "#dcc0b7"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "特排", "purpose": "仅卷首主标题一行。" },
+      "headline": { "displayName": "章题", "purpose": "章标题，与章印同行。" },
+      "title": { "displayName": "节题", "purpose": "节标题与面板题。" },
+      "body": { "displayName": "正文", "purpose": "阅读栏正文，40em 行长。" },
+      "label": { "displayName": "注记", "purpose": "图注、目次、读数与注释。" }
+    },
+    "shadows": [
+      { "name": "seal-press", "value": "1px 2px 4px rgba(32,49,62,.16)", "purpose": "章印/记录章等盖印元素的压痕。" },
+      { "name": "plate-rest", "value": "2px 3px 10px rgba(32,49,62,.08)", "purpose": "图版容器搁在桌面的安静衬垫。" },
+      { "name": "stamp-dot", "value": "1px 1px 3px rgba(32,49,62,.35)", "purpose": "最新观测记录的小圆章。" }
+    ],
+    "motion": [
+      { "name": "stampin", "value": "0.3s cubic-bezier(.2,.9,.3,1)", "purpose": "观测记录格盖印入场；prefers-reduced-motion 时关闭。" },
+      { "name": "fill-settle", "value": "width .4s cubic-bezier(.2,.9,.3,1)", "purpose": "频数条宽度沉淀；reduced-motion 关闭。" },
+      { "name": "press", "value": "transform .12s ease-out", "purpose": "按钮按压位移。" }
+    ],
+    "breakpoints": [
+      { "name": "ctl-wrap", "value": "520px" },
+      { "name": "svg-text", "value": "640px" },
+      { "name": "lab-two-col", "value": "780px" },
+      { "name": "margin-notes", "value": "1460px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "主按钮（掷一步）",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "朱砂实底主行动钮，字距 0.12em；hover 加深、active 下压。",
+      "html": "<button class=\"ds-btn-primary\">掷一步</button>",
+      "css": ".ds-btn-primary{font-family:Georgia,'Noto Serif SC','Songti SC','SimSun',serif;font-size:.95rem;font-weight:700;letter-spacing:.12em;text-indent:.1em;padding:.5rem 1.05rem .5rem 1.15rem;background:#b23a26;border:1px solid #93301f;border-radius:3px;color:#f6f1ea;cursor:pointer;transition:background .15s ease-out,transform .12s ease-out;box-shadow:1px 2px 4px rgba(32,49,62,.16)}.ds-btn-primary:hover{background:#93301f}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:2px solid #b23a26;outline-offset:3px}"
+    },
+    {
+      "name": "次按钮（自动运行/重置）",
+      "kind": "button",
+      "refersTo": "button-ghost",
+      "description": "纸底 hairline 边盖印钮；hover 朱砂边与淡朱底。",
+      "html": "<button class=\"ds-btn-ghost\">自动运行</button>",
+      "css": ".ds-btn-ghost{font-family:Georgia,'Noto Serif SC','Songti SC','SimSun',serif;font-size:.95rem;font-weight:700;letter-spacing:.12em;text-indent:.1em;padding:.5rem 1.05rem .5rem 1.15rem;background:#edf0ee;border:1px solid #8fa198;border-radius:3px;color:#20313e;cursor:pointer;transition:background .15s ease-out,border-color .15s ease-out,transform .12s ease-out}.ds-btn-ghost:hover{border-color:#b23a26;color:#93301f;background:rgba(178,58,38,.14)}.ds-btn-ghost:active{transform:translateY(1px)}.ds-btn-ghost:focus-visible{outline:2px solid #b23a26;outline-offset:3px}"
+    },
+    {
+      "name": "章印",
+      "kind": "custom",
+      "refersTo": "seal",
+      "description": "朱砂边框章印，rotate(-2deg)，压痕阴影；只用于章头。",
+      "html": "<span class=\"ds-seal\">第壹章</span>",
+      "css": ".ds-seal{display:inline-flex;align-items:center;justify-content:center;border:2px solid #b23a26;color:#b23a26;background:#edf0ee;font-family:Georgia,'Noto Serif SC','Songti SC','SimSun',serif;font-size:.98rem;font-weight:700;letter-spacing:.18em;text-indent:.18em;padding:.28rem .6rem .28rem .78rem;border-radius:3px;transform:rotate(-2deg);box-shadow:1px 2px 4px rgba(32,49,62,.16)}"
+    },
+    {
+      "name": "朱丝栏表格",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "1px 朱砂淡格线数据表；表头纸二底，数字右对齐 tabular-nums，行 hover 朱砂淡底。",
+      "html": "<table class=\"ds-led\"><thead><tr><th>今⁄明</th><th>晴</th><th>雨</th></tr></thead><tbody><tr><th scope=\"row\">晴</th><td>0.9000</td><td>0.1000</td></tr></tbody></table>",
+      "css": ".ds-led{border-collapse:collapse;font-family:Georgia,'Noto Serif SC','Songti SC','SimSun',serif;font-size:.95rem;color:#20313e;font-variant-numeric:tabular-nums}.ds-led th,.ds-led td{border:1px solid rgba(178,58,38,.3);padding:.42rem .8rem;text-align:right}.ds-led thead th{background:#e4eae6;font-weight:700;text-align:center;letter-spacing:.04em}.ds-led tbody th[scope=row]{text-align:left;background:#e4eae6;font-weight:700}.ds-led tbody tr:hover td{background:rgba(178,58,38,.14)}"
+    },
+    {
+      "name": "图版容器",
+      "kind": "card",
+      "refersTo": "plate",
+      "description": "hairline 细框图版：纸二底、搁置阴影、底部 hairline 之上放图注。",
+      "html": "<figure class=\"ds-plate\"><div class=\"ds-plate-body\">图与表内容</div><figcaption><span class=\"ds-plate-no\">图版一</span>两态马尔可夫链。</figcaption></figure>",
+      "css": ".ds-plate{margin:0;background:#e4eae6;border:1px solid #8fa198;padding:1.4rem 1.4rem 1rem;box-shadow:2px 3px 10px rgba(32,49,62,.08);font-family:Georgia,'Noto Serif SC','Songti SC','SimSun',serif;color:#20313e}.ds-plate figcaption{font-size:.88rem;color:#48596a;margin-top:.9rem;border-top:1px solid #b6c2ba;padding-top:.6rem;line-height:1.7}.ds-plate-no{color:#93301f;font-weight:700;letter-spacing:.1em;margin-right:.5em}"
+    },
+    {
+      "name": "观测记录格（最新一步）",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "40×52 观测格：字形+状态名双通道，底边态色条，最新格朱砂边加圆章。",
+      "html": "<div class=\"ds-cell ds-cell-latest\"><svg viewBox=\"0 0 24 24\" width=\"20\" height=\"20\" aria-hidden=\"true\"><circle cx=\"12\" cy=\"12\" r=\"4.4\" fill=\"#8a5a1c\"/></svg><span class=\"ds-cname\">晴</span><i class=\"ds-stamp\">记</i></div>",
+      "css": ".ds-cell{position:relative;width:40px;height:52px;border:1px solid #b6c2ba;background:#edf0ee;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;box-shadow:inset 0 -3px 0 #8a5a1c;font-family:Georgia,'Noto Serif SC','Songti SC','SimSun',serif}.ds-cell-latest{border-color:#b23a26;border-width:2px}.ds-cname{font-size:.68rem;letter-spacing:.15em;line-height:1;color:#8a5a1c}.ds-stamp{position:absolute;top:-9px;right:-9px;width:20px;height:20px;background:#b23a26;color:#f6f1ea;font-size:.62rem;font-style:normal;display:flex;align-items:center;justify-content:center;border-radius:50%;transform:rotate(8deg);box-shadow:1px 1px 3px rgba(32,49,62,.35)}"
+    },
+    {
+      "name": "滑杆",
+      "kind": "input",
+      "refersTo": null,
+      "description": "朱砂淡轨道 + 方印拇指的概率滑杆，读数朱砂深色。",
+      "html": "<div class=\"ds-ctl\"><label for=\"ds-r\">晴→晴 概率 a</label><input type=\"range\" id=\"ds-r\" min=\"0.05\" max=\"0.95\" step=\"0.01\" value=\"0.90\"><output>0.90</output></div>",
+      "css": ".ds-ctl{display:flex;align-items:center;gap:.8rem;font-family:Georgia,'Noto Serif SC','Songti SC','SimSun',serif;color:#20313e}.ds-ctl label{flex:none;width:9.5em;font-size:.95rem}.ds-ctl output{flex:none;width:4.2em;text-align:right;font-weight:700;color:#93301f;font-variant-numeric:tabular-nums}.ds-ctl input[type=range]{flex:1;appearance:none;-webkit-appearance:none;height:22px;background:transparent}.ds-ctl input[type=range]::-webkit-slider-runnable-track{height:2px;background:rgba(178,58,38,.3)}.ds-ctl input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:16px;height:16px;margin-top:-7px;background:#b23a26;border:1px solid #93301f;border-radius:3px;box-shadow:1px 1px 3px rgba(32,49,62,.3);transform:rotate(-4deg);cursor:grab}.ds-ctl input[type=range]:focus-visible{outline:2px solid #b23a26;outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "概率观测年鉴",
+    "overview": "整个系统是一本正在填写的观测年册：世界只出现在文档的框架上（刊头双细线、章印、朱丝栏表格、图版框），阅读栏是一栏安静的宋体正文。朱砂红专司记录语义——印章、格线、π 参考线都意味着一个真实计算结果；普鲁士蓝与赭金分别是雨、晴两个状态的通道色，状态永远由字形+文字+位置共同编码。冷调蓝灰观测纸打底，铁胆青墨书写，深度只来自纸面分层与三处轻微压痕阴影。",
+    "keyCharacteristics": ["框架浓、栏体淡", "朱砂=记录语义", "全图形手绘 SVG、零外链", "数字页内实时计算、tabular-nums"],
+    "rules": [
+      { "name": "朱砂记录律", "body": "朱砂红只用于记录：印章、朱丝栏格线、π 参考线、主行动。永不作大面积底色或纯装饰。", "section": "colors" },
+      { "name": "墨形律", "body": "状态编码 = 字形 + 文字标签 + 位置；色相只是辅助通道。", "section": "colors" },
+      { "name": "图版框律", "body": "图/表一律装入 hairline 细框图版（编号+图注），正文栏内不出现无框浮动图。", "section": "colors" },
+      { "name": "数字即观测律", "body": "数值以 tabular-nums 衬线呈现且由页内脚本实时计算；禁止硬编码死值。", "section": "typography" }
+    ],
+    "dos": ["朱砂只出现在记录语义上，一屏内占比保持小", "字形+文字+位置编码状态，色相仅辅助", "数字 tabular-nums 且页内实时计算；图版必带编号与图注", "章节编号作为被正文交叉引用的编目装置保留"],
+    "donts": ["不引入外链字体/脚本/图片（离线自包含是硬约束）", "不用黑底霓虹节点图或白卡片阵列承载内容", "不等宽字体作装饰、渐变文字、硬偏移无模糊阴影、眉题/kicker", "朱砂不作大面积底色或纯装饰色块"]
+  }
+}

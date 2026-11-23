@@ -1,0 +1,142 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "marketing-site",
+    "audience": "自学者与业余演奏者：认识音名、想弄懂调号与和弦关系，但没有系统学过和声",
+    "scenarios": [
+      "查一个调有几个升降号",
+      "看懂关系大小调",
+      "找出 Ⅰ–Ⅳ–Ⅴ 与 ii–V–I",
+      "把一段进行移到别的调",
+      "记住升降号的累积顺序"
+    ]
+  },
+  "brand": {
+    "personality": ["精确", "克制", "学院感"],
+    "references": ["乐理教科书插图", "乐器面板刻度盘", "老式铅印谱表"]
+  },
+  "style": {
+    "direction": "乐理手册式单页：暖纸底 + 单一墨色 + 一个赭红强调；hairline 分隔替代卡片阴影；音名与数字用等宽字体承载，中文正文用无衬线；转盘是唯一强视觉（罗盘刻度盘），其余靠字号与留白分层",
+    "do_not": [
+      "紫蓝/紫粉渐变与渐变文字",
+      "玻璃拟态卡与彩色 glow",
+      "emoji 作图标",
+      "全大写 + 宽字距标签",
+      "标题 weight 800 以上",
+      "满屏圆角卡片堆叠"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#9E3B2A",
+      "surface": "#FAF7F1",
+      "surface_2": "#F3EDE3",
+      "surface_raised": "#FFFFFF",
+      "line": "#E3DCD0",
+      "line_strong": "#D6CCBB",
+      "accent_tint": "#F6E7E2",
+      "text_on_primary": "#FFFFFF",
+      "neutrals": ["#191613", "#3D3730", "#6E6558"]
+    },
+    "typography": {
+      "body": "\"Microsoft YaHei\", \"PingFang SC\", system-ui, sans-serif",
+      "display": "\"Source Han Serif SC\", \"Songti SC\", \"SimSun\", Georgia, serif",
+      "mono": "ui-monospace, \"Cascadia Mono\", Consolas, \"Courier New\", monospace",
+      "scale": [12, 14, 16, 18, 20, 24, 28, 32, 40, 52, 64]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96]
+    },
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 14
+    },
+    "shadow": {
+      "card": "0 1px 2px rgba(25,22,19,0.06)"
+    },
+    "motion": {
+      "easing": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "dur_hover": 140,
+      "dur_panel": 200,
+      "dur_needle": 420
+    }
+  },
+  "components": {
+    "button": {
+      "height": 40,
+      "radius": "md",
+      "rules": ["主操作唯一", "焦点环始终可见（2px accent + 2px 偏移）", "不用 hover 缩放"]
+    },
+    "station": {
+      "rules": ["圈上 12 个圆形调位可点击", "aria-pressed 表达选中", "方向键在调位间移动并同步选中"]
+    },
+    "table": {
+      "density": "compact",
+      "rules": ["数字与音名右对齐/等宽", "禁用斑马纹", "窄屏横向滚动并可用键盘滚动"]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 720,
+      "lg": 980,
+      "xl": 1120
+    },
+    "density": "comfortable"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required",
+    "reduced_motion": "required"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "交付物是单个 index.html：CSS 与 JS 全部内联，零外部请求（无 CDN、无外链字体、无图片请求、无网络调用）"
+    },
+    {
+      "id": "INV-002",
+      "type": "functional",
+      "description": "五度圈必须真实可交互：12 个调位全部可选中，右侧面板的调号、升降音、七个调内和弦、相邻调随选中项切换"
+    },
+    {
+      "id": "INV-003",
+      "type": "behavior",
+      "description": "乐理数据必须与调号一致：C 0 个、G 1♯…F♯ 6♯、D♭ 5♭…F 1♭；升降音按 ♯F C G D A E B / ♭B E A D G C F 累积；关系小调与调内和弦由同一套拼写推导，不手写零散名字"
+    },
+    {
+      "id": "INV-004",
+      "type": "behavior",
+      "description": "转盘可用键盘操作：Tab 进入、方向键/Home/End 在 12 个调位间移动并同步选中，焦点环始终可见"
+    },
+    {
+      "id": "INV-005",
+      "type": "behavior",
+      "description": "禁用 JS 时正文、转盘 12 个调位与默认（C 大调）面板内容仍然可读，不出现空白主区域"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "单文件自包含，无构建步骤、无第三方库",
+      "只用系统字体与内联 SVG/CSS 绘制，不引入二进制资源",
+      "不新增网络依赖与后台进程"
+    ],
+    "pages": {
+      "index.html": {
+        "wheel_fallback": "视口 <= 720px 时转盘改为 3 列调位网格，保持同样的三行信息",
+        "audio": "音色由 Web Audio 现场合成；无 AudioContext 时隐藏试听按钮",
+        "enharmonic": "圈上同时保留 F♯ 与 D♭（惯用拼写），等音关系写在正文说明"
+      }
+    }
+  },
+  "precedence": ["invariants", "a11y_hard", "project_constraints", "tokens", "style_preferences"],
+  "provenance": {
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "decisions": ".vismith/decisions.log.md"
+  }
+}

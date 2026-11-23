@@ -1,0 +1,730 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>五度圈 · 十二个调的调号、关系小调与和弦</title>
+<meta name="description" content="可交互的五度圈：点一个调，看它的调号、关系小调、调内三和弦与常见和弦进行。单页，纯静态。">
+<style>
+:root{
+  color-scheme:light;
+  --paper:#FAF7F0;
+  --card:#FFFCF6;
+  --sunk:#F2ECDF;
+  --sunk-2:#E9E1D1;
+  --line:#DCD4C4;
+  --line-2:#C9BFAB;
+  --ink:#1B1815;
+  --ink-2:#4A443C;
+  --ink-3:#6B6459;
+  --pine:#1C5B4A;
+  --pine-dark:#14453A;
+  --pine-tint:#E4EEE9;
+  --pine-note:#C8DED5;
+  --onpine:#FFFCF6;
+  --brass:#9C7524;
+  --sans:"Segoe UI",system-ui,-apple-system,"PingFang SC","Hiragino Sans GB","Microsoft YaHei","Source Han Sans SC",sans-serif;
+  --serif:Georgia,"Iowan Old Style","Palatino Linotype","Noto Serif","Songti SC",serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono","Consolas",monospace;
+  --r-s:4px;--r-m:8px;--r-l:12px;
+  --ease:cubic-bezier(.22,1,.36,1);
+}
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;background:var(--paper);color:var(--ink);
+  font-family:var(--sans);font-size:1rem;line-height:1.65;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+h1,h2,h3{margin:0;font-weight:500;text-wrap:balance}
+p{margin:0}
+ul,ol{margin:0;padding:0;list-style:none}
+svg{display:block}
+table{border-collapse:collapse}
+::selection{background:var(--pine-tint);color:var(--ink)}
+:where(a,button,summary,[tabindex]):focus-visible{
+  outline:2px solid var(--pine);outline-offset:3px;border-radius:2px;
+}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.skip{
+  position:absolute;left:1rem;top:-4rem;z-index:9;
+  background:var(--pine);color:var(--onpine);padding:.5rem 1rem;
+  border-radius:0 0 var(--r-m) var(--r-m);text-decoration:none;font-size:.875rem;
+  transition:top .14s var(--ease);
+}
+.skip:focus{top:0}
+.wrap{width:100%;max-width:78rem;margin-inline:auto;padding-inline:1.5rem}
+@media (min-width:64rem){.wrap{padding-inline:2.5rem}}
+
+/* masthead */
+.masthead{padding-block:2.25rem 1.75rem;border-bottom:1px solid var(--line)}
+.masthead__grid{display:grid;gap:1.75rem;align-items:end}
+@media (min-width:56rem){
+  .masthead__grid{grid-template-columns:minmax(0,1fr) 17rem;gap:3rem}
+}
+.kicker{
+  font-family:var(--mono);font-size:.8125rem;line-height:1.4;
+  color:var(--ink-3);margin-bottom:.75rem;
+}
+.kicker b{font-weight:400;color:var(--ink-2)}
+h1{
+  font-family:var(--serif);font-weight:500;
+  font-size:clamp(2rem,3.8vw,3rem);line-height:1.08;letter-spacing:-.02em;
+}
+h1 em{font-style:normal;color:var(--pine)}
+.lede{
+  margin-top:1rem;max-width:35em;color:var(--ink-2);
+  font-size:1.125rem;line-height:1.7;
+}
+.facts{margin:0}
+.facts__row{display:grid;grid-template-columns:5.5rem 1fr;gap:1rem;padding-block:.5rem;border-top:1px solid var(--line)}
+.facts__row:first-child{border-top:0;padding-top:0}
+.facts dt{font-size:.8125rem;color:var(--ink-3);line-height:1.9}
+.facts dd{margin:0;font-size:.875rem;line-height:1.9;color:var(--ink);font-variant-numeric:tabular-nums}
+/* section shells */
+.sec{padding-block:3.5rem;border-bottom:1px solid var(--line)}
+.sec--first{padding-top:2.25rem}
+.sec__head{display:flex;flex-wrap:wrap;align-items:baseline;gap:.5rem 1.25rem;margin-bottom:1.5rem}
+h2{font-family:var(--serif);font-size:clamp(1.5rem,2.4vw,2rem);line-height:1.15;letter-spacing:-.015em}
+.sec__note{font-size:.8125rem;color:var(--ink-3)}
+.sec__note--end{margin-left:auto}
+
+/* console */
+.console__grid{display:grid;gap:2.5rem;align-items:start}
+@media (min-width:60rem){
+  .console__grid{grid-template-columns:minmax(0,1.04fr) minmax(0,1fr);gap:3.5rem}
+}
+.wheel{width:100%;max-width:28rem;margin-inline:auto}
+.wheel svg{width:100%;height:auto;overflow:visible}
+.wheel__caption{
+  display:flex;flex-wrap:wrap;gap:.5rem 1rem;justify-content:space-between;align-items:center;
+  margin-top:1rem;font-size:.8125rem;color:var(--ink-3);line-height:1.6;
+}
+.tickline{stroke:var(--line-2);stroke-width:1}
+.tickline--major{stroke:var(--brass);stroke-opacity:.72;stroke-width:1.25}
+.dial-edge{fill:none;stroke:var(--line);stroke-width:1}
+.hub{fill:var(--paper);stroke:var(--line-2);stroke-width:1}
+.k{cursor:pointer;outline:none}
+.k .ring-o{fill:var(--sunk);stroke:var(--paper);stroke-width:1.5;transition:fill .14s var(--ease)}
+.k .ring-i{fill:var(--card);stroke:var(--paper);stroke-width:1.5;transition:fill .14s var(--ease)}
+.k:hover .ring-o{fill:var(--sunk-2)}
+.k:hover .ring-i{fill:var(--sunk)}
+.k[aria-checked="true"] .ring-o{fill:var(--pine);stroke:var(--onpine)}
+.k[aria-checked="true"] .ring-i{fill:var(--pine-dark);stroke:var(--pine-note);stroke-opacity:.45}
+.k:focus-visible .ring-o{stroke:var(--ink);stroke-width:3.5}
+.k:focus-visible .ring-i{stroke:var(--ink);stroke-width:3}
+.t-major{font-family:var(--serif);font-size:1.25rem;fill:var(--ink);pointer-events:none}
+.t-minor{font-size:.8125rem;fill:var(--ink-3);pointer-events:none}
+.t-count{font-family:var(--mono);font-size:.6875rem;fill:var(--ink-3);pointer-events:none;letter-spacing:.02em}
+.k[aria-checked="true"] .t-major{fill:var(--onpine)}
+.k[aria-checked="true"] .t-minor{fill:var(--pine-note)}
+.k[aria-checked="true"] .t-count{fill:var(--pine-note);fill-opacity:.85}
+.hub-name{font-family:var(--serif);font-size:2.5rem;fill:var(--ink);letter-spacing:-.01em}
+.hub-sub{font-size:.8125rem;fill:var(--ink-3)}
+.hub-sig{font-family:var(--mono);font-size:.875rem;fill:var(--pine)}
+
+/* detail panel */
+.panel{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);
+  padding:1.5rem;
+}
+@media (min-width:64rem){.panel{padding:1.75rem}}
+.panel__top{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}
+.panel__key{font-family:var(--serif);font-size:1.5rem;line-height:1.25;letter-spacing:-.01em}
+.panel__rel{font-size:.8125rem;color:var(--ink-3);margin-top:.25rem}
+.panel__rel b{font-weight:500;color:var(--ink-2)}
+.panel__badge{
+  flex:none;font-family:var(--mono);font-size:.8125rem;font-variant-numeric:tabular-nums;
+  color:var(--pine);background:var(--pine-tint);border-radius:var(--r-s);padding:.25rem .5rem;
+}
+.panel__badge--flat{color:var(--ink-2);background:var(--sunk)}
+.blk{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--line)}
+.blk__h{
+  display:flex;align-items:baseline;justify-content:space-between;gap:.75rem;
+  font-size:.75rem;font-weight:400;color:var(--ink-3);margin-bottom:.75rem;
+}
+.blk__h span{font-variant-numeric:tabular-nums}
+.staff-wrap{background:var(--paper);border:1px solid var(--line);border-radius:var(--r-m);padding:.5rem .75rem}
+.staff{width:100%;max-width:17rem;height:auto}
+.staff-line{stroke:var(--ink-3);stroke-width:1;stroke-opacity:.75}
+.staff-bar{stroke:var(--ink);stroke-width:1.5}
+.acc{font-family:var(--serif);font-size:1.25rem;fill:var(--ink)}
+.staff-empty{font-size:.6875rem;fill:var(--ink-3);font-family:var(--mono)}
+.chips{display:flex;flex-wrap:wrap;gap:.375rem}
+.chip{
+  font-family:var(--mono);font-size:.875rem;font-variant-numeric:tabular-nums;
+  padding:.25rem .5rem;border:1px solid var(--line-2);border-radius:var(--r-s);
+  background:var(--paper);color:var(--ink);
+}
+.chip--none{border-style:dashed;color:var(--ink-3);font-family:var(--sans);font-size:.8125rem}
+.chords{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:.25rem}
+@media (max-width:30rem){.chords{grid-template-columns:repeat(4,minmax(0,1fr));gap:.5rem}}
+.chord{display:flex;flex-direction:column;border-top:2px solid var(--line-2);padding-top:.5rem;min-width:0}
+.chord__deg{font-family:var(--mono);font-size:.6875rem;color:var(--ink-3);line-height:1.5}
+.chord__nm{font-family:var(--serif);font-size:1rem;line-height:1.35;white-space:nowrap}
+.chord--tonic .chord__nm{color:var(--pine)}
+.chord--tonic{border-top-color:var(--pine)}
+.progs{display:grid;gap:.5rem}
+.prog{display:grid;grid-template-columns:7.5rem 1fr;gap:.75rem;align-items:baseline;font-size:.875rem}
+.prog__id{font-family:var(--mono);font-size:.75rem;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.prog__val{font-family:var(--mono);font-size:.875rem;color:var(--ink);letter-spacing:.02em}
+.nav2{display:grid;grid-template-columns:1fr 1fr;gap:.5rem}
+.nav-btn{
+  display:flex;flex-direction:column;gap:.0625rem;text-align:left;
+  font:inherit;color:var(--ink);background:var(--paper);
+  border:1px solid var(--line-2);border-radius:var(--r-m);
+  padding:.5rem .75rem;cursor:pointer;
+  transition:background .14s var(--ease),border-color .14s var(--ease);
+}
+.nav-btn:hover{background:var(--pine-tint);border-color:var(--pine)}
+.nav-btn__h{font-size:.6875rem;color:var(--ink-3);line-height:1.6}
+.nav-btn__v{font-family:var(--serif);font-size:1rem;line-height:1.4}
+.btn{
+  display:inline-flex;align-items:center;gap:.5rem;
+  font:inherit;font-size:.875rem;line-height:1.4;
+  padding:.5rem 1rem;border-radius:var(--r-m);border:1px solid var(--pine);
+  background:var(--pine);color:var(--onpine);cursor:pointer;
+  transition:background .14s var(--ease),border-color .14s var(--ease),color .14s var(--ease);
+}
+.btn:hover{background:var(--pine-dark);border-color:var(--pine-dark)}
+.btn[aria-pressed="true"]{background:var(--paper);color:var(--pine);border-color:var(--pine)}
+.btn__dot{width:.5rem;height:.5rem;border-radius:50%;background:currentColor;flex:none}
+.btn[aria-pressed="true"] .btn__dot{border-radius:1px}
+/* cards */
+.cards{display:grid;gap:1rem;grid-template-columns:1fr}
+@media (min-width:44rem){.cards{grid-template-columns:1fr 1fr}}
+@media (min-width:72rem){.cards{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--r-l);
+  padding:1.25rem;display:flex;flex-direction:column;gap:.5rem;
+}
+.card__h{font-size:1rem;font-weight:500;line-height:1.45}
+.card__b{font-size:.875rem;line-height:1.7;color:var(--ink-2);margin:0}
+.card__b b{font-weight:500;color:var(--ink)}
+.card__foot{margin-top:auto;padding-top:.5rem;font-size:.75rem;line-height:1.6;color:var(--ink-3)}
+
+/* reference table */
+.table-wrap{margin-top:1.5rem;border-top:1px solid var(--line-2);overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{width:100%;min-width:34rem;font-size:.875rem}
+caption{text-align:left;font-size:.8125rem;color:var(--ink-3);padding-block:.75rem}
+th,td{text-align:left;padding:.75rem 1rem .75rem 0;border-bottom:1px solid var(--line);vertical-align:baseline}
+th{
+  font-weight:400;font-size:.75rem;color:var(--ink-3);
+  border-bottom:1px solid var(--line-2);white-space:nowrap;
+}
+th:last-child,td:last-child{padding-right:0}
+td.k-name{font-family:var(--serif);font-size:1rem;white-space:nowrap}
+td.k-min{font-family:var(--mono);font-size:.875rem;color:var(--ink-2);white-space:nowrap}
+td.k-sig{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.k-acc{font-family:var(--mono);font-size:.8125rem;color:var(--ink-2);white-space:nowrap}
+td.k-tri{font-family:var(--mono);font-size:.8125rem;color:var(--ink-2);white-space:nowrap}
+tr[data-current="true"] td{background:var(--pine-tint)}
+tr[data-current="true"] td.k-name{box-shadow:inset 3px 0 0 var(--pine);padding-left:.75rem}
+tr[data-current="true"] td.k-name::after{
+  content:"当前";font-family:var(--sans);font-size:.6875rem;color:var(--pine);
+  margin-left:.5rem;
+}
+
+/* footer */
+.foot{padding-block:2.5rem 4rem;font-size:.8125rem;line-height:1.8;color:var(--ink-3)}
+.foot__grid{display:grid;gap:1.5rem}
+@media (min-width:48rem){.foot__grid{grid-template-columns:1fr 1fr;gap:2.5rem}}
+.foot p+p{margin-top:.5rem}
+.foot b{font-weight:500;color:var(--ink-2)}
+.foot__rule{border-top:1px solid var(--line);padding-top:1.5rem}
+
+/* motion */
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{
+    animation-duration:.01ms !important;animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;scroll-behavior:auto !important;
+  }
+}
+@keyframes cof-fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.panel__body{animation:cof-fade .42s var(--ease) both}
+@media print{
+  .btn,.skip{display:none}
+  body{background:#fff}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="masthead">
+  <div class="wrap masthead__grid">
+    <div>
+      <p class="kicker">乐理图解 · 调号 / 关系调 / 和弦</p>
+      <h1>五度圈，<em>一圈讲完</em>调号与和弦</h1>
+      <p class="lede">每向上一个纯五度，调号就多一个升号；向下则多一个降号。十二个调因此排成一圈——调号、关系小调、调内和弦全在一张图上。</p>
+    </div>
+    <dl class="facts">
+      <div class="facts__row"><dt>每格间隔</dt><dd>纯五度 · 7 个半音</dd></div>
+      <div class="facts__row"><dt>两个方向</dt><dd>顺时针加 ♯ · 逆时针加 ♭</dd></div>
+      <div class="facts__row"><dt>一格读出</dt><dd>调号 · 关系小调 · 7 个调内三和弦</dd></div>
+    </dl>
+  </div>
+</header>
+
+<main id="main">
+
+<section class="sec sec--first" aria-labelledby="h-wheel">
+  <div class="wrap">
+    <div class="sec__head">
+      <h2 id="h-wheel">轮盘</h2>
+      <p class="sec__note">外环是大调，内环是它的关系小调；外缘小字是调号的升降号个数</p>
+    </div>
+
+    <div class="console__grid">
+      <div>
+        <div class="wheel">
+          <svg id="cof" viewBox="0 0 400 400" role="group" aria-labelledby="cof-t cof-d">
+            <title id="cof-t">五度圈轮盘</title>
+            <desc id="cof-d">十二个调按纯五度顺时针排列：从顶部的 C 开始向右依次为 G、D、A、E、B、F♯，向左依次为 F、B♭、E♭、A♭、D♭。外环为大调，内环为对应的关系小调。</desc>
+            <g id="cof-root" role="radiogroup" aria-label="十二个调，用左右方向键切换"></g>
+          </svg>
+        </div>
+        <div class="wheel__caption">
+          <p>点扇区，或用 ← → 键切换</p>
+          <button class="btn" id="walk" type="button" aria-pressed="false">
+            <span class="btn__dot" aria-hidden="true"></span>
+            <span id="walk-t">沿圈走一圈</span>
+          </button>
+        </div>
+
+        <div class="blk">
+          <p class="blk__h"><span>相邻格</span><span>每步差一个变化音</span></p>
+          <div class="nav2">
+            <button class="nav-btn" id="nav-prev" type="button">
+              <span class="nav-btn__h">逆时针一格 · 多一个 ♭</span>
+              <span class="nav-btn__v" id="nav-prev-v">F 大调</span>
+            </button>
+            <button class="nav-btn" id="nav-next" type="button">
+              <span class="nav-btn__h">顺时针一格 · 多一个 ♯</span>
+              <span class="nav-btn__v" id="nav-next-v">G 大调</span>
+            </button>
+          </div>
+        </div>
+
+        <noscript>
+          <p class="sec__note">轮盘需要 JavaScript；下面的“调号速查表”包含同样的信息。</p>
+        </noscript>
+      </div>
+
+      <div class="panel">
+        <div class="panel__top">
+          <div>
+            <h3 class="panel__key" id="p-key">C 大调</h3>
+            <p class="panel__rel">关系小调 <b id="p-minor">A 小调</b></p>
+          </div>
+          <span class="panel__badge" id="p-badge">0</span>
+        </div>
+
+        <div class="panel__body">
+          <div class="blk">
+            <p class="blk__h"><span>调号 · 高音谱表</span><span id="p-sig">无升降号</span></p>
+            <div class="staff-wrap" id="p-staff"></div>
+          </div>
+
+          <div class="blk">
+            <p class="blk__h"><span>变化音</span><span id="p-acc-count">0 个</span></p>
+            <div class="chips" id="p-accs"><span class="chip chip--none">无变化音</span></div>
+          </div>
+
+          <div class="blk">
+            <p class="blk__h"><span>调内三和弦</span><span>根音三和弦 · 七个级数</span></p>
+            <ol class="chords" id="p-chords"></ol>
+          </div>
+
+          <div class="blk">
+            <p class="blk__h"><span>常见进行</span><span>只用调内音</span></p>
+            <div class="progs">
+              <p class="prog"><span class="prog__id">I–V–vi–IV</span><span class="prog__val" id="p-prog1">C – G – Am – F</span></p>
+              <p class="prog"><span class="prog__id">ii–V–I</span><span class="prog__val" id="p-prog2">Dm – G – C</span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<section class="sec" aria-labelledby="h-how">
+  <div class="wrap">
+    <div class="sec__head">
+      <h2 id="h-how">拿它干什么</h2>
+      <p class="sec__note">四件事，都只用这一个盘</p>
+    </div>
+    <div class="cards">
+      <article class="card">
+        <h3 class="card__h">数调号</h3>
+        <p class="card__b">顺时针走得越远，升号越多：G 是第 1 格，调号 1 个 ♯（F♯）；D 是第 2 格，2 个 ♯（F♯ C♯）。逆时针同理换成 ♭，F 是 1 个 ♭（B♭）。轮盘外缘那个小数就是个数，不用背。</p>
+        <p class="card__foot">升号出现次序 F C G D A E B，降号倒过来</p>
+      </article>
+      <article class="card">
+        <h3 class="card__h">找关系小调</h3>
+        <p class="card__b">内环同一格的调与它共用一套音：C 大调与 A 小调七个音完全一样，只是中心音不同。谱子上写着 3 个 ♯、你拿不准是大调还是小调时，看结尾落在哪个音就够了。</p>
+        <p class="card__foot">关系小调 = 大调第 6 级音（主音下方小三度）</p>
+      </article>
+      <article class="card">
+        <h3 class="card__h">推和弦</h3>
+        <p class="card__b">站在任一格上：<b>本格 I，顺时针一格 V，逆时针一格 IV</b>；内环本格 vi，V 对应的内环是 iii，IV 对应的是 ii。剩下 vii° 是七个里唯一的减三和弦，功能接近 V，常直接接回 I。</p>
+        <p class="card__foot">I–IV–V–vi 是流行乐里出现频率最高的四个</p>
+      </article>
+      <article class="card">
+        <h3 class="card__h">选转调点</h3>
+        <p class="card__b">相邻两格只差一个变化音，是最省力的落点：C 转 G，只要把 F 升成 F♯。隔得越远要改的音越多；正对门（三全音）的两个调几乎没共同音，转过去最生硬。</p>
+        <p class="card__foot">近关系调 = 相邻 1 格 + 自己那一格的内环</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section class="sec" aria-labelledby="h-table">
+  <div class="wrap">
+    <div class="sec__head">
+      <h2 id="h-table">调号速查表</h2>
+      <p class="sec__note sec__note--end">十二格全表 · 选中行会高亮</p>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <caption>十二个调：大调、关系小调、调号、变化音与 I–IV–V。无 JavaScript 时这张表就是全部内容。</caption>
+        <thead>
+          <tr>
+            <th scope="col">大调</th>
+            <th scope="col">关系小调</th>
+            <th scope="col">调号</th>
+            <th scope="col">变化音</th>
+            <th scope="col">I · IV · V</th>
+          </tr>
+        </thead>
+        <tbody id="t-body">
+          <tr data-i="0"><td class="k-name">C</td><td class="k-min">Am</td><td class="k-sig">0</td><td class="k-acc">—</td><td class="k-tri">C · F · G</td></tr>
+          <tr data-i="1"><td class="k-name">G</td><td class="k-min">Em</td><td class="k-sig">1 ♯</td><td class="k-acc">F♯</td><td class="k-tri">G · C · D</td></tr>
+          <tr data-i="2"><td class="k-name">D</td><td class="k-min">Bm</td><td class="k-sig">2 ♯</td><td class="k-acc">F♯ C♯</td><td class="k-tri">D · G · A</td></tr>
+          <tr data-i="3"><td class="k-name">A</td><td class="k-min">F♯m</td><td class="k-sig">3 ♯</td><td class="k-acc">F♯ C♯ G♯</td><td class="k-tri">A · D · E</td></tr>
+          <tr data-i="4"><td class="k-name">E</td><td class="k-min">C♯m</td><td class="k-sig">4 ♯</td><td class="k-acc">F♯ C♯ G♯ D♯</td><td class="k-tri">E · A · B</td></tr>
+          <tr data-i="5"><td class="k-name">B</td><td class="k-min">G♯m</td><td class="k-sig">5 ♯</td><td class="k-acc">F♯ C♯ G♯ D♯ A♯</td><td class="k-tri">B · E · F♯</td></tr>
+          <tr data-i="6"><td class="k-name">F♯</td><td class="k-min">D♯m</td><td class="k-sig">6 ♯</td><td class="k-acc">F♯ C♯ G♯ D♯ A♯ E♯</td><td class="k-tri">F♯ · B · C♯</td></tr>
+          <tr data-i="7"><td class="k-name">D♭</td><td class="k-min">B♭m</td><td class="k-sig">5 ♭</td><td class="k-acc">B♭ E♭ A♭ D♭ G♭</td><td class="k-tri">D♭ · G♭ · A♭</td></tr>
+          <tr data-i="8"><td class="k-name">A♭</td><td class="k-min">Fm</td><td class="k-sig">4 ♭</td><td class="k-acc">B♭ E♭ A♭ D♭</td><td class="k-tri">A♭ · D♭ · E♭</td></tr>
+          <tr data-i="9"><td class="k-name">E♭</td><td class="k-min">Cm</td><td class="k-sig">3 ♭</td><td class="k-acc">B♭ E♭ A♭</td><td class="k-tri">E♭ · A♭ · B♭</td></tr>
+          <tr data-i="10"><td class="k-name">B♭</td><td class="k-min">Gm</td><td class="k-sig">2 ♭</td><td class="k-acc">B♭ E♭</td><td class="k-tri">B♭ · E♭ · F</td></tr>
+          <tr data-i="11"><td class="k-name">F</td><td class="k-min">Dm</td><td class="k-sig">1 ♭</td><td class="k-acc">B♭</td><td class="k-tri">F · B♭ · C</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer class="foot">
+  <div class="wrap foot__grid">
+    <div>
+      <p><b>等音与记法</b>　第 6 格可写 F♯（6 个升号）或 G♭（6 个降号），两者是等音调；本页取 F♯，第 7 格取常用的 D♭。C♯ 大调（7 ♯）与 C♭ 大调（7 ♭）在实际中几乎不用，所以没有画进轮盘。</p>
+      <p><b>小调口径</b>　调号按自然小调算。和声小调会临时升起第 7 级音（比如 A 小调里的 G♯），那是临时记号，不改变调号。</p>
+    </div>
+    <div class="foot__rule">
+      <p><b>两个固定次序</b>　升号 F C G D A E B，降号 B E A D G C F。轮盘上每格的升降号个数，就是它在自己那一侧的第几格。</p>
+      <p><b>这一页</b>　单文件、零外部请求；字体用系统栈；轮盘、谱表与标记全部是内联 SVG。</p>
+    </div>
+  </div>
+</footer>
+<script>
+(function(){
+  'use strict';
+
+  var NS='http://www.w3.org/2000/svg';
+  var LETTERS=['C','D','E','F','G','A','B'];
+  var BASE={C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+  var STEPS=[0,2,4,5,7,9,11];
+  var QUAL=['','m','m','','','m','dim'];
+  var DEG=['I','ii','iii','IV','V','vi','vii\u00b0'];
+  var SHARP_ORDER=['F','C','G','D','A','E','B'];
+  var FLAT_ORDER=['B','E','A','D','G','C','F'];
+
+  /* 12 格：顺时针纯五度。第 6 格取 F♯（等音 G♭），第 7 格取常用的 D♭ */
+  var RING=[
+    {l:'C',a:0},{l:'G',a:0},{l:'D',a:0},{l:'A',a:0},{l:'E',a:0},{l:'B',a:0},
+    {l:'F',a:1},{l:'D',a:-1},{l:'A',a:-1},{l:'E',a:-1},{l:'B',a:-1},{l:'F',a:0}
+  ];
+
+  /* 高音谱表上的位置：谱线 y=20/30/40/50/60，线距 10 */
+  var SHARP_POS={F:20,C:35,G:15,D:30,A:45,E:25,B:40};
+  var FLAT_POS={B:40,E:25,A:45,D:30,G:50,C:35,F:55};
+
+  function accMark(a){
+    if(a===0) return '';
+    if(a>0) return a===1?'\u266f':'\u266f\u266f';
+    return a===-1?'\u266d':'\u266d\u266d';
+  }
+
+  /* 由主音字母 + 升降号推出大调音阶，每个音保持正确的字母拼写 */
+  function scaleOf(letter,acc){
+    var li=LETTERS.indexOf(letter);
+    var root=((BASE[letter]+acc)%12+12)%12;
+    var out=[];
+    for(var d=0;d<7;d++){
+      var L=LETTERS[(li+d)%7];
+      var pc=(root+STEPS[d])%12;
+      var diff=(pc-BASE[L]+12)%12;
+      if(diff>6) diff-=12;
+      out.push({l:L,a:diff,n:L+accMark(diff)});
+    }
+    return out;
+  }
+
+  function keyOf(i){
+    var e=RING[i];
+    var sc=scaleOf(e.l,e.a);
+    var flat=false;
+    for(var j=0;j<7;j++){ if(sc[j].a<0){ flat=true; break; } }
+    var order=flat?FLAT_ORDER:SHARP_ORDER;
+    var sig=[];
+    for(var k=0;k<7;k++){ if(sc[k].a!==0) sig.push(sc[k]); }
+    sig.sort(function(p,q){ return order.indexOf(p.l)-order.indexOf(q.l); });
+    return {i:i,name:e.l+accMark(e.a),scale:sc,sig:sig,flat:flat,minor:sc[5]};
+  }
+
+  function chordName(K,d){ return K.scale[d].n+QUAL[d]; }
+  function sigLabel(K){ return K.sig.length? K.sig.length+(K.flat?'\u266d':'\u266f') : '0'; }
+
+  function S(name,attrs,text){
+    var e=document.createElementNS(NS,name), k;
+    if(attrs){ for(k in attrs){ if(Object.prototype.hasOwnProperty.call(attrs,k)) e.setAttribute(k,attrs[k]); } }
+    if(text!==undefined && text!==null) e.textContent=text;
+    return e;
+  }
+  function polar(r,deg){
+    var a=deg*Math.PI/180;
+    return [Math.round((200+r*Math.cos(a))*100)/100, Math.round((200+r*Math.sin(a))*100)/100];
+  }
+  function annulus(rO,rI,a0,a1){
+    var p1=polar(rO,a0),p2=polar(rO,a1),p3=polar(rI,a1),p4=polar(rI,a0);
+    var big=(a1-a0)>180?1:0;
+    return 'M'+p1[0]+' '+p1[1]+'A'+rO+' '+rO+' 0 '+big+' 1 '+p2[0]+' '+p2[1]+
+           'L'+p3[0]+' '+p3[1]+'A'+rI+' '+rI+' 0 '+big+' 0 '+p4[0]+' '+p4[1]+'Z';
+  }
+
+  var root=document.getElementById('cof-root');
+  var nodes=[];
+  var hubName,hubSub,hubSig;
+
+  function build(){
+    root.appendChild(S('circle',{class:'dial-edge',cx:200,cy:200,r:194}));
+
+    var ticks=S('g',{'aria-hidden':'true'});
+    for(var t=0;t<60;t++){
+      var ang=-90+t*6;
+      var major=(t%5===0);
+      var tp1=polar(major?176:182,ang), tp2=polar(190,ang);
+      ticks.appendChild(S('line',{
+        class:major?'tickline tickline--major':'tickline',
+        x1:tp1[0],y1:tp1[1],x2:tp2[0],y2:tp2[1]
+      }));
+    }
+    root.appendChild(ticks);
+
+    for(var i=0;i<12;i++){
+      var a0=-90+i*30+0.6, a1=-90+(i+1)*30-0.6;
+      var g=S('g',{class:'k',role:'radio','aria-checked':'false',tabindex:'-1','data-i':String(i)});
+      g.appendChild(S('path',{class:'ring-o',d:annulus(172,120,a0,a1)}));
+      g.appendChild(S('path',{class:'ring-i',d:annulus(118,84,a0,a1)}));
+
+      var mid=-90+(i+0.5)*30;
+      var pM=polar(140,mid), pC=polar(163,mid), pN=polar(101,mid);
+      var tM=S('text',{class:'t-major',x:pM[0],y:pM[1],'text-anchor':'middle','dominant-baseline':'central'});
+      var tC=S('text',{class:'t-count',x:pC[0],y:pC[1],'text-anchor':'middle','dominant-baseline':'central'});
+      var tN=S('text',{class:'t-minor',x:pN[0],y:pN[1],'text-anchor':'middle','dominant-baseline':'central'});
+      g.appendChild(tM);
+      g.appendChild(tC);
+      g.appendChild(tN);
+      root.appendChild(g);
+      nodes.push({g:g,major:tM,count:tC,minor:tN});
+    }
+
+    root.appendChild(S('circle',{class:'hub',cx:200,cy:200,r:82}));
+    hubName=S('text',{class:'hub-name',x:200,y:186,'text-anchor':'middle'});
+    hubSub=S('text',{class:'hub-sub',x:200,y:214,'text-anchor':'middle'});
+    hubSig=S('text',{class:'hub-sig',x:200,y:238,'text-anchor':'middle'});
+    root.appendChild(hubName);
+    root.appendChild(hubSub);
+    root.appendChild(hubSig);
+  }
+
+  function renderStaff(K){
+    var el=S('svg',{class:'staff',viewBox:'0 0 152 82','aria-hidden':'true',focusable:'false'});
+    for(var L=0;L<5;L++){
+      var y=20+L*10;
+      el.appendChild(S('line',{class:'staff-line',x1:14,x2:144,y1:y,y2:y}));
+    }
+    el.appendChild(S('line',{class:'staff-bar',x1:8,y1:20,x2:8,y2:60}));
+    el.appendChild(S('line',{class:'staff-bar',x1:11,y1:20,x2:11,y2:60}));
+
+    var pos=K.flat?FLAT_POS:SHARP_POS;
+    var mark=K.flat?'\u266d':'\u266f';
+    for(var s=0;s<K.sig.length;s++){
+      el.appendChild(S('text',{
+        class:'acc',x:24+s*10,y:pos[K.sig[s].l],
+        'text-anchor':'middle','dominant-baseline':'central'
+      },mark));
+    }
+    if(!K.sig.length){
+      el.appendChild(S('text',{class:'staff-empty',x:26,y:74},'\u65e0\u5347\u964d\u53f7'));
+    }
+    var box=document.getElementById('p-staff');
+    box.innerHTML='';
+    box.appendChild(el);
+  }
+
+  var elKey=document.getElementById('p-key');
+  var elMinor=document.getElementById('p-minor');
+  var elBadge=document.getElementById('p-badge');
+  var elSig=document.getElementById('p-sig');
+  var elAccCount=document.getElementById('p-acc-count');
+  var elAccs=document.getElementById('p-accs');
+  var elChords=document.getElementById('p-chords');
+  var elProg1=document.getElementById('p-prog1');
+  var elProg2=document.getElementById('p-prog2');
+  var navPrevV=document.getElementById('nav-prev-v');
+  var navNextV=document.getElementById('nav-next-v');
+  var rows=Array.prototype.slice.call(document.querySelectorAll('#t-body tr'));
+  var state={i:0};
+
+  function sigText(K){
+    return K.sig.length? (K.sig.length+' 个'+(K.flat?'降':'升')+'号') : '无升降号';
+  }
+
+  function paint(){
+    var i,k,n;
+    for(i=0;i<12;i++){
+      k=keyOf(i); n=nodes[i];
+      n.g.setAttribute('aria-checked', i===state.i?'true':'false');
+      n.g.setAttribute('tabindex', i===state.i?'0':'-1');
+      n.g.setAttribute('aria-label', k.name+' 大调，'+sigText(k)+'，关系小调 '+k.minor.n+' 小调');
+      n.major.textContent=k.name;
+      n.count.textContent=sigLabel(k);
+      n.minor.textContent=k.minor.n+'m';
+    }
+
+    var K=keyOf(state.i);
+    hubName.textContent=K.name;
+    hubSub.textContent='大调';
+    hubSig.textContent=K.sig.length? sigLabel(K) : '无升降';
+
+    elKey.textContent=K.name+' 大调';
+    elMinor.textContent=K.minor.n+' 小调';
+    elBadge.textContent=sigLabel(K);
+    elBadge.className='panel__badge'+(K.flat?' panel__badge--flat':'');
+    elSig.textContent=sigText(K);
+    elAccCount.textContent=K.sig.length? K.sig.length+' 个' : '0 个';
+
+    renderStaff(K);
+
+    elAccs.innerHTML='';
+    if(!K.sig.length){
+      var none=document.createElement('span');
+      none.className='chip chip--none';
+      none.textContent='无变化音';
+      elAccs.appendChild(none);
+    }else{
+      for(i=0;i<K.sig.length;i++){
+        var c=document.createElement('span');
+        c.className='chip';
+        c.textContent=K.sig[i].n;
+        elAccs.appendChild(c);
+      }
+    }
+
+    elChords.innerHTML='';
+    for(i=0;i<7;i++){
+      var li=document.createElement('li');
+      li.className='chord'+(i===0?' chord--tonic':'');
+      var dg=document.createElement('span');
+      dg.className='chord__deg';
+      dg.textContent=DEG[i];
+      var nm=document.createElement('span');
+      nm.className='chord__nm';
+      nm.textContent=chordName(K,i);
+      li.appendChild(dg);
+      li.appendChild(nm);
+      elChords.appendChild(li);
+    }
+
+    elProg1.textContent=[0,4,5,3].map(function(d){ return chordName(K,d); }).join(' \u2013 ');
+    elProg2.textContent=[1,4,0].map(function(d){ return chordName(K,d); }).join(' \u2013 ');
+
+    var pv=keyOf((state.i+11)%12), nx=keyOf((state.i+1)%12);
+    navPrevV.textContent=pv.name+' 大调 · '+sigLabel(pv);
+    navNextV.textContent=nx.name+' 大调 · '+sigLabel(nx);
+
+    for(i=0;i<rows.length;i++){
+      if(i===state.i) rows[i].setAttribute('data-current','true');
+      else rows[i].removeAttribute('data-current');
+    }
+  }
+
+  var walkBtn=document.getElementById('walk');
+  var walkT=document.getElementById('walk-t');
+  var walkTimer=null;
+
+  function stopWalk(){
+    if(walkTimer){ clearInterval(walkTimer); walkTimer=null; }
+    walkBtn.setAttribute('aria-pressed','false');
+    walkT.textContent='沿圈走一圈';
+  }
+  function setKey(i){
+    state.i=((i%12)+12)%12;
+    paint();
+  }
+  function select(i,focus){
+    setKey(i);
+    if(focus){ try{ nodes[state.i].g.focus(); }catch(e){} }
+    stopWalk();
+  }
+
+  walkBtn.addEventListener('click',function(){
+    if(walkTimer){ stopWalk(); return; }
+    walkBtn.setAttribute('aria-pressed','true');
+    walkT.textContent='停下';
+    setKey(0);
+    var n=0;
+    walkTimer=setInterval(function(){
+      n++;
+      if(n>11){ stopWalk(); return; }
+      setKey(n);
+    },820);
+  });
+
+  document.getElementById('nav-prev').addEventListener('click',function(){ select(state.i+11,true); });
+  document.getElementById('nav-next').addEventListener('click',function(){ select(state.i+1,true); });
+
+  root.addEventListener('click',function(ev){
+    var t=ev.target;
+    while(t && t!==root){
+      if(t.getAttribute && t.getAttribute('role')==='radio'){
+        select(parseInt(t.getAttribute('data-i'),10),true);
+        return;
+      }
+      t=t.parentNode;
+    }
+  });
+
+  root.addEventListener('keydown',function(ev){
+    var k=ev.key, next=-1;
+    if(k==='ArrowRight'||k==='ArrowDown') next=state.i+1;
+    else if(k==='ArrowLeft'||k==='ArrowUp') next=state.i+11;
+    else if(k==='Home') next=0;
+    else if(k==='End') next=11;
+    else return;
+    ev.preventDefault();
+    select(next,true);
+  });
+
+  build();
+  paint();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,118 @@
+{
+  "seed": 20261123,
+  "note": "root-only 盲评映射，grader 不可读",
+  "map": [
+    {
+      "label": "e5-p01",
+      "arm": "B",
+      "scen": "P2",
+      "seed": "b",
+      "bytes": 52832
+    },
+    {
+      "label": "e5-p02",
+      "arm": "C",
+      "scen": "P1",
+      "seed": "b",
+      "bytes": 41147
+    },
+    {
+      "label": "e5-p03",
+      "arm": "C",
+      "scen": "P2",
+      "seed": "b",
+      "bytes": 47609
+    },
+    {
+      "label": "e5-p04",
+      "arm": "D",
+      "scen": "P1",
+      "seed": "b",
+      "bytes": 47533
+    },
+    {
+      "label": "e5-p05",
+      "arm": "B",
+      "scen": "P1",
+      "seed": "a",
+      "bytes": 40303
+    },
+    {
+      "label": "e5-p06",
+      "arm": "B",
+      "scen": "P2",
+      "seed": "a",
+      "bytes": 66062
+    },
+    {
+      "label": "e5-p07",
+      "arm": "A",
+      "scen": "P2",
+      "seed": "b",
+      "bytes": 51038
+    },
+    {
+      "label": "e5-p08",
+      "arm": "A",
+      "scen": "P2",
+      "seed": "a",
+      "bytes": 72703
+    },
+    {
+      "label": "e5-p09",
+      "arm": "C",
+      "scen": "P2",
+      "seed": "a",
+      "bytes": 50835
+    },
+    {
+      "label": "e5-p10",
+      "arm": "B",
+      "scen": "P1",
+      "seed": "b",
+      "bytes": 61813
+    },
+    {
+      "label": "e5-p11",
+      "arm": "D",
+      "scen": "P1",
+      "seed": "a",
+      "bytes": 36501
+    },
+    {
+      "label": "e5-p12",
+      "arm": "C",
+      "scen": "P1",
+      "seed": "a",
+      "bytes": 40278
+    },
+    {
+      "label": "e5-p13",
+      "arm": "D",
+      "scen": "P2",
+      "seed": "a",
+      "bytes": 32878
+    },
+    {
+      "label": "e5-p14",
+      "arm": "A",
+      "scen": "P1",
+      "seed": "b",
+      "bytes": 29534
+    },
+    {
+      "label": "e5-p15",
+      "arm": "D",
+      "scen": "P2",
+      "seed": "b",
+      "bytes": 44932
+    },
+    {
+      "label": "e5-p16",
+      "arm": "A",
+      "scen": "P1",
+      "seed": "a",
+      "bytes": 20607
+    }
+  ]
+}

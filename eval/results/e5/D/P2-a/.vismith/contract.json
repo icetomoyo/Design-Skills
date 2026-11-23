@@ -1,0 +1,201 @@
+{
+  "version": 1,
+  "meta": {
+    "product_type": "creative",
+    "audience": "学乐理的学生与业余演奏者：能读谱但不熟调号推导；也有好奇的普通访客",
+    "scenarios": [
+      "查某调的调号有几个升降号、分别是哪几个音",
+      "找某大调的关系小调与近关系调，用于转调",
+      "由一个调推出调内七个三和弦，直接用进流行进行"
+    ]
+  },
+  "brand": {
+    "personality": [
+      "严谨",
+      "清澈",
+      "手作感"
+    ],
+    "references": [
+      "乐谱雕版与制图仪器（刻度盘/量角器）",
+      "纸本乐理教本的参考表页"
+    ]
+  },
+  "style": {
+    "direction": "纸上制图室：暖纸底 + 墨色文字 + 单一松绿 accent；以刻度量角盘为主体图形，等宽数字承担调号计数，衬线承担调名。安静界面外壳，全部视觉重量交给轮盘与调号谱表。",
+    "do_not": [
+      "紫蓝/紫粉渐变",
+      "渐变文字",
+      "彩色 glow 与模糊光斑",
+      "玻璃拟态卡片",
+      "emoji 当图标",
+      "全大写 + 宽字距标签",
+      "标题 weight 800-900"
+    ]
+  },
+  "tokens": {
+    "colors": {
+      "primary": "#1C5B4A",
+      "primary_hover": "#14453A",
+      "primary_tint": "#E4EEE9",
+      "surface": "#FAF7F0",
+      "surface_card": "#FFFCF6",
+      "surface_sunk": "#F2ECDF",
+      "line": "#DCD4C4",
+      "line_strong": "#C9BFAB",
+      "neutrals": [
+        "#1B1815",
+        "#4A443C",
+        "#6B6459"
+      ],
+      "text_on_primary": "#FFFCF6",
+      "decor_brass": "#9C7524",
+      "note_on_primary": "#C8DED5"
+    },
+    "typography": {
+      "body": "\"Segoe UI\", system-ui, -apple-system, \"PingFang SC\", \"Hiragino Sans GB\", \"Microsoft YaHei\", \"Source Han Sans SC\", sans-serif",
+      "display": "Georgia, \"Iowan Old Style\", \"Palatino Linotype\", \"Noto Serif\", \"Songti SC\", serif",
+      "mono": "ui-monospace, \"SF Mono\", \"Cascadia Mono\", \"Segoe UI Mono\", Consolas, monospace",
+      "scale": [
+        11,
+        12,
+        13,
+        14,
+        16,
+        18,
+        20,
+        24,
+        32,
+        40,
+        56,
+        72
+      ]
+    },
+    "spacing": {
+      "base": 4,
+      "scale": [
+        4,
+        8,
+        12,
+        16,
+        20,
+        24,
+        32,
+        40,
+        48,
+        64,
+        80,
+        96,
+        128
+      ],
+      "unit": "rem（0.25rem = 4px），在页面内一律写 rem，交由根字号缩放"
+    },
+    "radius": {
+      "sm": 4,
+      "md": 8,
+      "lg": 12,
+      "pill": 999
+    },
+    "shadow": {
+      "card": "0 1px 0 #DCD4C4",
+      "lift": "0 12px 32px -24px rgba(27,24,21,.55)"
+    },
+    "motion": {
+      "ease": "cubic-bezier(0.22, 1, 0.36, 1)",
+      "fast": "140ms",
+      "base": "220ms",
+      "enter": "420ms"
+    }
+  },
+  "components": {
+    "wheel": {
+      "rules": [
+        "12 个扇区即 12 个可选项，语义 role=radiogroup/radio + roving tabindex",
+        "外环为大调，内环为关系小调；升号侧顺时针、降号侧逆时针",
+        "选中态用单一 accent 面，不叠加描边+阴影+动效三重强调"
+      ]
+    },
+    "panel": {
+      "rules": [
+        "只显示当前选中调，不并列多调对比",
+        "谱表调号、升降号清单、调内三和弦、常见进行四块固定顺序"
+      ]
+    },
+    "table": {
+      "density": "compact",
+      "rules": [
+        "数字（升/降号个数）右对齐并用 tabular-nums",
+        "禁用斑马纹，用 hairline 分行"
+      ]
+    }
+  },
+  "layout": {
+    "breakpoints": {
+      "sm": 640,
+      "md": 768,
+      "lg": 1024,
+      "xl": 1280
+    },
+    "density": "spacious",
+    "note": "read 意图为主：正文行长 60-72ch，区块间 64-96px，轮盘与详情面板 1:1 双栏，768px 以下堆叠"
+  },
+  "a11y": {
+    "min_contrast_normal_text": 4.5,
+    "focus_visible": "required",
+    "keyboard": "required",
+    "reduced_motion": "required",
+    "svg_text": "轮盘内文字一律 >=12px 等效并保持 >=4.5:1"
+  },
+  "invariants": [
+    {
+      "id": "INV-001",
+      "type": "functional",
+      "description": "轮盘 12 个调全部可选中，选中后右侧面板的调号/升降号/调内和弦必须与该调一致"
+    },
+    {
+      "id": "INV-002",
+      "type": "behavior",
+      "description": "轮盘可纯键盘操作：单一 Tab 停靠点，←/→ 切换相邻调，Home/End 跳首尾"
+    },
+    {
+      "id": "INV-003",
+      "type": "visual",
+      "description": "单一 accent：松绿只用于选中态与主操作，其余一律墨色/纸色"
+    },
+    {
+      "id": "INV-004",
+      "type": "functional",
+      "description": "键盘焦点在任何可交互元素上都可见（:focus-visible，环 + 偏移，>=3:1）"
+    },
+    {
+      "id": "INV-005",
+      "type": "functional",
+      "description": "单文件自包含：零外部请求，字体只用系统栈，图形全部内联 SVG"
+    }
+  ],
+  "constraints": {
+    "project": [
+      "交付物为单个自包含 HTML（CSS/JS 内联，零外部请求）",
+      "不使用网络字体、CDN、图片文件",
+      "间距与字号用 rem，避免 px 魔法数"
+    ],
+    "pages": {
+      "index.html": [
+        "首屏即轮盘，不做居中大标题的营销 hero",
+        "无 JS 时仍可读到调号速查表（轮盘为增强层）"
+      ]
+    }
+  },
+  "precedence": [
+    "invariants",
+    "a11y_hard",
+    "project_constraints",
+    "tokens",
+    "style_preferences"
+  ],
+  "provenance": {
+    "created": "2026-11-15",
+    "updated": "2026-11-15",
+    "decisions": ".vismith/decisions.log.md",
+    "note": "generate 模式自建契约；产品类别按 creative 路由（单页解释型，非转化页），intent=read 主 + experience 次"
+  }
+}

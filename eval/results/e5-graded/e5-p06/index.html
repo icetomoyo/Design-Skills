@@ -1,0 +1,1218 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="五度圈交互图解：12 个大小调的调号、音阶与调内和弦，一次看懂。">
+<title>五度圈 · Circle of Fifths</title>
+<style>
+/* ============ 1. TOKENS ============ */
+:root{
+  --font-display:"Bahnschrift","Segoe UI Variable Display","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  --font-sans:"Segoe UI Variable Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",system-ui,sans-serif;
+  --font-mono:"Cascadia Mono","Consolas","SFMono-Regular",ui-monospace,monospace;
+
+  --bg:#FCF5E9; --bg-veil:rgba(252,245,233,.84); --bg-tint:#F6ECDB;
+  --surface:#FFFFFF; --surface-2:#FFFCF6;
+  --ink:#191310; --ink-2:#4C4038; --ink-3:#7C6B60;
+  --red:#C2231D; --red-fill:#CF2C22; --on-red:#FFF8F2;
+  --amber:#9C5205; --amber-fill:#E1912B; --amber-tint:#FBE9CC;
+  --teal:#0D6A5E; --teal-fill:#2E9C8B; --teal-tint:#D8EDE7;
+  --line:rgba(25,19,16,.15); --line-soft:rgba(25,19,16,.08);
+  --shadow-1:0 1px 2px rgba(70,45,25,.05),0 10px 26px -16px rgba(70,45,25,.28);
+  --shadow-2:0 2px 6px rgba(70,45,25,.05),0 30px 70px -40px rgba(70,45,25,.45);
+  --radius:22px; --radius-sm:12px;
+  --badge-bg:#F3E7D5;
+  --sel:rgba(255,255,255,.94); --hover:rgba(25,19,16,.05);
+  --focus:#B4241E; --maxw:1200px;
+  color-scheme:light;
+}
+html[data-theme="dark"]{
+  --bg:#131010; --bg-veil:rgba(19,16,16,.82); --bg-tint:#1A1514;
+  --surface:#1F1918; --surface-2:#251E1C;
+  --ink:#F7EFE6; --ink-2:#C6B6AB; --ink-3:#95857B;
+  --red:#F46B5E; --red-fill:#C8302A; --on-red:#FFF7F2;
+  --amber:#F1AE58; --amber-fill:#D9912B; --amber-tint:#3B2A15;
+  --teal:#5CC9B6; --teal-fill:#2A9382; --teal-tint:#153330;
+  --line:rgba(247,239,230,.16); --line-soft:rgba(247,239,230,.08);
+  --shadow-1:0 1px 2px rgba(0,0,0,.42),0 12px 30px -18px rgba(0,0,0,.9);
+  --shadow-2:0 2px 8px rgba(0,0,0,.45),0 34px 80px -40px rgba(0,0,0,1);
+  --badge-bg:#2E2523;
+  --sel:rgba(255,255,255,.1); --hover:rgba(255,255,255,.06);
+  --focus:#F1AE58;
+  color-scheme:dark;
+}
+
+/* ============ 2. BASE ============ */
+*,*::before,*::after{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{
+  margin:0;font-family:var(--font-sans);font-size:17px;line-height:1.72;
+  color:var(--ink);background:var(--bg);
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+body::before{
+  content:"";position:fixed;inset:0;z-index:90;pointer-events:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity:.045;mix-blend-mode:multiply;
+}
+html[data-theme="dark"] body::before{opacity:.055;mix-blend-mode:overlay}
+h1,h2,h3,h4{margin:0;font-family:var(--font-display);font-weight:800;line-height:1.06;letter-spacing:-.022em}
+p{margin:0}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;padding:0;cursor:pointer}
+svg{display:block}
+:focus-visible{outline:2px solid var(--focus);outline-offset:3px;border-radius:6px}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.mono{font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+
+.skip{position:fixed;left:12px;top:-64px;z-index:120;background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:10px;font-size:14px;transition:top .2s}
+.skip:focus{top:12px}
+
+/* ============ 3. PROGRESS + HEADER ============ */
+.progress{position:fixed;top:0;left:0;right:0;height:2px;z-index:80}
+.progress i{display:block;height:100%;width:100%;transform:scaleX(0);transform-origin:0 50%;
+  background:linear-gradient(90deg,var(--amber-fill),var(--red));transition:transform .12s linear}
+
+.hdr{position:sticky;top:0;z-index:70;background:var(--bg-veil);border-bottom:1px solid var(--line-soft);
+  -webkit-backdrop-filter:blur(16px) saturate(1.25);backdrop-filter:blur(16px) saturate(1.25)}
+.hdr-in{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,4vw,44px);height:64px;display:flex;align-items:center;gap:22px}
+.brand{display:flex;align-items:center;gap:11px;color:var(--ink)}
+.brand svg{color:var(--red);flex:none}
+.brand-txt{display:flex;align-items:baseline;gap:9px;font-family:var(--font-display);font-weight:700;font-size:16.5px;letter-spacing:-.01em}
+.brand-en{font-family:var(--font-mono);font-size:9.5px;font-weight:400;letter-spacing:.2em;text-transform:uppercase;color:var(--ink-3)}
+.nav{display:flex;gap:clamp(14px,2.2vw,30px);margin-left:auto;font-size:14.5px;color:var(--ink-2)}
+.nav a{position:relative;padding:6px 0;transition:color .18s}
+.nav a::after{content:"";position:absolute;left:0;right:0;bottom:0;height:1.5px;background:var(--red);
+  transform:scaleX(0);transform-origin:0 50%;transition:transform .22s cubic-bezier(.3,.9,.3,1)}
+.nav a:hover{color:var(--ink)}
+.nav a:hover::after{transform:scaleX(1)}
+.theme{width:44px;height:44px;display:grid;place-items:center;border-radius:50%;border:1px solid var(--line);
+  color:var(--ink-2);transition:background .2s,color .2s,border-color .2s,transform .2s;flex:none}
+.theme:hover{background:var(--surface);color:var(--ink);border-color:var(--ink-3)}
+html[data-theme="dark"] .i-sun{display:none}
+html:not([data-theme="dark"]) .i-moon{display:none}
+
+/* ============ 4. HERO ============ */
+.hero{position:relative;padding:clamp(44px,6.5vw,92px) 0 clamp(38px,5.5vw,76px)}
+.hero::before{content:"";position:absolute;inset:-160px 0 auto 0;height:620px;pointer-events:none;
+  background:radial-gradient(760px 420px at 78% 8%,rgba(225,145,43,.16),transparent 68%),
+             radial-gradient(560px 360px at 8% 0%,rgba(194,35,29,.10),transparent 70%)}
+html[data-theme="dark"] .hero::before{background:radial-gradient(760px 420px at 78% 8%,rgba(217,145,43,.13),transparent 68%),
+  radial-gradient(560px 360px at 8% 0%,rgba(200,48,42,.16),transparent 70%)}
+.hero-in{position:relative;max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,4vw,44px);
+  display:grid;grid-template-columns:minmax(0,1.02fr) minmax(0,.98fr);gap:clamp(28px,4.5vw,66px);align-items:center}
+.eyebrow{font-family:var(--font-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--ink-3)}
+h1{font-size:clamp(58px,9.4vw,124px);line-height:.92;letter-spacing:-.02em;margin:14px 0 0;font-weight:800}
+.hero-en{font-family:var(--font-display);font-size:clamp(11px,1.35vw,14px);font-weight:600;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--red);margin-top:16px}
+.lede{margin-top:clamp(16px,2.2vw,26px);font-size:clamp(15.5px,1.3vw,18px);line-height:1.82;color:var(--ink-2);max-width:48ch}
+.hero-acts{display:flex;flex-wrap:wrap;gap:12px;margin-top:clamp(24px,3vw,36px)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.55em;min-height:50px;padding:0 24px;border-radius:999px;
+  font-size:15.5px;font-weight:600;letter-spacing:.01em;border:1px solid transparent;cursor:pointer;
+  transition:transform .18s ease,background .2s,color .2s,border-color .2s,box-shadow .2s}
+.btn-sm{min-height:44px;padding:0 16px;font-size:13.5px;gap:.45em}
+.btn-primary{background:var(--red-fill);color:var(--on-red);box-shadow:0 8px 22px -12px rgba(190,40,32,.9)}
+.btn-primary:hover{transform:translateY(-2px);background:var(--red);box-shadow:0 14px 30px -14px rgba(190,40,32,.95)}
+.btn-ghost{background:var(--surface);border-color:var(--line);color:var(--ink);box-shadow:var(--shadow-1)}
+.btn-ghost:hover{transform:translateY(-2px);border-color:var(--ink-3);background:var(--surface-2)}
+.btn:active{transform:translateY(0) scale(.985)}
+.hero-meta{display:flex;flex-wrap:wrap;gap:clamp(20px,3.2vw,44px);margin:clamp(26px,3.4vw,40px) 0 0;
+  padding-top:20px;border-top:1px solid var(--line-soft)}
+.hero-meta div{display:flex;flex-direction:column;gap:2px}
+.hero-meta dt{font-family:var(--font-display);font-size:clamp(22px,2.6vw,30px);font-weight:700;line-height:1;letter-spacing:-.03em}
+.hero-meta dd{margin:0;font-size:12px;letter-spacing:.1em;color:var(--ink-3);text-transform:uppercase;font-family:var(--font-mono)}
+
+.hero-vis{margin:0;background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:20px 20px 18px;box-shadow:var(--shadow-2);position:relative;overflow:hidden}
+.hero-vis::before{content:"";position:absolute;inset:0 0 auto 0;height:3px;
+  background:linear-gradient(90deg,var(--teal-fill),var(--amber-fill) 44%,var(--amber-fill) 56%,var(--teal-fill))}
+.vis-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.vis-head .mono{color:var(--ink-2)}
+.bars{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;height:196px;margin-top:16px}
+.bar-col{display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:6px;min-width:0}
+.bar-track{position:relative;width:100%;flex:1 1 auto;min-height:0;display:flex;align-items:flex-end;justify-content:center}
+.bar{display:block;width:100%;max-width:24px;border-radius:7px 7px 4px 4px;background:currentColor;
+  transform:scaleY(0);transform-origin:bottom center;
+  transition:transform .95s cubic-bezier(.22,.9,.25,1)}
+.bar-col.n{color:var(--ink-3)} .bar-col.s{color:var(--amber-fill)} .bar-col.f{color:var(--teal-fill)}
+.bar-n{font-family:var(--font-mono);font-size:10px;line-height:1;color:var(--ink-3);font-variant-numeric:tabular-nums}
+.bar-k{font-family:var(--font-display);font-size:11.5px;font-weight:600;line-height:1;color:var(--ink-2);white-space:nowrap}
+.hero-vis figcaption{margin-top:14px;padding-top:12px;border-top:1px solid var(--line-soft);
+  font-size:12.5px;line-height:1.6;color:var(--ink-3)}
+
+/* ============ 5. SECTION SHELL ============ */
+.sec{position:relative;padding:clamp(56px,8vw,116px) 0}
+.sec + .sec{border-top:1px solid var(--line-soft)}
+.sec-tint{background:var(--bg-tint)}
+.sec-inner{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,4vw,44px);
+  display:grid;grid-template-columns:96px minmax(0,1fr);gap:clamp(14px,2.6vw,34px)}
+.sec-idx{font-family:var(--font-mono);font-size:11px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink-3);padding-top:9px;align-self:start;position:sticky;top:92px;line-height:1.5}
+.sec-body{min-width:0}
+.sec-head{max-width:74ch}
+.sec-head h2{font-size:clamp(27px,3.5vw,46px);line-height:1.14;margin-top:12px}
+.sec-head .lede{max-width:60ch;margin-top:clamp(14px,1.8vw,20px);font-size:clamp(15px,1.2vw,17px)}
+.aside{margin-top:clamp(18px,2.4vw,28px);padding:14px 16px;border-left:2px solid var(--amber-fill);
+  background:var(--surface-2);border-radius:0 12px 12px 0;font-size:83%;line-height:1.7;color:var(--ink-2);max-width:66ch}
+
+/* ============ 6. BASICS / RAILS ============ */
+.rails{display:grid;gap:14px;margin-top:clamp(22px,3vw,34px)}
+.rail{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:15px 18px 16px;box-shadow:var(--shadow-1)}
+.rail-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.tag{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  padding:4px 9px;border-radius:999px;white-space:nowrap}
+.tag-sharp{background:var(--amber-tint);color:var(--amber)}
+.tag-flat{background:var(--teal-tint);color:var(--teal)}
+.rail-note{font-size:12px;color:var(--ink-3);letter-spacing:.01em}
+.rail-list{list-style:none;margin:14px 0 0;padding:0 0 4px;display:flex;overflow-x:auto;gap:0;
+  scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.rail-list li{position:relative;flex:0 0 auto;display:flex;flex-direction:column;align-items:center;
+  gap:3px;padding-right:26px;min-width:56px}
+.rail-list li:not(:last-child)::after{content:"›";position:absolute;right:7px;top:2px;
+  color:var(--ink-3);font-size:16px;line-height:1.4}
+.rk{font-family:var(--font-display);font-size:21px;font-weight:700;letter-spacing:-.03em;line-height:1.2}
+.ra{font-family:var(--font-mono);font-size:10px;color:var(--ink-3);letter-spacing:.02em;white-space:nowrap}
+.rail-sharp .rk{color:var(--ink)} .rail-flat .rk{color:var(--ink)}
+
+/* ============ 7. WHEEL ============ */
+.wheel-wrap{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(0,.88fr);
+  gap:clamp(18px,2.8vw,38px);align-items:start;margin-top:clamp(20px,2.6vw,32px)}
+.wheel-stage{min-width:0}
+.wheel-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:10px}
+.wheel-hint{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.1em;color:var(--ink-3);margin-left:auto}
+.wheel-box{background:var(--surface);border:1px solid var(--line-soft);border-radius:30px;
+  padding:clamp(6px,1.4vw,16px);box-shadow:var(--shadow-2)}
+#wheelSvg{width:100%;height:auto;overflow:visible;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.w-rim{fill:none;stroke:var(--line-soft);stroke-width:1.4}
+.w-rim2{fill:none;stroke:var(--line);stroke-width:1}
+.w-band{fill:var(--bg-tint);opacity:.55}
+.w-center{fill:var(--surface-2);stroke:var(--line-soft);stroke-width:1.4}
+.w-tick{stroke:var(--line);stroke-width:1.2;stroke-linecap:round}
+.w-axis{stroke:var(--red);stroke-width:1.3;stroke-dasharray:2 7;stroke-linecap:round;opacity:.5}
+.w-pointer{stroke:var(--red);stroke-width:6;stroke-linecap:round}
+.sector{cursor:pointer;outline:none}
+.sector-hit{fill:transparent;transition:fill .2s ease}
+.sector:hover .sector-hit{fill:var(--hover)}
+.sector.is-visited .sector-hit{fill:rgba(225,145,43,.14)}
+.sector.is-active .sector-hit{fill:var(--sel)}
+.sector:focus-visible .sector-hit{stroke:var(--focus);stroke-width:2.6;stroke-dasharray:7 6;fill:var(--hover)}
+.t-major{font-family:var(--font-display);font-size:36px;font-weight:700;letter-spacing:-.03em;
+  fill:var(--ink);text-anchor:middle;dominant-baseline:central;transition:fill .2s}
+.t-acc{font-family:var(--font-mono);font-size:11.5px;letter-spacing:.06em;fill:var(--ink-3);
+  text-anchor:middle;dominant-baseline:central}
+.t-minor{font-family:var(--font-display);font-size:22px;font-weight:600;letter-spacing:.01em;
+  fill:var(--ink-3);text-anchor:middle;dominant-baseline:central;transition:fill .2s}
+.sector[data-side="s"] .t-major{fill:var(--amber)}
+.sector[data-side="f"] .t-major{fill:var(--teal)}
+.sector.is-active .t-major{fill:var(--ink)}
+.sector.is-active .t-minor{fill:var(--ink-2)}
+.c-name{font-family:var(--font-display);font-size:80px;font-weight:800;letter-spacing:-.05em;
+  fill:var(--ink);text-anchor:middle;dominant-baseline:central}
+.c-sub{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.18em;fill:var(--ink-3);
+  text-anchor:middle;dominant-baseline:central;text-transform:uppercase}
+.c-min{font-family:var(--font-display);font-size:17px;font-weight:600;fill:var(--ink-2);
+  text-anchor:middle;dominant-baseline:central}
+.c-opp{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.16em;fill:var(--ink-3);
+  text-anchor:middle;dominant-baseline:central;text-transform:uppercase}
+.legend{list-style:none;display:flex;flex-wrap:wrap;gap:6px 16px;margin:14px 0 0;padding:0;
+  font-size:11.5px;color:var(--ink-3);font-family:var(--font-mono);letter-spacing:.04em}
+.legend li{display:flex;align-items:center;gap:6px}
+.dot{width:9px;height:9px;border-radius:3px;display:inline-block;flex:none}
+.dot-sharp{background:var(--amber-fill)} .dot-flat{background:var(--teal-fill)}
+.dot-nat{background:var(--ink-3)} .dot-sel{background:var(--red-fill);border-radius:50%}
+.wheel-cap{margin-top:10px;font-family:var(--font-mono);font-size:10.5px;line-height:1.7;
+  letter-spacing:.04em;color:var(--ink-3)}
+.wheel-cap b{color:var(--ink-2);font-weight:600}
+
+/* ============ 8. KEY PANEL ============ */
+.panel{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);
+  box-shadow:var(--shadow-2);padding:clamp(18px,2vw,24px);position:sticky;top:84px}
+.panel-eyebrow{font-family:var(--font-mono);font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ink-3)}
+.panel-title{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:6px}
+.panel-title h3{font-size:clamp(30px,3.4vw,42px);letter-spacing:-.04em;line-height:1}
+.sig-badge{font-family:var(--font-mono);font-size:11px;letter-spacing:.08em;padding:5px 11px;border-radius:999px;
+  background:var(--badge-bg);color:var(--ink-2);white-space:nowrap}
+.sig-badge.sig-s{color:var(--amber);background:var(--amber-tint)}
+.sig-badge.sig-f{color:var(--teal);background:var(--teal-tint)}
+.panel-facts{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px;margin:18px 0 0;
+  padding:14px 0 0;border-top:1px solid var(--line-soft)}
+.panel-facts > div{min-width:0}
+.panel-facts > div:first-child{grid-column:1 / -1}
+.panel-facts dt{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3)}
+.panel-facts dd{margin:3px 0 0;font-size:14.5px;line-height:1.5;color:var(--ink);font-weight:500}
+.panel-facts dd.empty{color:var(--ink-3);font-weight:400}
+.panel-block{margin-top:16px}
+.blk-lbl{display:flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:9.5px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-3);margin-bottom:8px}
+.blk-lbl .hint{letter-spacing:.02em;text-transform:none;font-family:var(--font-sans);font-size:11px;color:var(--ink-3);opacity:.85}
+.chips{display:flex;flex-wrap:wrap;gap:5px}
+.chip{display:inline-flex;flex-direction:column;align-items:center;justify-content:center;gap:0;
+  min-width:44px;min-height:44px;padding:5px 9px;border-radius:10px;background:var(--bg-tint);
+  border:1px solid transparent;font-family:var(--font-display);font-size:14.5px;font-weight:600;
+  letter-spacing:-.01em;line-height:1.25;transition:background .16s,border-color .16s,transform .16s,color .16s}
+button.chip:hover{border-color:var(--ink-3);transform:translateY(-1px);background:var(--surface-2)}
+.chip .rn{font-family:var(--font-mono);font-size:9px;letter-spacing:.04em;color:var(--ink-3);font-weight:400}
+.chip.is-playing{border-color:var(--red);color:var(--red);background:transparent}
+.panel-acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px;padding-top:16px;border-top:1px solid var(--line-soft)}
+.panel-note{margin-top:12px;font-size:12px;line-height:1.6;color:var(--ink-3)}
+.panel-note b{color:var(--ink-2);font-weight:600}
+
+/* ============ 9. TABLE ============ */
+.table-wrap{margin-top:clamp(20px,2.6vw,32px);background:var(--surface);border:1px solid var(--line-soft);
+  border-radius:var(--radius);box-shadow:var(--shadow-2);overflow:hidden}
+.table-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table.keytable{width:100%;border-collapse:collapse;font-size:14px;min-width:660px}
+.keytable th{text-align:left;font-family:var(--font-mono);font-size:9.5px;font-weight:400;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-3);padding:13px 14px;background:var(--surface-2);
+  border-bottom:1px solid var(--line);white-space:nowrap}
+.keytable td{padding:9px 14px;border-bottom:1px solid var(--line-soft);vertical-align:middle;color:var(--ink-2)}
+.keytable tbody tr{transition:background .16s}
+.keytable tbody tr:hover{background:var(--hover)}
+.keytable tbody tr:last-child td{border-bottom:0}
+.keytable tr.is-current td{background:var(--bg-tint);color:var(--ink)}
+.keytable tr.is-current td:first-child{box-shadow:inset 3px 0 0 var(--red)}
+.c-idx{font-family:var(--font-mono);font-size:10.5px;color:var(--ink-3);letter-spacing:.06em;width:52px}
+.rowbtn{display:inline-flex;align-items:baseline;gap:4px;font-family:var(--font-display);font-size:18px;
+  font-weight:700;letter-spacing:-.025em;color:var(--ink);padding:5px 2px;border-radius:6px}
+.rowbtn:hover{color:var(--red)}
+.rowbtn .alt{font-size:11.5px;font-weight:500;color:var(--ink-3);letter-spacing:0}
+.sig-cell{display:inline-flex;align-items:center;gap:7px;font-family:var(--font-mono);font-size:12.5px;white-space:nowrap}
+.sig-cell .sig-dot{width:8px;height:8px;border-radius:2px;flex:none}
+.sig-dot.sig-s{background:var(--amber-fill)} .sig-dot.sig-f{background:var(--teal-fill)}
+.sig-dot.sig-n{background:var(--ink-3)}
+.acc-cell{font-family:var(--font-mono);font-size:12.5px;letter-spacing:.04em}
+.acc-cell .none{color:var(--ink-3)}
+.minor-cell{font-family:var(--font-display);font-size:14.5px;font-weight:600}
+.table-hint{margin-top:10px;font-size:11.5px;color:var(--ink-3);font-family:var(--font-mono);letter-spacing:.04em}
+@media (min-width:761px){.table-hint{display:none}}
+
+/* ============ 10. USE CARDS ============ */
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(12px,1.8vw,18px);
+  margin-top:clamp(22px,3vw,34px)}
+.card{background:var(--surface);border:1px solid var(--line-soft);border-radius:var(--radius);
+  padding:clamp(16px,2vw,22px);box-shadow:var(--shadow-1);display:flex;flex-direction:column;
+  transition:transform .22s ease,box-shadow .22s ease,border-color .22s}
+.card:hover{transform:translateY(-3px);box-shadow:var(--shadow-2);border-color:var(--line)}
+.card-idx{font-family:var(--font-mono);font-size:10px;letter-spacing:.2em;color:var(--red)}
+.card h3{font-size:18.5px;margin-top:9px;letter-spacing:-.02em;line-height:1.35}
+.card p{margin-top:9px;font-size:13.5px;line-height:1.72;color:var(--ink-2)}
+.card-viz{margin-top:auto;padding-top:18px}
+.viz-lbl{font-family:var(--font-mono);font-size:9.5px;letter-spacing:.13em;text-transform:uppercase;
+  color:var(--ink-3);margin-bottom:6px}
+.dotrow{display:flex;gap:3px;align-items:center;flex-wrap:wrap}
+.nd{width:23px;height:23px;border-radius:6px;display:grid;place-items:center;background:var(--bg-tint);
+  font-family:var(--font-mono);font-size:10px;color:var(--ink-2);letter-spacing:-.02em}
+.nd.diff{background:var(--amber-tint);color:var(--amber);box-shadow:inset 0 0 0 1px var(--amber-fill)}
+.dotrow + .viz-lbl{margin-top:10px}
+.chain{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:700;
+  font-size:17px;letter-spacing:-.02em}
+.chain .ar{color:var(--ink-3);font-size:13px;font-weight:400}
+.chain .kbox{padding:4px 9px;border-radius:8px;background:var(--bg-tint)}
+.chain .kbox.hot{background:var(--red-fill);color:var(--on-red)}
+.chip-tag{display:inline-block;margin-top:10px;font-family:var(--font-mono);font-size:10px;
+  letter-spacing:.08em;color:var(--ink-3);border:1px solid var(--line);border-radius:999px;padding:3px 9px}
+
+/* ============ 11. QUIZ ============ */
+.quiz{margin-top:clamp(20px,2.6vw,32px);background:var(--surface);border:1px solid var(--line-soft);
+  border-radius:var(--radius);box-shadow:var(--shadow-2);padding:clamp(18px,2.4vw,28px)}
+.quiz-top{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  font-family:var(--font-mono);font-size:10.5px;letter-spacing:.12em;color:var(--ink-3);
+  padding-bottom:4px;text-transform:uppercase}
+.q{padding:20px 0;border-top:1px solid var(--line-soft)}
+.q:first-child{border-top:0;padding-top:8px}
+.q-num{font-family:var(--font-mono);font-size:10px;letter-spacing:.14em;color:var(--red);margin-bottom:6px}
+.q-text{font-family:var(--font-display);font-size:17.5px;font-weight:700;letter-spacing:-.015em;line-height:1.45}
+.opts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:12px}
+.opt{min-height:46px;padding:10px 14px;border-radius:11px;border:1px solid var(--line);
+  background:var(--surface-2);text-align:left;font-size:14px;color:var(--ink);
+  transition:border-color .16s,background .16s,transform .16s,color .16s}
+.opt:hover:not([disabled]){border-color:var(--ink-3);transform:translateY(-1px)}
+.opt[disabled]{cursor:default;opacity:1}
+.opt.is-right{border-color:var(--teal-fill);background:var(--teal-tint);color:var(--teal);font-weight:600}
+.opt.is-wrong{border-color:var(--red);color:var(--red);text-decoration:line-through;text-decoration-thickness:1px}
+.q-why{margin-top:11px;font-size:12.5px;line-height:1.66;color:var(--ink-2);
+  border-left:2px solid var(--line);padding-left:11px}
+.quiz-foot{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  margin-top:16px;padding-top:16px;border-top:1px solid var(--line-soft)}
+.quiz-result{font-size:13px;color:var(--ink-2);font-family:var(--font-mono);letter-spacing:.02em}
+
+/* ============ 12. FOOTER ============ */
+.ftr{border-top:1px solid var(--line-soft);background:var(--bg-tint);padding:clamp(34px,5vw,62px) 0 34px}
+.ftr-in{max-width:var(--maxw);margin:0 auto;padding:0 clamp(18px,4vw,44px)}
+.ftr-line{font-family:var(--font-display);font-size:clamp(19px,2.5vw,29px);font-weight:700;
+  letter-spacing:-.025em;max-width:26ch;line-height:1.4}
+.ftr-meta{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:24px;
+  padding-top:18px;border-top:1px solid var(--line);font-family:var(--font-mono);font-size:10.5px;
+  color:var(--ink-3);letter-spacing:.07em;text-transform:uppercase}
+.ftr-meta a:hover{color:var(--red)}
+
+/* ============ 13. MOTION / RESPONSIVE ============ */
+html.js [data-reveal]{opacity:0;transform:translateY(20px);
+  transition:opacity .7s cubic-bezier(.22,.9,.25,1),transform .7s cubic-bezier(.22,.9,.25,1)}
+html.js [data-reveal].in{opacity:1;transform:none}
+
+@media (max-width:1040px){
+  .hero-in{grid-template-columns:1fr;gap:32px}
+  .hero-vis{max-width:560px}
+  .wheel-wrap{grid-template-columns:1fr}
+  .panel{position:static}
+  .cards{grid-template-columns:1fr 1fr}
+}
+@media (max-width:860px){
+  .nav{display:none}
+  .brand-en{display:none}
+  .sec-inner{grid-template-columns:1fr;gap:10px}
+  .sec-idx{position:static;padding-top:0}
+  .hero-vis{max-width:none}
+  .opts{grid-template-columns:1fr}
+  .panel-facts{grid-template-columns:1fr}
+  .panel-facts > div:first-child{grid-column:auto}
+  .sec-idx{display:none}
+}
+@media (max-width:640px){
+  body{font-size:16px}
+  .cards{grid-template-columns:1fr}
+  .hero-meta{gap:16px}
+  .hero-meta dt{font-size:21px}
+  .hero-acts .btn{flex:1 1 auto}
+  .wheel-box{padding:4px;border-radius:24px}
+  .rail-list li{padding-right:20px;min-width:50px}
+  .quiz{padding:16px}
+  .ftr-meta{font-size:9.5px}
+}
+@media (prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  *,*::before,*::after{animation-duration:.001ms !important;animation-iteration-count:1 !important;
+    transition-duration:.001ms !important;scroll-behavior:auto !important}
+  html.js [data-reveal]{opacity:1 !important;transform:none !important}
+  .bar{transform:scaleY(1) !important}
+}
+@media print{
+  .hdr,.progress,.theme,.hero-acts,.panel-acts,.quiz-foot,.skip{display:none !important}
+  body{background:#fff;color:#000}
+  .sec{padding:20px 0;break-inside:avoid}
+}
+
+/* ============ 14. FINAL PATCH ============ */
+.btn.is-on{background:var(--bg-tint);border-color:var(--red);color:var(--red)}
+.panel .chip:focus-visible,.opt:focus-visible,.rowbtn:focus-visible{outline:2px solid var(--focus);outline-offset:2px}
+.keytable tbody tr:hover .rowbtn{color:var(--red)}
+.hero-vis .bar-col{min-width:0}
+.sector.is-active .t-acc{fill:var(--ink-2)}
+@media (max-width:420px){
+  .legend{gap:4px 12px;font-size:10.5px}
+  .blk-lbl .hint{display:none}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#wheel">跳到五度圈</a>
+<div class="progress" aria-hidden="true"><i id="progressBar"></i></div>
+
+<header class="hdr">
+  <div class="hdr-in">
+    <a class="brand" href="#top">
+      <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="none">
+        <circle cx="13" cy="13" r="10.2" stroke="currentColor" stroke-width="1.7"/>
+        <circle cx="13" cy="2.8" r="2.7" fill="currentColor"/>
+        <path d="M13 13 L19.6 17.4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      </svg>
+      <span class="brand-txt">五度圈<span class="brand-en">Circle of Fifths</span></span>
+    </a>
+    <nav class="nav" aria-label="页面导航">
+      <a href="#basics">原理</a>
+      <a href="#wheel">五度圈</a>
+      <a href="#table">速查</a>
+      <a href="#uses">应用</a>
+      <a href="#quiz">自测</a>
+    </nav>
+    <button class="theme" id="themeBtn" type="button" aria-pressed="false" aria-label="切换到深色模式">
+      <svg class="i-sun" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="4.2"/><path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+      </svg>
+      <svg class="i-moon" width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
+        <path d="M20.4 14.6A8.6 8.6 0 1 1 9.4 3.6a6.9 6.9 0 0 0 11 11z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero" aria-labelledby="heroTitle">
+    <div class="hero-in">
+      <div class="hero-copy">
+        <p class="eyebrow">乐理 · 交互图解</p>
+        <h1 id="heroTitle">五度圈</h1>
+        <p class="hero-en">Circle of Fifths</p>
+        <p class="lede">一个环，装下全部 12 个调：每个调有几个升号或降号、它的关系小调是谁、和别的调隔多远。读完这一页，调号就不用再背了。</p>
+        <div class="hero-acts">
+          <a class="btn btn-primary" href="#wheel">
+            转起来看看
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4.5v15M6 13l6 6 6-6"/></svg>
+          </a>
+          <a class="btn btn-ghost" href="#basics">一句话原理</a>
+        </div>
+        <dl class="hero-meta">
+          <div><dt>12</dt><dd>个调</dd></div>
+          <div><dt>30°</dt><dd>一个纯五度</dd></div>
+          <div><dt>0–6</dt><dd>个升降号</dd></div>
+        </dl>
+      </div>
+      <figure class="hero-vis">
+        <div class="vis-head"><span>调号数量分布</span><span class="mono">0 → 6 → 1</span></div>
+        <div class="bars" id="heroBars" role="img" aria-label="按五度圈顺序排列的 12 个调，升降号数量从 0 递增到 6，再递减回 1"></div>
+        <figcaption>沿五度圈走，升号一个一个加上去；到第 7 格抵达 6 个升号，翻过去，就开始一个一个有降号。</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- 01 原理 -->
+  <section class="sec" id="basics" aria-labelledby="basicsTitle">
+    <div class="sec-inner">
+      <p class="sec-idx" aria-hidden="true">01<br>原理</p>
+      <div class="sec-body">
+        <header class="sec-head" data-reveal>
+          <p class="eyebrow">一句话原理</p>
+          <h2 id="basicsTitle">往上走一个纯五度，<br>就多一个升号。</h2>
+          <p class="lede">从 C 出发，每次向上跳 7 个半音：C → G → D → A → E → B → F♯。每跳一格，调号里就多一个升号；而且新加的那一个，永远是<strong>上一个调的第四级音</strong>，也是新调的第七级音（导音）。</p>
+        </header>
+        <div class="rails" data-reveal>
+          <div class="rail rail-sharp">
+            <div class="rail-head">
+              <span class="tag tag-sharp">升号方向</span>
+              <span class="rail-note">顺时针走 · 上行纯五度 · 每次 +1 ♯</span>
+            </div>
+            <ol class="rail-list" id="railSharp"></ol>
+          </div>
+          <div class="rail rail-flat">
+            <div class="rail-head">
+              <span class="tag tag-flat">降号方向</span>
+              <span class="rail-note">逆时针走 · 上行纯四度 · 每次 +1 ♭</span>
+            </div>
+            <ol class="rail-list" id="railFlat"></ol>
+          </div>
+        </div>
+        <p class="aside" data-reveal>为什么刚好 12 格？因为叠 12 个纯五度（702 × 12 = 8424 音分）几乎等于 7 个八度（8400 音分），多出的那 24 音分叫「毕达哥拉斯音差」。平均律把它摊平了，于是第 13 步正好回到出发的音——这一圈只有 12 个位置，第 7 格上的 F♯ 与 G♭ 是同一个声音的两种写法。</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 02 交互五度圈 -->
+  <section class="sec" id="wheel" aria-labelledby="wheelTitle">
+    <div class="sec-inner">
+      <p class="sec-idx" aria-hidden="true">02<br>五度圈</p>
+      <div class="sec-body">
+        <header class="sec-head" data-reveal>
+          <p class="eyebrow">交互五度圈</p>
+          <h2 id="wheelTitle">点一个音名，看它的全部资料。</h2>
+          <p class="lede">外圈是大调，内圈是它的关系小调，两者之间写着这个调号里有几个升号或降号。红针指着的就是当前选中的调；针穿过圆心，对面那一个永远和它差六个五度——也就是一个三全音。</p>
+        </header>
+        <div class="wheel-wrap" data-reveal>
+          <div class="wheel-stage">
+            <div class="wheel-top">
+              <button class="btn btn-ghost btn-sm" id="tourBtn" type="button">
+                <svg width="11" height="11" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1.4 10 6l-7.5 4.6z" fill="currentColor"/></svg>
+                <span id="tourTxt">顺五度巡游</span>
+              </button>
+              <p class="wheel-hint">点击 / ← → 键</p>
+            </div>
+            <div class="wheel-box">
+              <svg id="wheelSvg" viewBox="0 0 720 720" role="group" aria-label="五度圈：12 个大调、它们的关系小调与调号"></svg>
+            </div>
+            <ul class="legend" aria-label="图例">
+              <li><i class="dot dot-sharp"></i>升号一侧</li>
+              <li><i class="dot dot-flat"></i>降号一侧</li>
+              <li><i class="dot dot-nat"></i>无升降</li>
+              <li><i class="dot dot-sel"></i>当前选择</li>
+            </ul>
+            <p class="wheel-cap"><b>顺时针</b> = 上行纯五度 = 多一个升号　·　<b>逆时针</b> = 多一个降号</p>
+          </div>
+          <aside class="panel" id="panel" aria-labelledby="panelTitle"></aside>
+        </div>
+        <p class="sr-only" id="wheelStatus" role="status" aria-live="polite"></p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 03 速查表 -->
+  <section class="sec sec-tint" id="table" aria-labelledby="tableTitle">
+    <div class="sec-inner">
+      <p class="sec-idx" aria-hidden="true">03<br>速查</p>
+      <div class="sec-body">
+        <header class="sec-head" data-reveal>
+          <p class="eyebrow">调号速查</p>
+          <h2 id="tableTitle">十二个调，一张表。</h2>
+          <p class="lede">表的顺序就是五度圈的顺序：从 C 出发，每往下一行就多一个记号。点任意一行，上面的五度圈会跟着跳到那个调。</p>
+        </header>
+        <div class="table-wrap" data-reveal>
+          <div class="table-scroll" tabindex="0" role="region" aria-labelledby="tableTitle">
+            <table class="keytable">
+              <caption class="sr-only">十二个大调的调号、变化音、关系小调与主和弦</caption>
+              <thead>
+                <tr>
+                  <th scope="col">#</th>
+                  <th scope="col">大调</th>
+                  <th scope="col">调号</th>
+                  <th scope="col">变化的音</th>
+                  <th scope="col">关系小调</th>
+                  <th scope="col">主和弦</th>
+                </tr>
+              </thead>
+              <tbody id="keyTbody"></tbody>
+            </table>
+          </div>
+        </div>
+        <p class="table-hint">表格可左右滑动 →</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- 04 应用 -->
+  <section class="sec" id="uses" aria-labelledby="usesTitle">
+    <div class="sec-inner">
+      <p class="sec-idx" aria-hidden="true">04<br>应用</p>
+      <div class="sec-body">
+        <header class="sec-head" data-reveal>
+          <p class="eyebrow">它到底能干什么</p>
+          <h2 id="usesTitle">三个很实际的问题，<br>它都能回答。</h2>
+          <p class="lede">五度圈不是考试用的装饰画。写歌、转调、给和弦找「理由」的时候，它一直在用。</p>
+        </header>
+        <div class="cards">
+          <article class="card" data-reveal>
+            <p class="card-idx">A / 距离</p>
+            <h3>相邻的调，只差一个音</h3>
+            <p>C 大调与 G 大调共享 6 个音，唯一的区别是 F 变成 F♯。所以从 C 转到 G 几乎不需要过渡：换一个和弦就过去了。</p>
+            <div class="card-viz">
+              <p class="viz-lbl">C 大调</p>
+              <div class="dotrow" aria-hidden="true">
+                <span class="nd">C</span><span class="nd">D</span><span class="nd">E</span><span class="nd">F</span><span class="nd">G</span><span class="nd">A</span><span class="nd">B</span>
+              </div>
+              <p class="viz-lbl">G 大调</p>
+              <div class="dotrow" aria-hidden="true">
+                <span class="nd">G</span><span class="nd">A</span><span class="nd">B</span><span class="nd">C</span><span class="nd">D</span><span class="nd">E</span><span class="nd diff">F♯</span>
+              </div>
+              <p class="chip-tag">只差 F → F♯</p>
+            </div>
+          </article>
+          <article class="card" data-reveal>
+            <p class="card-idx">B / 转调</p>
+            <h3>转调，先找左右邻居</h3>
+            <p>想让副歌「亮」起来，往上挪一格到属调最省事：两调共有的和弦最多，听感上像是同一间屋子换了个采光。</p>
+            <div class="card-viz">
+              <div class="chain" aria-hidden="true">
+                <span class="kbox">F</span><span class="ar">←</span><span class="kbox hot">C</span><span class="ar">→</span><span class="kbox">G</span>
+              </div>
+              <p class="chip-tag">邻居共享 6 个音 · 对面一个都不共享</p>
+            </div>
+          </article>
+          <article class="card" data-reveal>
+            <p class="card-idx">C / 拉力</p>
+            <h3>任何和弦，都能加一个属七</h3>
+            <p>想让 G 出现得更「有理由」，先在它前面放上方五度的 D7。这种「副属和弦」在流行与爵士里到处都是，位置全在五度圈上。</p>
+            <div class="card-viz">
+              <div class="chain" aria-hidden="true">
+                <span class="kbox">D7</span><span class="ar">→</span><span class="kbox hot">G</span>
+              </div>
+              <p class="chip-tag">V7 / V ：D7 是 G 的属七</p>
+            </div>
+          </article>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 05 自测 -->
+  <section class="sec" id="quiz" aria-labelledby="quizTitle">
+    <div class="sec-inner">
+      <p class="sec-idx" aria-hidden="true">05<br>自测</p>
+      <div class="sec-body">
+        <header class="sec-head" data-reveal>
+          <p class="eyebrow">四道小题</p>
+          <h2 id="quizTitle">走一遍，就记住了。</h2>
+          <p class="lede">答案都在上面出现过。选错也没关系，每一题都有解释。</p>
+        </header>
+        <div class="quiz" data-reveal>
+          <div class="quiz-top">
+            <span id="quizCount">0 / 4 已作答</span>
+            <span id="quizScore">答对 0 题</span>
+          </div>
+          <div id="quizBody"></div>
+          <div class="quiz-foot">
+            <span class="quiz-result" id="quizResult">选一个选项开始。</span>
+            <button class="btn btn-ghost btn-sm" id="quizReset" type="button">重新来一遍</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="ftr">
+  <div class="ftr-in">
+    <p class="ftr-line">五度圈不是一张要背的表，而是一条能走的路线图。</p>
+    <div class="ftr-meta">
+      <span>十二平均律 / 纯五度 = 7 个半音</span>
+      <a href="#top">回到顶部 ↑</a>
+    </div>
+  </div>
+</footer>
+
+<noscript>
+  <div style="max-width:1200px;margin:0 auto;padding:20px;font-size:14px;color:#7C6B60">
+    本页的五度圈与图表由 JavaScript 绘制，请在开启脚本后查看。
+  </div>
+</noscript>
+
+<script>
+(function () {
+  'use strict';
+  var root = document.documentElement;
+  root.classList.add('js');
+
+  /* ================= DATA ================= */
+  var KEYS = [
+    { n: 'C', alt: '', pc: 0, side: 'n', list: [], scale: ['C', 'D', 'E', 'F', 'G', 'A', 'B'] },
+    { n: 'G', alt: '', pc: 7, side: 's', list: ['F♯'], scale: ['G', 'A', 'B', 'C', 'D', 'E', 'F♯'] },
+    { n: 'D', alt: '', pc: 2, side: 's', list: ['F♯', 'C♯'], scale: ['D', 'E', 'F♯', 'G', 'A', 'B', 'C♯'] },
+    { n: 'A', alt: '', pc: 9, side: 's', list: ['F♯', 'C♯', 'G♯'], scale: ['A', 'B', 'C♯', 'D', 'E', 'F♯', 'G♯'] },
+    { n: 'E', alt: '', pc: 4, side: 's', list: ['F♯', 'C♯', 'G♯', 'D♯'], scale: ['E', 'F♯', 'G♯', 'A', 'B', 'C♯', 'D♯'] },
+    { n: 'B', alt: '', pc: 11, side: 's', list: ['F♯', 'C♯', 'G♯', 'D♯', 'A♯'], scale: ['B', 'C♯', 'D♯', 'E', 'F♯', 'G♯', 'A♯'] },
+    { n: 'F♯', alt: 'G♭', pc: 6, side: 's', list: ['F♯', 'C♯', 'G♯', 'D♯', 'A♯', 'E♯'],
+      scale: ['F♯', 'G♯', 'A♯', 'B', 'C♯', 'D♯', 'E♯'],
+      altScale: ['G♭', 'A♭', 'B♭', 'C♭', 'D♭', 'E♭', 'F'] },
+    { n: 'D♭', alt: '', pc: 1, side: 'f', list: ['B♭', 'E♭', 'A♭', 'D♭', 'G♭'], scale: ['D♭', 'E♭', 'F', 'G♭', 'A♭', 'B♭', 'C'] },
+    { n: 'A♭', alt: '', pc: 8, side: 'f', list: ['B♭', 'E♭', 'A♭', 'D♭'], scale: ['A♭', 'B♭', 'C', 'D♭', 'E♭', 'F', 'G'] },
+    { n: 'E♭', alt: '', pc: 3, side: 'f', list: ['B♭', 'E♭', 'A♭'], scale: ['E♭', 'F', 'G', 'A♭', 'B♭', 'C', 'D'] },
+    { n: 'B♭', alt: '', pc: 10, side: 'f', list: ['B♭', 'E♭'], scale: ['B♭', 'C', 'D', 'E♭', 'F', 'G', 'A'] },
+    { n: 'F', alt: '', pc: 5, side: 'f', list: ['B♭'], scale: ['F', 'G', 'A', 'B♭', 'C', 'D', 'E'] }
+  ];
+  var DEG = [0, 2, 4, 5, 7, 9, 11];
+  var RN = ['I', 'ii', 'iii', 'IV', 'V', 'vi', 'vii°'];
+  var QUAL = ['maj', 'min', 'min', 'maj', 'maj', 'min', 'dim'];
+  var SUF = ['', 'm', 'm', '', '', 'm', 'dim'];
+
+  function accCount(k) { return k.list.length; }
+  function accLabel(k) {
+    if (!k.list.length) return '无升降';
+    return k.list.length + (k.side === 's' ? ' 个升号' : ' 个降号');
+  }
+  function accShort(k) {
+    if (!k.list.length) return '0';
+    return k.list.length + (k.side === 's' ? '♯' : '♭');
+  }
+  function minorOf(k) { return k.scale[5] + 'm'; }
+  function oppIdx(i) { return (i + 6) % 12; }
+  function sideName(k) { return k.side === 's' ? '升号侧' : (k.side === 'f' ? '降号侧' : '无升降'); }
+
+  /* ================= HERO BARS ================= */
+  function buildBars() {
+    var host = document.getElementById('heroBars');
+    if (!host) return;
+    var html = '';
+    KEYS.forEach(function (k) {
+      var c = accCount(k);
+      var ratio = c === 0 ? 0.07 : Math.max(0.1, c / 6);
+      var cls = k.side === 'n' ? 'n' : (k.side === 's' ? 's' : 'f');
+      html += '<div class="bar-col ' + cls + '" title="' + k.n + ' 大调 · ' + accLabel(k) + '">' +
+        '<span class="bar-n">' + accShort(k) + '</span>' +
+        '<span class="bar-track"><span class="bar" style="height:' + Math.round(ratio * 100) + '%"></span></span>' +
+        '<span class="bar-k">' + k.n + '</span>' +
+        '</div>';
+    });
+    host.innerHTML = html;
+    var bars = host.querySelectorAll('.bar');
+    window.requestAnimationFrame(function () {
+      for (var i = 0; i < bars.length; i++) {
+        (function (b, idx) {
+          window.setTimeout(function () { b.style.transform = 'scaleY(1)'; }, 120 + idx * 42);
+        })(bars[i], i);
+      }
+    });
+  }
+
+  /* ================= RAILS ================= */
+  function buildRails() {
+    var sharp = document.getElementById('railSharp');
+    var flat = document.getElementById('railFlat');
+    if (sharp) {
+      sharp.innerHTML = KEYS.slice(0, 7).map(function (k) {
+        return '<li><span class="rk">' + k.n + '</span><span class="ra">' +
+          (k.list.length ? k.list.length + '♯' : '无升降') + '</span></li>';
+      }).join('');
+    }
+    if (flat) {
+      var order = [0, 11, 10, 9, 8, 7, 6];
+      flat.innerHTML = order.map(function (i) {
+        var k = KEYS[i];
+        var c = i === 6 ? 6 : k.list.length;
+        var name = i === 6 ? 'G♭' : k.n;
+        return '<li><span class="rk">' + name + '</span><span class="ra">' +
+          (c ? c + '♭' : '无升降') + '</span></li>';
+      }).join('');
+    }
+  }
+
+  /* ================= WHEEL ================= */
+  var SVGNS = 'http://www.w3.org/2000/svg';
+  var CX = 360, CY = 360;
+  var R_MAJOR_IN = 252, R_MAJOR_OUT = 340, R_MINOR_IN = 190, R_MINOR_OUT = 244, R_CORE = 180;
+  var R_TEXT_MAJOR = 312, R_TEXT_ACC = 278, R_TEXT_MINOR = 217;
+  var R_RIM = 356, R_PTR_IN = 344, R_PTR_OUT = 353;
+  var CUR = 0, timer = null, visited = [];
+
+  function pt(angleDeg, r) {
+    var rad = (angleDeg - 90) * Math.PI / 180;
+    return [CX + r * Math.cos(rad), CY + r * Math.sin(rad)];
+  }
+  function annulus(a0, a1, r0, r1) {
+    var p1 = pt(a0, r1), p2 = pt(a1, r1), p3 = pt(a1, r0), p4 = pt(a0, r0);
+    var large = (a1 - a0) > 180 ? 1 : 0;
+    return 'M' + p1[0].toFixed(2) + ' ' + p1[1].toFixed(2) +
+      'A' + r1 + ' ' + r1 + ' 0 ' + large + ' 1 ' + p2[0].toFixed(2) + ' ' + p2[1].toFixed(2) +
+      'L' + p3[0].toFixed(2) + ' ' + p3[1].toFixed(2) +
+      'A' + r0 + ' ' + r0 + ' 0 ' + large + ' 0 ' + p4[0].toFixed(2) + ' ' + p4[1].toFixed(2) + 'Z';
+  }
+
+  function buildWheel() {
+    var svg = document.getElementById('wheelSvg');
+    if (!svg) return;
+    var i, a0, a1, mid, s = '';
+
+    s += '<circle class="w-rim" cx="' + CX + '" cy="' + CY + '" r="' + R_RIM + '"/>';
+    for (i = 0; i < 12; i++) {
+      a0 = i * 30 - 15; a1 = i * 30 + 15;
+      s += '<path class="w-band" d="' + annulus(a0 + 0.8, a1 - 0.8, R_MAJOR_IN, R_MAJOR_OUT) + '"/>';
+      s += '<path class="w-band" d="' + annulus(a0 + 0.8, a1 - 0.8, R_MINOR_IN, R_MINOR_OUT) + '"/>';
+    }
+    s += '<circle class="w-center" cx="' + CX + '" cy="' + CY + '" r="' + R_CORE + '"/>';
+
+    // axis (needle through the centre)
+    var pa = pt(0, R_MINOR_IN + 4), pb = pt(0, R_MAJOR_OUT - 4);
+    var pc = pt(180, R_MINOR_IN + 4), pd = pt(180, R_MAJOR_OUT - 4);
+    s += '<g id="wAxis" opacity="0.42">' +
+      '<line class="w-axis" x1="' + pa[0].toFixed(2) + '" y1="' + pa[1].toFixed(2) + '" x2="' + pb[0].toFixed(2) + '" y2="' + pb[1].toFixed(2) + '"/>' +
+      '<line class="w-axis" x1="' + pc[0].toFixed(2) + '" y1="' + pc[1].toFixed(2) + '" x2="' + pd[0].toFixed(2) + '" y2="' + pd[1].toFixed(2) + '"/>' +
+      '</g>';
+
+    // boundary ticks
+    for (i = 0; i < 12; i++) {
+      var bt = i * 30 + 15;
+      var q1 = pt(bt, R_MAJOR_OUT), q2 = pt(bt, R_RIM);
+      s += '<line class="w-tick" x1="' + q1[0].toFixed(2) + '" y1="' + q1[1].toFixed(2) +
+        '" x2="' + q2[0].toFixed(2) + '" y2="' + q2[1].toFixed(2) + '"/>';
+    }
+
+    // sectors
+    s += '<g id="wSectors">';
+    for (i = 0; i < 12; i++) {
+      var k = KEYS[i];
+      mid = i * 30;
+      var tMaj = pt(mid, R_TEXT_MAJOR), tAcc = pt(mid, R_TEXT_ACC), tMin = pt(mid, R_TEXT_MINOR);
+      s += '<g class="sector" data-i="' + i + '" data-side="' + k.side + '" role="button" tabindex="' + (i === 0 ? 0 : -1) + '"' +
+        ' aria-label="' + k.n + ' 大调，' + accLabel(k) + '，关系小调 ' + minorOf(k) + '">' +
+        '<path class="sector-hit" d="' + annulus(i * 30 - 14.6, i * 30 + 14.6, R_MINOR_IN - 4, R_MAJOR_OUT + 4) + '"/>' +
+        '<text class="t-major" dominant-baseline="central" text-anchor="middle" x="' + tMaj[0].toFixed(2) + '" y="' + tMaj[1].toFixed(2) + '">' + k.n + '</text>' +
+        '<text class="t-acc" dominant-baseline="central" text-anchor="middle" x="' + tAcc[0].toFixed(2) + '" y="' + tAcc[1].toFixed(2) + '">' + accShort(k) + '</text>' +
+        '<text class="t-minor" dominant-baseline="central" text-anchor="middle" x="' + tMin[0].toFixed(2) + '" y="' + tMin[1].toFixed(2) + '">' + minorOf(k) + '</text>' +
+        '</g>';
+    }
+    s += '</g>';
+
+    // pointer
+    var pp1 = pt(0, R_PTR_IN), pp2 = pt(0, R_PTR_OUT);
+    s += '<line class="w-pointer" id="wPointer" x1="' + pp1[0].toFixed(2) + '" y1="' + pp1[1].toFixed(2) +
+      '" x2="' + pp2[0].toFixed(2) + '" y2="' + pp2[1].toFixed(2) + '"/>';
+
+    // centre readout
+    s += '<g id="wCore" aria-hidden="true">' +
+      '<text class="c-name" id="cName" dominant-baseline="central" text-anchor="middle" x="' + CX + '" y="' + (CY - 26) + '">C</text>' +
+      '<text class="c-sub" id="cSub" dominant-baseline="central" text-anchor="middle" x="' + CX + '" y="' + (CY + 36) + '">无升降</text>' +
+      '<text class="c-min" id="cMin" dominant-baseline="central" text-anchor="middle" x="' + CX + '" y="' + (CY + 70) + '">Am</text>' +
+      '<text class="c-opp" id="cOpp" dominant-baseline="central" text-anchor="middle" x="' + CX + '" y="' + (CY + 102) + '">对面 F♯</text>' +
+      '</g>';
+
+    svg.innerHTML = s;
+    svg.addEventListener('click', function (e) {
+      var g = e.target.closest ? e.target.closest('.sector') : null;
+      if (g) { select(parseInt(g.getAttribute('data-i'), 10), true); }
+    });
+    svg.addEventListener('keydown', onWheelKey);
+  }
+
+  function onWheelKey(e) {
+    var g = e.target.closest ? e.target.closest('.sector') : null;
+    if (!g) return;
+    var i = parseInt(g.getAttribute('data-i'), 10);
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); moveTo((i + 1) % 12); }
+    else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') { e.preventDefault(); moveTo((i + 11) % 12); }
+    else if (e.key === 'Home') { e.preventDefault(); moveTo(0); }
+    else if (e.key === 'End') { e.preventDefault(); moveTo(11); }
+    else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); select(i, true); playTriad(KEYS[i]); }
+  }
+
+  function moveTo(i) {
+    select(i, true);
+    var g = document.querySelector('.sector[data-i="' + i + '"]');
+    if (g) {
+      var all = document.querySelectorAll('.sector');
+      for (var j = 0; j < all.length; j++) all[j].setAttribute('tabindex', '-1');
+      g.setAttribute('tabindex', '0');
+      g.focus({ preventScroll: true });
+    }
+  }
+
+  function setAttr2(el, x1, y1, x2, y2) {
+    if (!el) return;
+    el.setAttribute('x1', x1.toFixed(2)); el.setAttribute('y1', y1.toFixed(2));
+    el.setAttribute('x2', x2.toFixed(2)); el.setAttribute('y2', y2.toFixed(2));
+  }
+
+  function select(i, fromUser) {
+    CUR = i;
+    var k = KEYS[i], mid = i * 30;
+    var sectors = document.querySelectorAll('.sector');
+    for (var j = 0; j < sectors.length; j++) {
+      sectors[j].classList.toggle('is-active', j === i);
+      sectors[j].classList.toggle('is-visited', visited.indexOf(j) > -1);
+    }
+    var p1 = pt(mid, R_PTR_IN), p2 = pt(mid, R_PTR_OUT);
+    setAttr2(document.getElementById('wPointer'), p1[0], p1[1], p2[0], p2[1]);
+
+    var axis = document.getElementById('wAxis');
+    if (axis) {
+      var lines = axis.getElementsByTagName('line');
+      var a1 = pt(mid, R_MINOR_IN + 4), a2 = pt(mid, R_MAJOR_OUT - 4);
+      var b1 = pt(mid + 180, R_MINOR_IN + 4), b2 = pt(mid + 180, R_MAJOR_OUT - 4);
+      setAttr2(lines[0], a1[0], a1[1], a2[0], a2[1]);
+      setAttr2(lines[1], b1[0], b1[1], b2[0], b2[1]);
+    }
+
+    setText('cName', k.n);
+    setText('cSub', accLabel(k));
+    setText('cMin', '相对小调 ' + minorOf(k));
+    setText('cOpp', '对面 ' + KEYS[oppIdx(i)].n);
+
+    renderPanel(i);
+    syncTable(i);
+    var st = document.getElementById('wheelStatus');
+    if (st) st.textContent = '已选中 ' + k.n + ' 大调，' + accLabel(k) + '，关系小调 ' + minorOf(k) + '。';
+  }
+
+  function setText(id, txt) {
+    var el = document.getElementById(id);
+    if (el) el.textContent = txt;
+  }
+
+  /* ================= PANEL ================= */
+  var ICON_PLAY = '<svg width="10" height="10" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 1.4 10 6l-7.5 4.6z" fill="currentColor"/></svg>';
+
+  function renderPanel(i) {
+    var k = KEYS[i], panel = document.getElementById('panel');
+    if (!panel) return;
+    var scaleChips = k.scale.map(function (nm) { return '<span class="chip">' + nm + '</span>'; }).join('');
+    var chordChips = k.scale.map(function (nm, idx) {
+      return '<button class="chip" type="button" data-chord="' + i + '" data-idx="' + idx +
+        '" aria-label="试听 ' + nm + SUF[idx] + ' 和弦">' +
+        '<span class="rn">' + RN[idx] + '</span><span>' + nm + SUF[idx] + '</span></button>';
+    }).join('');
+    var note = '';
+    if (k.alt && k.altScale) {
+      note = '<p class="panel-note">等音记法：<b>' + k.alt + ' 大调</b> — ' + k.altScale.join(' · ') +
+        '，共 6 个降号，关系小调 ' + k.altScale[5] + 'm。同一个键位，两套写法，按乐谱习惯挑一个。</p>';
+    }
+    panel.innerHTML =
+      '<p class="panel-eyebrow">' + sideName(k) + ' · 五度圈第 ' + (i + 1) + ' 格</p>' +
+      '<div class="panel-title"><h3 id="panelTitle">' + k.n + ' 大调</h3>' +
+      '<span class="sig-badge sig-' + k.side + '">' + accLabel(k) + '</span></div>' +
+      '<dl class="panel-facts">' +
+      '<div><dt>调号里的音</dt><dd class="' + (k.list.length ? '' : 'empty') + '">' +
+      (k.list.length ? k.list.join(' · ') : '没有升降号，全用白键') + '</dd></div>' +
+      '<div><dt>关系小调</dt><dd>' + minorOf(k) + '</dd></div>' +
+      '<div><dt>对面 · 三全音</dt><dd>' + KEYS[oppIdx(i)].n + ' 大调</dd></div>' +
+      '</dl>' +
+      '<div class="panel-block"><p class="blk-lbl">音阶</p><div class="chips">' + scaleChips + '</div></div>' +
+      '<div class="panel-block"><p class="blk-lbl">调内和弦<span class="hint">点一下试听</span></p><div class="chips">' + chordChips + '</div></div>' +
+      '<div class="panel-acts">' +
+      '<button class="btn btn-ghost btn-sm" type="button" data-play="triad">' + ICON_PLAY + '主三和弦</button>' +
+      '<button class="btn btn-ghost btn-sm" type="button" data-play="prog">' + ICON_PLAY + 'I – IV – V</button>' +
+      '</div>' + note;
+  }
+
+  /* ================= AUDIO ================= */
+  var AC = null, MASTER = null;
+  function audio() {
+    if (AC) { if (AC.state === 'suspended' && AC.resume) { AC.resume(); } return AC; }
+    var Ctor = window.AudioContext || window.webkitAudioContext;
+    if (!Ctor) return null;
+    try { AC = new Ctor(); } catch (err) { return null; }
+    MASTER = AC.createGain();
+    MASTER.gain.value = 0.85;
+    if (AC.createDynamicsCompressor) {
+      var comp = AC.createDynamicsCompressor();
+      MASTER.connect(comp); comp.connect(AC.destination);
+    } else { MASTER.connect(AC.destination); }
+    return AC;
+  }
+  function freqOf(midi) { return 440 * Math.pow(2, (midi - 69) / 12); }
+  function voice(midi, t0, dur, gain) {
+    var o = AC.createOscillator(), g = AC.createGain();
+    o.type = 'triangle';
+    o.frequency.setValueAtTime(freqOf(midi), t0);
+    g.gain.setValueAtTime(0.0001, t0);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.001, gain), t0 + 0.014);
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur);
+    o.connect(g); g.connect(MASTER);
+    o.start(t0); o.stop(t0 + dur + 0.04);
+  }
+  function chordAt(baseMidi, quality, t0, dur, gain) {
+    var iv = quality === 'min' ? [0, 3, 7] : (quality === 'dim' ? [0, 3, 6] : [0, 4, 7]);
+    for (var i = 0; i < iv.length; i++) voice(baseMidi + iv[i], t0, dur, gain * (i === 0 ? 1 : 0.78));
+    voice(baseMidi + 12, t0, dur * 0.82, gain * 0.4);
+  }
+  function playChord(rootPc, quality, when, dur) {
+    if (!audio()) return false;
+    chordAt(55 + rootPc, quality, AC.currentTime + (when || 0.03), dur || 0.9, 0.145);
+    return true;
+  }
+  function playTriad(k) { return playChord(k.pc % 12, 'maj', 0.03, 0.95); }
+  function playProg(k) {
+    if (!audio()) return false;
+    var seq = [DEG[0], DEG[3], DEG[4]], base = 55 + (k.pc % 12);
+    for (var i = 0; i < seq.length; i++) {
+      chordAt(base + seq[i], 'maj', AC.currentTime + 0.04 + i * 0.56, 0.66, 0.14);
+    }
+    return true;
+  }
+  function flash(el) {
+    if (!el) return;
+    el.classList.add('is-playing');
+    window.setTimeout(function () { el.classList.remove('is-playing'); }, 620);
+  }
+  function onPanelClick(e) {
+    var chip = e.target.closest ? e.target.closest('[data-chord]') : null;
+    if (chip) {
+      var i = parseInt(chip.getAttribute('data-chord'), 10);
+      var idx = parseInt(chip.getAttribute('data-idx'), 10);
+      var k = KEYS[i];
+      playChord((k.pc + DEG[idx]) % 12, QUAL[idx], 0.03, 0.85);
+      flash(chip);
+      return;
+    }
+    var act = e.target.closest ? e.target.closest('[data-play]') : null;
+    if (act) {
+      var kk = KEYS[CUR];
+      if (act.getAttribute('data-play') === 'prog') { playProg(kk); } else { playTriad(kk); }
+    }
+  }
+
+  /* ================= TABLE ================= */
+  function buildTable() {
+    var tb = document.getElementById('keyTbody');
+    if (!tb) return;
+    tb.innerHTML = KEYS.map(function (k, i) {
+      return '<tr data-i="' + i + '">' +
+        '<td class="c-idx">' + String(i + 1).padStart(2, '0') + '</td>' +
+        '<td><button class="rowbtn" type="button" data-row="' + i + '">' + k.n +
+        (k.alt ? '<span class="alt">/ ' + k.alt + '</span>' : '') + '</button></td>' +
+        '<td><span class="sig-cell"><i class="sig-dot sig-' + k.side + '"></i>' + accShort(k) + '</span></td>' +
+        '<td class="acc-cell">' + (k.list.length ? k.list.join(' ') : '<span class="none">—</span>') + '</td>' +
+        '<td class="minor-cell">' + minorOf(k) + '</td>' +
+        '<td class="acc-cell">' + k.scale[0] + '</td>' +
+        '</tr>';
+    }).join('');
+    tb.addEventListener('click', function (e) {
+      var b = e.target.closest ? e.target.closest('[data-row]') : null;
+      if (!b) return;
+      var i = parseInt(b.getAttribute('data-row'), 10);
+      visited.push(i);
+      select(i, true);
+      var box = document.getElementById('wheelSvg');
+      if (box && box.scrollIntoView) {
+        var r = box.getBoundingClientRect();
+        if (!(r.top < window.innerHeight * 0.85 && r.bottom > 60)) {
+          box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    });
+  }
+  function syncTable(i) {
+    var rows = document.querySelectorAll('#keyTbody tr');
+    for (var j = 0; j < rows.length; j++) { rows[j].classList.toggle('is-current', j === i); }
+  }
+
+  /* ================= QUIZ ================= */
+  var QUIZ = [
+    { q: '调号里有 3 个升号的大调是？', o: ['A 大调', 'D 大调', 'E 大调', 'B 大调'], a: 0,
+      why: '三个升号依次是 F♯、C♯、G♯，对应 A 大调；它在五度圈上离 C 三格。' },
+    { q: 'C 大调的关系小调是？', o: ['a 小调', 'e 小调', 'd 小调', 'g 小调'], a: 0,
+      why: '关系小调的主音在大调主音下方小三度，就是内圈同一个位置：C ↔ Am，一个升降号都没有。' },
+    { q: 'E♭ 大调在五度圈上顺时针走一格，得到？', o: ['A♭ 大调', 'B♭ 大调', 'A♭ 小调', 'C 小调'], a: 1,
+      why: '顺时针是上行纯五度，降号反而少一个：E♭（3♭）→ B♭（2♭）。' },
+    { q: 'F 大调的 V 级和弦是？', o: ['C', 'B♭', 'Gm', 'Dm'], a: 0,
+      why: 'F 大调音阶是 F G A B♭ C D E，第五级是 C，所以 V 级是 C 大三和弦。' }
+  ];
+  var answered = 0, correct = 0;
+
+  function buildQuiz() {
+    var body = document.getElementById('quizBody');
+    if (!body) return;
+    body.innerHTML = QUIZ.map(function (item, qi) {
+      var opts = item.o.map(function (txt, oi) {
+        return '<button class="opt" type="button" data-q="' + qi + '" data-o="' + oi + '">' + txt + '</button>';
+      }).join('');
+      return '<div class="q" data-q="' + qi + '"><p class="q-num">0' + (qi + 1) + '</p>' +
+        '<p class="q-text">' + item.q + '</p><div class="opts">' + opts + '</div></div>';
+    }).join('');
+  }
+  function onQuizClick(e) {
+    var btn = e.target.closest ? e.target.closest('.opt') : null;
+    if (!btn || btn.disabled) return;
+    var card = btn.closest('.q');
+    if (!card || card.getAttribute('data-done')) return;
+    card.setAttribute('data-done', '1');
+    var qi = parseInt(btn.getAttribute('data-q'), 10);
+    var oi = parseInt(btn.getAttribute('data-o'), 10);
+    var item = QUIZ[qi];
+    var btns = card.querySelectorAll('.opt');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].disabled = true;
+      if (i === item.a) btns[i].classList.add('is-right');
+    }
+    var ok = oi === item.a;
+    if (!ok) btn.classList.add('is-wrong');
+    var why = document.createElement('p');
+    why.className = 'q-why';
+    why.textContent = (ok ? '对了。' : '不对。') + item.why;
+    card.appendChild(why);
+    answered++; if (ok) correct++;
+    updateQuizMeta();
+  }
+  function updateQuizMeta() {
+    var c = document.getElementById('quizCount'), s = document.getElementById('quizScore');
+    var r = document.getElementById('quizResult');
+    if (c) c.textContent = answered + ' / ' + QUIZ.length + ' 已作答';
+    if (s) s.textContent = '答对 ' + correct + ' 题';
+    if (r) {
+      if (answered === 0) r.textContent = '选一个选项开始。';
+      else if (answered < QUIZ.length) r.textContent = '还剩 ' + (QUIZ.length - answered) + ' 题。';
+      else if (correct === QUIZ.length) r.textContent = '全对。这一圈你已经能自己走了。';
+      else if (correct >= 2) r.textContent = '差不多了，再看一眼速查表就稳。';
+      else r.textContent = '回到上面再转两圈，比背十遍有用。';
+    }
+  }
+  function resetQuiz() {
+    answered = 0; correct = 0;
+    buildQuiz(); updateQuizMeta();
+  }
+
+  /* ================= TOUR ================= */
+  var tourTimer = null, tourStep = 0, tourRunning = false, tourStart = 0;
+  function toggleTour() {
+    if (tourRunning) { stopTour(); return; }
+    tourRunning = true; tourStep = 0; tourStart = CUR; visited = [CUR];
+    var txt = document.getElementById('tourTxt'), btn = document.getElementById('tourBtn');
+    if (txt) txt.textContent = '停止巡游';
+    if (btn) btn.classList.add('is-on');
+    tourTimer = window.setInterval(function () {
+      tourStep++;
+      var ni = (tourStart + tourStep) % 12;
+      visited.push(ni);
+      select(ni, true);
+      if (tourStep >= 12) { stopTour(); }
+    }, 800);
+  }
+  function stopTour() {
+    tourRunning = false;
+    if (tourTimer) { window.clearInterval(tourTimer); tourTimer = null; }
+    var txt = document.getElementById('tourTxt'), btn = document.getElementById('tourBtn');
+    if (txt) txt.textContent = '顺五度巡游';
+    if (btn) btn.classList.remove('is-on');
+  }
+
+  /* ================= CHROME ================= */
+  function initReveal() {
+    var els = document.querySelectorAll('[data-reveal]');
+    var i;
+    if (!('IntersectionObserver' in window)) {
+      for (i = 0; i < els.length; i++) els[i].classList.add('in');
+      return;
+    }
+    var io = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); io.unobserve(en.target); }
+      });
+    }, { threshold: 0.06, rootMargin: '0px 0px -6% 0px' });
+    for (i = 0; i < els.length; i++) {
+      var idx = Array.prototype.indexOf.call(els[i].parentNode.children, els[i]);
+      els[i].style.transitionDelay = Math.min(idx, 5) * 70 + 'ms';
+      io.observe(els[i]);
+    }
+  }
+  function syncThemeBtn(btn) {
+    var dark = root.getAttribute('data-theme') === 'dark';
+    btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    btn.setAttribute('aria-label', dark ? '切换到浅色模式' : '切换到深色模式');
+  }
+  function initTheme() {
+    var btn = document.getElementById('themeBtn');
+    if (!btn) return;
+    var saved = null;
+    try { saved = window.localStorage.getItem('cof-theme'); } catch (err) { saved = null; }
+    if (saved === 'dark' || saved === 'light') root.setAttribute('data-theme', saved);
+    syncThemeBtn(btn);
+    btn.addEventListener('click', function () {
+      var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+      root.setAttribute('data-theme', next);
+      try { window.localStorage.setItem('cof-theme', next); } catch (err) { }
+      syncThemeBtn(btn);
+    });
+  }
+  function initProgress() {
+    var bar = document.getElementById('progressBar');
+    if (!bar) return;
+    function upd() {
+      var h = document.documentElement;
+      var max = (h.scrollHeight - h.clientHeight) || 1;
+      var top = window.pageYOffset || h.scrollTop || 0;
+      var p = Math.min(1, Math.max(0, top / max));
+      bar.style.transform = 'scaleX(' + p.toFixed(4) + ')';
+    }
+    window.addEventListener('scroll', upd, { passive: true });
+    window.addEventListener('resize', upd);
+    upd();
+  }
+
+  /* ================= INIT ================= */
+  function init() {
+    buildBars();
+    buildRails();
+    buildWheel();
+    buildTable();
+    buildQuiz();
+    updateQuizMeta();
+    select(0, false);
+    initReveal();
+    initTheme();
+    initProgress();
+    var tourBtn = document.getElementById('tourBtn');
+    if (tourBtn) tourBtn.addEventListener('click', toggleTour);
+    var panel = document.getElementById('panel');
+    if (panel) panel.addEventListener('click', onPanelClick);
+    var quizBody = document.getElementById('quizBody');
+    if (quizBody) quizBody.addEventListener('click', onQuizClick);
+    var quizReset = document.getElementById('quizReset');
+    if (quizReset) quizReset.addEventListener('click', resetQuiz);
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
+</body>
+</html>

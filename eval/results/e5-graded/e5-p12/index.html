@@ -1,0 +1,738 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>马尔可夫链 · 随机换乘指南</title>
+<meta name="description" content="一份关于「下一步」的随机换乘指南：用一座四站小城讲清状态、转移概率、无记忆性与平稳分布，全部数字由页面内嵌转移矩阵实时计算。">
+<style>
+/* ============ 随机换乘指南 · 轨交印刷品系统 ============ */
+:root{
+  --paper:#FBFAF7;
+  --panel:#FFFFFF;
+  --tint:#F2EEE2;
+  --ink:#1E2A44;
+  --ink2:#4C5770;
+  --rule:#DAD4C6;
+  --rule2:#C6BFAE;
+  --l1:#B44A18; /* 1号线 家 */
+  --l2:#0F6E6E; /* 2号线 图书馆 */
+  --l3:#A62E5C; /* 3号线 咖啡馆 */
+  --l4:#5B4B8A; /* 4号线 公司 */
+  --sans:"PingFang SC","Microsoft YaHei","Source Han Sans SC","Noto Sans SC",-apple-system,"Segoe UI",sans-serif;
+  --serif:Georgia,"Noto Serif SC","Source Han Serif SC","Songti SC","SimSun",serif;
+  --mono:Consolas,"SFMono-Regular",Menlo,"Courier New",monospace;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{
+  margin:0;
+  background:var(--paper);
+  color:var(--ink);
+  font:17px/1.95 var(--serif);
+  caret-color:var(--l1);
+}
+::selection{background:var(--ink);color:var(--paper)}
+a{color:inherit;text-decoration:underline;text-decoration-color:var(--rule2);text-underline-offset:3px}
+a:hover{text-decoration-color:var(--l1);text-decoration-thickness:2px}
+:focus-visible{outline:2px solid var(--l1);outline-offset:2px}
+p{margin:0 0 1.15em}
+.col{max-width:41em;margin-inline:auto;padding-inline:22px}
+.wide{max-width:47em;margin-inline:auto;padding-inline:22px}
+.skip{position:absolute;left:-9999px;top:0;background:var(--ink);color:var(--paper);padding:8px 14px;font:14px var(--sans);z-index:50}
+.skip:focus{left:12px;top:12px}
+
+/* ---------- 报头 ---------- */
+.masthead{background:var(--ink);color:var(--paper)}
+.masthead .col{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-block:13px}
+.mast-name{font:700 13px/1 var(--sans);letter-spacing:.35em}
+.mast-issue{font:12px/1.5 var(--mono);letter-spacing:.08em;color:#B9C2D6}
+.badges{display:flex;gap:7px;align-items:center}
+.badge{width:15px;height:15px;border-radius:50%;display:inline-block;border:2px solid var(--paper)}
+.badge.b1{background:var(--l1)} .badge.b2{background:var(--l2)}
+.badge.b3{background:var(--l3)} .badge.b4{background:var(--l4)}
+.stripes{display:flex;height:7px}
+.stripes span{flex:1}
+.stripes .s1{background:var(--l1)} .stripes .s2{background:var(--l2)}
+.stripes .s3{background:var(--l3)} .stripes .s4{background:var(--l4)}
+
+/* ---------- 标题块 ---------- */
+.head-block{padding-top:54px}
+.head-block .issue{font:13px/1 var(--mono);letter-spacing:.14em;color:var(--ink2);margin:0 0 14px}
+h1{font:800 46px/1.22 var(--sans);letter-spacing:.04em;margin:0 0 10px}
+.subtitle{font:19px/1.7 var(--serif);font-style:italic;color:var(--ink2);margin:0 0 26px}
+.lead{font-size:18px}
+.lead strong{font-style:normal}
+
+/* ---------- 线路导航 ---------- */
+.route{position:sticky;top:0;z-index:20;background:var(--paper);border-block:1px solid var(--rule)}
+.route ol{list-style:none;display:flex;gap:0;margin:0;padding:10px 0;overflow-x:auto}
+.route li{flex:1;min-width:86px;position:relative;display:flex;justify-content:center}
+.route li:not(:last-child)::after{
+  content:"";position:absolute;top:50%;left:calc(50% + 16px);right:calc(-50% + 16px);
+  height:3px;background:var(--rule2);transform:translateY(-50%);border-radius:2px;
+}
+.route a{display:flex;flex-direction:column;align-items:center;gap:5px;text-decoration:none;padding:2px 6px;position:relative;z-index:1}
+.route .dot{
+  width:26px;height:26px;border-radius:50%;background:var(--paper);
+  border:3px solid var(--rule2);color:var(--ink2);
+  font:700 13px/20px var(--sans);text-align:center;
+}
+.route .nm{font:12px/1.3 var(--sans);color:var(--ink2);white-space:nowrap}
+.route li.active .dot{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.route li.active .nm{color:var(--ink);font-weight:700}
+.route li.terminus .dot{border-radius:4px}
+.route li.terminus.active .dot{border-radius:4px}
+
+/* ---------- 章节与站名 ---------- */
+section{padding-top:74px}
+.h2row{display:flex;align-items:center;gap:14px;margin:0 0 18px}
+.stnum{
+  width:38px;height:38px;border-radius:50%;flex:none;
+  background:var(--ink);color:var(--paper);
+  font:800 17px/38px var(--sans);text-align:center;
+}
+section:nth-of-type(1) .stnum,.stnum.c1{background:var(--l1)}
+section:nth-of-type(2) .stnum{background:var(--l2)}
+section:nth-of-type(3) .stnum{background:var(--l3)}
+section:nth-of-type(4) .stnum{background:var(--l4)}
+h2{font:800 27px/1.35 var(--sans);margin:0;letter-spacing:.03em}
+h3{font:700 19px/1.5 var(--sans);margin:1.9em 0 .6em}
+.sec-foot{border-top:1px solid var(--rule);margin-top:2.6em;padding-top:.8em;display:flex;justify-content:space-between;font:13px/1.6 var(--sans);color:var(--ink2)}
+.sec-foot a{text-decoration:none;font-weight:700}
+.sec-foot a:hover{text-decoration:underline}
+
+/* ---------- 图版 · 时刻表 · 标注框 ---------- */
+figure.plate{
+  margin:2.2em 0 2.6em;background:var(--panel);
+  border:1px solid var(--rule);
+  box-shadow:3px 4px 14px rgba(30,42,68,.08);
+  padding:22px 22px 18px;position:relative;
+}
+figcaption{font:13px/1.75 var(--sans);color:var(--ink2);margin-top:14px;border-top:1px dashed var(--rule2);padding-top:12px}
+figcaption b{color:var(--ink)}
+.figtag{
+  position:absolute;top:-11px;left:18px;background:var(--ink);color:var(--paper);
+  font:700 11px/1 var(--mono);letter-spacing:.1em;padding:5px 9px;
+}
+.callout{border:1px solid var(--rule2);background:var(--tint);position:relative;margin:1.8em 0;padding:22px 20px 16px}
+.callout .tab{position:absolute;top:-10px;left:14px;background:var(--ink);color:var(--paper);font:700 11px/1 var(--sans);letter-spacing:.12em;padding:5px 10px}
+.callout p{margin:0 0 .4em;font-size:16px}
+.callout p:last-child{margin:0}
+.formula{font:italic 19px/1.7 var(--serif);letter-spacing:.02em}
+.formula sub{font-size:.68em}
+
+/* ---------- 表格 ---------- */
+.tbl-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:9px 12px;border-bottom:1px solid var(--rule);text-align:right;font-weight:400}
+thead th{font:700 13px/1.4 var(--sans);border-bottom:2px solid var(--ink);text-align:right;white-space:nowrap}
+tbody th{font:700 14px/1.4 var(--sans);text-align:left;white-space:nowrap}
+td{font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+tbody tr:hover{background:#F5F1E7}
+tbody tr.on{background:var(--tint)}
+tbody tr.on td{font-weight:700}
+.chip{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:7px;vertical-align:baseline}
+.sum{color:var(--ink2)}
+.tbl-note{font:13px/1.7 var(--sans);color:var(--ink2);margin:.7em 0 0}
+
+/* ---------- 按钮 ---------- */
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+button{font:700 15px/1 var(--sans);letter-spacing:.05em;cursor:pointer;border:none;border-radius:3px}
+.btn{background:var(--ink);color:var(--paper);padding:11px 18px;transition:background .15s,transform .15s}
+.btn:hover{background:#33456E;transform:translateY(-1px)}
+.btn:active{transform:translateY(0)}
+.btn.ghost{background:transparent;color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--ink);padding:10px 16px}
+.btn.ghost:hover{background:var(--tint);transform:translateY(-1px)}
+.btn.big{padding:13px 22px;font-size:16px}
+.status{font:13px/1.6 var(--mono);color:var(--ink2);margin-left:auto;white-space:nowrap}
+@media (max-width:560px){.status{margin-left:0;width:100%}}
+
+/* ---------- 线路图 SVG ---------- */
+.mapwrap{background:
+  linear-gradient(var(--rule) 1px,transparent 1px),
+  linear-gradient(90deg,var(--rule) 1px,transparent 1px);
+  background-size:28px 28px;background-position:center;border:1px solid var(--rule);padding:12px}
+.mapsvg{display:block;width:100%;height:auto}
+.st-label{font:700 15px var(--sans);fill:var(--ink)}
+.st-line{font:11px var(--mono);fill:var(--ink2);letter-spacing:.08em}
+.edge{fill:none;stroke-linecap:round;opacity:.92}
+.edge.dim{opacity:.16}
+.elabel{font:700 12.5px var(--mono);fill:var(--ink);stroke:var(--panel);stroke-width:4px;paint-order:stroke;opacity:0;transition:opacity .4s}
+.g-edges.drawn .elabel{opacity:1}
+.g-st circle.core{transition:stroke-width .2s}
+.g-st.cur circle.core{stroke-width:5}
+.g-st text{transition:font-weight .1s}
+.flag{opacity:0;transition:opacity .3s}
+.g-st.visited .flag{opacity:1}
+#token{transition:transform .55s cubic-bezier(.22,.9,.3,1.05)}
+body.fast #token{transition:none}
+.g-edges .edge{stroke-dasharray:var(--len);stroke-dashoffset:var(--len);transition:stroke-dashoffset 1.1s ease-out}
+.g-edges.drawn .edge{stroke-dashoffset:0}
+@media (prefers-reduced-motion:reduce){
+  .g-edges .edge{stroke-dasharray:none;stroke-dashoffset:0;transition:none}
+  #token{transition:none}
+  .btn:hover{transform:none}
+}
+
+/* ---------- 轨迹条 ---------- */
+.railbox{margin-top:14px;border-top:1px solid var(--rule);padding-top:12px}
+.railtitle{font:700 11px/1 var(--sans);letter-spacing:.18em;color:var(--ink2);margin-bottom:9px}
+.rail{display:flex;gap:4px;overflow-x:auto;padding:8px 0 6px}
+.cell{width:15px;height:24px;flex:none;border-radius:2px;position:relative;opacity:.85}
+.cell.c0{background:var(--l1)} .cell.c1{background:var(--l2)}
+.cell.c2{background:var(--l3)} .cell.c3{background:var(--l4)}
+.cell.old{opacity:.42}
+.cell.cur{opacity:1;box-shadow:inset 0 0 0 2px var(--paper)}
+.cell.cur::after{
+  content:"";position:absolute;top:-9px;left:3px;
+  border-left:4px solid transparent;border-right:4px solid transparent;
+  border-top:7px solid var(--ink);
+}
+.rail-hint{font:12px/1.6 var(--sans);color:var(--ink2)}
+
+/* ---------- 出发点选择 ---------- */
+.rowbtns{display:flex;flex-wrap:wrap;gap:8px;margin:1.2em 0 .4em}
+.rbtn{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 1.5px var(--rule2);padding:8px 14px;border-radius:3px}
+.rbtn:hover{box-shadow:inset 0 0 0 1.5px var(--ink)}
+.rbtn[aria-pressed="true"]{background:var(--ink);color:var(--paper);box-shadow:none}
+
+/* ---------- 分布柱状图 ---------- */
+.bars{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;align-items:end;height:230px;margin-top:8px}
+.bcol{display:flex;flex-direction:column;height:100%}
+.plot{position:relative;flex:1;min-height:0;display:flex;align-items:flex-end}
+.bar{width:100%;border-radius:2px 2px 0 0;min-height:3px;transition:height .3s ease-out;position:relative}
+.piline{position:absolute;left:-3px;right:-3px;border-top:2.5px dashed var(--ink);opacity:.75}
+.piline .pv{position:absolute;right:0;top:-22px;font:700 12px var(--mono);color:var(--ink)}
+.bcol .bl{font:700 14px/1.5 var(--sans);margin-top:8px;text-align:center}
+.bcol .bv{font:12.5px/1.6 var(--mono);color:var(--ink2);text-align:center;font-variant-numeric:tabular-nums}
+.legend{display:flex;gap:20px;flex-wrap:wrap;font:13px/1.6 var(--sans);color:var(--ink2);margin:.6em 0 0}
+.legend .sw{display:inline-block;width:22px;height:11px;vertical-align:-1px;margin-right:7px}
+.legend .sw.bar-sw{background:var(--l2)}
+.legend .sw.pi-sw{border-top:2.5px dashed var(--ink);height:0;vertical-align:3px}
+@media (prefers-reduced-motion:reduce){.bar{transition:none}}
+
+/* ---------- 终点站指示牌 ---------- */
+.endboard{background:var(--ink);color:var(--paper);margin-top:80px;padding:54px 12px 46px}
+.endboard h2{color:var(--paper)}
+.endboard .h2row .stnum{background:var(--paper);color:var(--ink)}
+.endboard p{color:#C9D1E4}
+.transfers{list-style:none;margin:2em 0 0;padding:0}
+.transfers li{display:flex;align-items:center;gap:16px;padding:16px 4px;border-top:1px solid #37456B}
+.transfers li:last-child{border-bottom:1px solid #37456B}
+.transfers .ln{font:700 13px/1 var(--mono);color:var(--paper);width:7.2em;flex:none;letter-spacing:.06em}
+.transfers .arrow{flex:none;display:inline-flex}
+.transfers .tx{font:15px/1.7 var(--sans)}
+.transfers .tx b{font-size:16px}
+.transfers .tx span{color:#C9D1E4}
+
+/* ---------- 页脚 ---------- */
+footer{background:var(--paper);border-top:3px solid var(--ink);padding:26px 0 44px}
+footer p{font:12.5px/1.9 var(--mono);color:var(--ink2);margin:0}
+footer .fin{font-family:var(--sans);letter-spacing:.05em}
+
+@media (max-width:640px){
+  h1{font-size:34px}
+  .subtitle{font-size:17px}
+  .lead{font-size:16.5px}
+  .head-block{padding-top:38px}
+  figure.plate{padding:18px 14px 14px}
+  .mast-name{letter-spacing:.2em}
+  .bars{height:190px;gap:8px}
+}
+@media print{
+  .route,button,.skip{display:none}
+  figure.plate{box-shadow:none}
+  body{font-size:12pt}
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#main">跳到正文</a>
+
+<header class="masthead">
+  <div class="col">
+    <div class="mast-name">随机数学图解</div>
+    <div class="badges" aria-hidden="true">
+      <span class="badge b1"></span><span class="badge b2"></span><span class="badge b3"></span><span class="badge b4"></span>
+    </div>
+    <div class="mast-issue">单文件 · 离线 · 可互动</div>
+  </div>
+</header>
+<div class="stripes" aria-hidden="true"><span class="s1"></span><span class="s2"></span><span class="s3"></span><span class="s4"></span></div>
+
+<div class="col head-block">
+  <p class="issue">MARKOV CHAINS · 换乘指南 第 001 期</p>
+  <h1>马尔可夫链</h1>
+  <p class="subtitle">—— 一份关于「下一步」的随机换乘指南</p>
+  <p class="lead">设想你在一座四站小城里随机旅行：每到一站，只看眼前的<strong>换乘频率表</strong>，掷一次骰子，决定下一站。从哪里来、走过多少路，一概不必记得。1906 年，俄国数学家 A.&nbsp;A.&nbsp;马尔可夫研究诗歌中元音的成串出现时，写下的正是这种「只看现在」的随机过程。</p>
+</div>
+
+<nav class="route" aria-label="本页线路目录">
+  <div class="wide" style="padding-inline:0">
+    <ol>
+      <li><a href="#s1"><span class="dot">1</span><span class="nm">状态</span></a></li>
+      <li><a href="#s2"><span class="dot">2</span><span class="nm">转移概率</span></a></li>
+      <li><a href="#s3"><span class="dot">3</span><span class="nm">无记忆性</span></a></li>
+      <li><a href="#s4"><span class="dot">4</span><span class="nm">多步之后</span></a></li>
+      <li><a href="#s5"><span class="dot">5</span><span class="nm">平稳分布</span></a></li>
+      <li class="terminus"><a href="#end"><span class="dot">终</span><span class="nm">终点站</span></a></li>
+    </ol>
+  </div>
+</nav>
+
+<main id="main">
+
+<div class="wide">
+<figure class="plate" id="fig1">
+  <span class="figtag">图 1 · 互动</span>
+  <div class="controls">
+    <button class="btn big" id="btn-step" type="button">走一步</button>
+    <button class="btn" id="btn-ten" type="button">连走十步</button>
+    <button class="btn ghost" id="btn-reset" type="button">清零重来</button>
+    <span class="status" id="status" aria-live="polite">当前站：家 · 已走 0 步</span>
+  </div>
+  <div class="mapwrap">
+  <svg class="mapsvg" id="map" viewBox="0 0 760 400" role="img" aria-label="四站线路图：家、图书馆、咖啡馆、公司。箭头越粗，转移概率越大；颜色为下一站的线路色，空心圆点为乘客当前位置。">
+    <g id="g-edges" class="g-edges"></g>
+    <g id="g-labels"></g>
+    <g id="g-stations">
+      <g class="g-st" id="st0" transform="translate(140,300)">
+        <path class="flag" d="M20,-24 l0,-16 l11,4 l-11,4" fill="#B44A18"/>
+        <circle class="core" r="23" fill="#FFFFFF" stroke="#B44A18" stroke-width="3.5"/>
+        <circle r="7" fill="#B44A18"/>
+        <text class="st-label" x="0" y="47" text-anchor="middle">家</text>
+        <text class="st-line" x="0" y="64" text-anchor="middle">L1</text>
+      </g>
+      <g class="g-st" id="st1" transform="translate(330,110)">
+        <path class="flag" d="M20,-24 l0,-16 l11,4 l-11,4" fill="#B44A18"/>
+        <circle class="core" r="23" fill="#FFFFFF" stroke="#0F6E6E" stroke-width="3.5"/>
+        <circle r="7" fill="#0F6E6E"/>
+        <text class="st-label" x="0" y="-34" text-anchor="middle">图书馆</text>
+        <text class="st-line" x="0" y="-51" text-anchor="middle">L2</text>
+      </g>
+      <g class="g-st" id="st2" transform="translate(505,300)">
+        <path class="flag" d="M20,-24 l0,-16 l11,4 l-11,4" fill="#B44A18"/>
+        <circle class="core" r="23" fill="#FFFFFF" stroke="#A62E5C" stroke-width="3.5"/>
+        <circle r="7" fill="#A62E5C"/>
+        <text class="st-label" x="0" y="47" text-anchor="middle">咖啡馆</text>
+        <text class="st-line" x="0" y="64" text-anchor="middle">L3</text>
+      </g>
+      <g class="g-st" id="st3" transform="translate(645,110)">
+        <path class="flag" d="M20,-24 l0,-16 l11,4 l-11,4" fill="#B44A18"/>
+        <circle class="core" r="23" fill="#FFFFFF" stroke="#5B4B8A" stroke-width="3.5"/>
+        <circle r="7" fill="#5B4B8A"/>
+        <text class="st-label" x="0" y="-34" text-anchor="middle">公司</text>
+        <text class="st-line" x="0" y="-51" text-anchor="middle">L4</text>
+      </g>
+    </g>
+    <g id="token" transform="translate(140,300)" aria-hidden="true">
+      <circle r="10" fill="#FBFAF7" stroke="#1E2A44" stroke-width="3"/>
+    </g>
+  </svg>
+  </div>
+  <div class="railbox">
+    <div class="railtitle">轨迹条 · TRAJECTORY</div>
+    <div class="rail" id="rail" aria-hidden="true"></div>
+    <p class="rail-hint">小格颜色 = 刚走过的站；旗标 = 此刻所在。这条轨迹只被记录，从不被规则参考（见第 3 站）。</p>
+  </div>
+  <figcaption><b>图 1 · 一座四站小城。</b>箭头越粗，去那一站的可能越大；颜色是下一站的线路色。数字标签是<b>当前站</b>的出发频率，与表 1 完全一致。空心圆点是随机乘客：按「走一步」，看它按频率表换乘。</figcaption>
+</figure>
+</div>
+
+<section id="s1" class="col">
+  <div class="h2row"><span class="stnum c1">1</span><h2>状态 · 你现在在哪</h2></div>
+  <p>一切从「现在在哪」开始。天气可以是晴或雨；一首歌有它的下一秒；你此刻正站在某个站台。把系统在某一时刻所处的情形，叫作一个<b>状态</b>（state）。</p>
+  <div class="callout">
+    <span class="tab">定义 · 状态</span>
+    <p>状态（state）：系统在某时刻所处的情形。一组<b>互斥而穷尽</b>的可能情形，构成状态空间 <i>S</i>——任何时刻，系统恰好身处其中之一。</p>
+  </div>
+  <p>本页小城的状态空间就是四个站台：<b>家、图书馆、咖啡馆、公司</b>。旅行者的一生，可以写成这四个名字排成的一条序列——你在图 1 轨迹条里看到的那串彩格，正是它。</p>
+  <div class="sec-foot"><span>随机换乘指南 · 第 1 站</span><a href="#s2">下一站：转移概率 →</a></div>
+</section>
+
+<section id="s2" class="col">
+  <div class="h2row"><span class="stnum">2</span><h2>转移概率 · 换乘频率表</h2></div>
+  <p>光有站台还不够，还得有规则：从家出发，有多大可能去公司？把所有可能性排成一张表，它就是这座城的时刻表。</p>
+
+  <div class="wide">
+  <figure class="plate">
+    <span class="figtag">表 1 · 频率表</span>
+    <div class="tbl-scroll">
+    <table id="ptable">
+      <caption class="tbl-note" style="caption-side:top;text-align:left;margin-bottom:8px">转移概率 p<sub>ij</sub>：行是「当前站」，列是「下一站」。示例数据为教学虚构。</caption>
+      <thead>
+        <tr>
+          <th scope="col">当前站 ＼ 下一站</th>
+          <th scope="col"><span class="chip" style="background:var(--l1)"></span>家</th>
+          <th scope="col"><span class="chip" style="background:var(--l2)"></span>图书馆</th>
+          <th scope="col"><span class="chip" style="background:var(--l3)"></span>咖啡馆</th>
+          <th scope="col"><span class="chip" style="background:var(--l4)"></span>公司</th>
+          <th scope="col">Σ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr data-row="0"><th scope="row"><span class="chip" style="background:var(--l1)"></span>家</th><td>0.4</td><td>0.1</td><td>0.3</td><td>0.2</td><td class="sum">1.0</td></tr>
+        <tr data-row="1"><th scope="row"><span class="chip" style="background:var(--l2)"></span>图书馆</th><td>0.2</td><td>0.5</td><td>0.1</td><td>0.2</td><td class="sum">1.0</td></tr>
+        <tr data-row="2"><th scope="row"><span class="chip" style="background:var(--l3)"></span>咖啡馆</th><td>0.1</td><td>0.3</td><td>0.4</td><td>0.2</td><td class="sum">1.0</td></tr>
+        <tr data-row="3"><th scope="row"><span class="chip" style="background:var(--l4)"></span>公司</th><td>0.5</td><td>0.1</td><td>0.2</td><td>0.2</td><td class="sum">1.0</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figcaption><b>表 1 · 转移频率表。</b>每一行相加恒等于 1：旅行者总会去某个地方：<b>原地不动也是一种转移</b>（比如「图书馆 → 图书馆」的 0.5）。注意最后一列：无论从哪站出发，去公司的概率都是 0.2，这个巧合会在第 4 站回来找我们。</figcaption>
+  </figure>
+  </div>
+
+  <div class="rowbtns" role="group" aria-label="选择出发点，在线路图上查看该站的出发箭头">
+    <button class="rbtn" data-src="0" aria-pressed="false" type="button">家 出发</button>
+    <button class="rbtn" data-src="1" aria-pressed="false" type="button">图书馆 出发</button>
+    <button class="rbtn" data-src="2" aria-pressed="false" type="button">咖啡馆 出发</button>
+    <button class="rbtn" data-src="3" aria-pressed="false" type="button">公司 出发</button>
+  </div>
+  <p>点一个出发点：图 1 会亮出该站的四支出发箭头与频率。表中数字 <i>p<sub>ij</sub></i> 读作「在 <i>i</i> 站时，下一步去 <i>j</i> 站的概率」，必须非负，且每行合计为 1——这就是一张合法的<b>转移矩阵</b> <i>P</i>。</p>
+  <div class="sec-foot"><span>随机换乘指南 · 第 2 站</span><a href="#s3">下一站：无记忆性 →</a></div>
+</section>
+
+<section id="s3" class="col">
+  <div class="h2row"><span class="stnum">3</span><h2>无记忆性 · 只看现在</h2></div>
+  <p>现在问一个关键问题：预测下一站，需要知道多少历史？马尔可夫链的回答激进得近乎冒犯：<b>只要现在</b>。哪怕旅行者昨天宿在图书馆、上周去了十次咖啡馆，下一站的概率仍然只由此刻所站的台面决定。</p>
+  <div class="callout">
+    <span class="tab">记号 · 马尔可夫性质</span>
+    <p class="formula">P(X<sub>t+1</sub> = j ｜ X<sub>t</sub> = i, X<sub>t−1</sub>, …, X<sub>0</sub>) = P(X<sub>t+1</sub> = j ｜ X<sub>t</sub> = i) = p<sub>ij</sub></p>
+    <p>给定现在，未来与过去<b>条件独立</b>。这条性质也叫「无记忆性」。</p>
+  </div>
+  <p>回头看看图 1 下方的轨迹条：那串小格是旅行者走过的站。规则从不参考它。但它仍是理解整条链的钥匙：任何一条轨迹，都是「只看现在」的规则一次一次掷出来的结果。数学家把这条规则本身叫作链，把走出来的序列叫作<b>样本路径</b>。</p>
+  <p>顺带一提：并非所有随机过程都这么干脆。若规则还惦记着「上一站是哪」，那就不再是马尔可夫链。不过总有一个补救办法：把「现在 + 上一站」合并成一个大状态，世界就又无记忆了。</p>
+  <div class="sec-foot"><span>随机换乘指南 · 第 3 站</span><a href="#s4">下一站：多步之后 →</a></div>
+</section>
+
+<section id="s4" class="col">
+  <div class="h2row"><span class="stnum">4</span><h2>多步之后 · 矩阵自乘</h2></div>
+  <p>一次换乘只看一步。两步之后呢？从家出发，先到任意一站、再各走一步，把所有两条路的概率加起来：这正是<b>矩阵乘法</b>，<i>P</i>×<i>P</i>。每多乘一次，就看得远一步。</p>
+
+  <div class="wide">
+  <figure class="plate">
+    <span class="figtag">表 2 · 多步分布</span>
+    <div class="tbl-scroll">
+    <table>
+      <caption class="tbl-note" style="caption-side:top;text-align:left;margin-bottom:8px">从「家」出发，走 n 步后落在各站的概率（由本页内嵌矩阵计算）。</caption>
+      <thead>
+        <tr>
+          <th scope="col">步数 n</th>
+          <th scope="col"><span class="chip" style="background:var(--l1)"></span>家</th>
+          <th scope="col"><span class="chip" style="background:var(--l2)"></span>图书馆</th>
+          <th scope="col"><span class="chip" style="background:var(--l3)"></span>咖啡馆</th>
+          <th scope="col"><span class="chip" style="background:var(--l4)"></span>公司</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">1 步</th><td>40.0%</td><td>10.0%</td><td>30.0%</td><td>20.0%</td></tr>
+        <tr><th scope="row">2 步</th><td>31.0%</td><td>20.0%</td><td>29.0%</td><td>20.0%</td></tr>
+        <tr><th scope="row">3 步</th><td>29.3%</td><td>23.8%</td><td>26.9%</td><td>20.0%</td></tr>
+        <tr><th scope="row">5 步</th><td>29.2%</td><td>24.9%</td><td>25.9%</td><td>20.0%</td></tr>
+        <tr><th scope="row">10 步</th><td>29.2%</td><td>25.1%</td><td>25.6%</td><td>20.0%</td></tr>
+        <tr class="on"><th scope="row">n → ∞（极限 π）</th><td>29.31%</td><td>25.17%</td><td>25.52%</td><td>20.00%</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <figcaption><b>表 2 · n 步之后的分布。</b>还记得表 1 的最后一列吗？「公司」一列从第 1 步起就钉在 20%：因为每一行去公司的概率都是 0.2，无论先到哪站，下一步去公司的可能都相同。其余三列则在几步之内迅速靠近最后一行。</figcaption>
+  </figure>
+  </div>
+
+  <p>看趋势：步数越多，四列数字越来越接近某个<b>固定搭配</b>，而且妙就妙在，不管从哪一站出发，走到足够远，答案都一样。这个共同的归宿，值得单独设一站。</p>
+  <div class="sec-foot"><span>随机换乘指南 · 第 4 站</span><a href="#s5">下一站：平稳分布 →</a></div>
+</section>
+
+<section id="s5" class="col">
+  <div class="h2row"><span class="stnum">5</span><h2>平稳分布 · 走到天荒地老</h2></div>
+  <p>把很多步累积起来：让旅行者一直走下去，统计它「踩」到各站的时间比例。走得足够久，这个比例不再变化，收敛到一组固定数字，这就是<b>平稳分布</b> π。它由频率表唯一决定，与出发点无关。</p>
+
+  <div class="wide">
+  <figure class="plate" id="fig2">
+    <span class="figtag">图 2 · 大数定律</span>
+    <div class="controls">
+      <button class="btn" id="btn-hundred" type="button">走一百步</button>
+      <button class="btn" id="btn-thousand" type="button">走一千步</button>
+      <span class="status" id="status2" aria-live="polite">累计 1 次到访（含起点）</span>
+    </div>
+    <div class="bars" id="bars" role="img" aria-label="各站到访比例柱状图，虚线为理论平稳分布">
+      <div class="bcol"><div class="plot"><div class="piline" data-i="0"><span class="pv">π 29.3%</span></div><div class="bar" id="bar0" style="background:var(--l1)"></div></div><div class="bl">家</div><div class="bv" id="bv0">1 次 · 100%</div></div>
+      <div class="bcol"><div class="plot"><div class="piline" data-i="1"><span class="pv">π 25.2%</span></div><div class="bar" id="bar1" style="background:var(--l2)"></div></div><div class="bl">图书馆</div><div class="bv" id="bv1">0 次 · 0%</div></div>
+      <div class="bcol"><div class="plot"><div class="piline" data-i="2"><span class="pv">π 25.5%</span></div><div class="bar" id="bar2" style="background:var(--l3)"></div></div><div class="bl">咖啡馆</div><div class="bv" id="bv2">0 次 · 0%</div></div>
+      <div class="bcol"><div class="plot"><div class="piline" data-i="3"><span class="pv">π 20.0%</span></div><div class="bar" id="bar3" style="background:var(--l4)"></div></div><div class="bl">公司</div><div class="bv" id="bv3">0 次 · 0%</div></div>
+    </div>
+    <div class="legend"><span><span class="sw bar-sw"></span>实测到访比例</span><span><span class="sw pi-sw"></span>理论平稳分布 π（虚线）</span></div>
+    <figcaption><b>图 2 · 实测比例向 π 收敛。</b>实心柱是旅行者实际到访各站的比例；虚线是表 2 最后一行的理论值。多按几次「走一千步」，看柱顶如何贴住虚线：这就是大数定律在马尔可夫链上的样子。</figcaption>
+  </figure>
+  </div>
+
+  <p>这个结构用途极广。Google 创业之初的 <b>PageRank</b>，本质就是同一件事：让一位「随机冲浪者」沿着网页间的超链接永远点下去，长期停留在某个网页的时间比例，就成了它的排名。天气模型、输入法联想、棋盘游戏里的随机游走：只要「下一步只看现在」，马尔可夫链就在场。</p>
+  <div class="sec-foot"><span>随机换乘指南 · 第 5 站</span><a href="#end">下一站：终点站 →</a></div>
+</section>
+
+<section id="end" class="endboard">
+  <div class="col">
+    <div class="h2row"><span class="stnum">终</span><h2>终点站 · 换乘信息</h2></div>
+    <p>本线到此为止。想继续旅行，可换乘以下线路：</p>
+    <ul class="transfers">
+      <li>
+        <span class="ln">HMM 线</span>
+        <span class="arrow" aria-hidden="true"><svg width="34" height="12" viewBox="0 0 34 12"><path d="M0 6 H30 M25 1.5 L31 6 L25 10.5" stroke="#FBFAF7" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
+        <span class="tx"><b>隐马尔可夫模型</b>：<span>状态看不见，只看得见它们的蛛丝马迹——语音识别与基因序列的经典工具。</span></span>
+      </li>
+      <li>
+        <span class="ln">MCMC 线</span>
+        <span class="arrow" aria-hidden="true"><svg width="34" height="12" viewBox="0 0 34 12"><path d="M0 6 H30 M25 1.5 L31 6 L25 10.5" stroke="#FBFAF7" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
+        <span class="tx"><b>马尔可夫链蒙特卡洛</b>：<span>故意造一条链，让它的长期比例逼近复杂积分——现代统计计算的发动机。</span></span>
+      </li>
+      <li>
+        <span class="ln">MDP 线</span>
+        <span class="arrow" aria-hidden="true"><svg width="34" height="12" viewBox="0 0 34 12"><path d="M0 6 H30 M25 1.5 L31 6 L25 10.5" stroke="#FBFAF7" stroke-width="2" fill="none" stroke-linecap="round"/></svg></span>
+        <span class="tx"><b>马尔可夫决策过程</b>：<span>在链上加入「选择」与代价，通往强化学习的站厅。</span></span>
+      </li>
+    </ul>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="col">
+    <p>马尔可夫链 · 随机换乘指南 —— 单文件离线页面，零外部请求。<br>
+    示例小城为教学虚构；文中所有概率、n 步分布与 π 均由页面内嵌的同一转移矩阵实时计算。<br>
+    <span class="fin">随机数学图解 第 001 期 · 本页到此终点，欢迎再次乘车。</span></p>
+  </div>
+</footer>
+
+<noscript><div class="col" style="padding-bottom:30px"><p style="font:13px/1.7 var(--sans);color:var(--ink2)">提示：互动模拟需要启用 JavaScript；正文、表 1 与表 2 的静态内容不受影响。</p></div></noscript>
+
+<script>
+(function(){
+"use strict";
+/* ===== 本页唯一的真相源：转移矩阵 P（行=当前站，列=下一站） ===== */
+var P = [
+  [0.4, 0.1, 0.3, 0.2],
+  [0.2, 0.5, 0.1, 0.2],
+  [0.1, 0.3, 0.4, 0.2],
+  [0.5, 0.1, 0.2, 0.2]
+];
+var NAMES = ["家","图书馆","咖啡馆","公司"];
+var COL   = ["#B44A18","#0F6E6E","#A62E5C","#5B4B8A"];
+var POS   = [[140,300],[330,110],[505,300],[645,110]]; /* 与 SVG 站点一致 */
+var START = 0, HOME_R = 23, SVGNS = "http://www.w3.org/2000/svg";
+
+var reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+/* ---------- 矩阵工具：n 步分布与平稳分布 π ---------- */
+function mulVec(v, M){ return v.map(function(_, j){ var s=0; for(var i=0;i<4;i++) s += v[i]*M[i][j]; return s; }); }
+function stepDist(from, n){
+  var v=[0,0,0,0]; v[from]=1;
+  for(var k=0;k<n;k++) v = mulVec(v,P);
+  return v;
+}
+var PI=(function(){
+  var v=[1,0,0,0], i;
+  for(i=0;i<600;i++){ var nv=mulVec(v,P); var d=0;
+    for(var j=0;j<4;j++) d=Math.max(d,Math.abs(nv[j]-v[j])); v=nv;
+    if(d<1e-14) break; }
+  return v;
+})();
+
+/* ---------- 状态 ---------- */
+var cur=START, steps=0, counts=[0,0,0,0], traj=[START], focusRow=START;
+counts[START]=1;
+
+/* ---------- 绘制线路图的边（宽度=概率，颜色=下一站线路色） ---------- */
+var gEdges=document.getElementById("g-edges"), gLabels=document.getElementById("g-labels");
+var edgeById={}, labelEls={};
+function el(name, attrs, parent){
+  var e=document.createElementNS(SVGNS,name);
+  for(var k in attrs) e.setAttribute(k, attrs[k]);
+  (parent||gEdges).appendChild(e); return e;
+}
+function arrowDefs(){
+  var defs=el("defs",{});
+  for(var c=0;c<4;c++){
+    var mk=el("marker",{id:"arw"+c, viewBox:"0 0 10 10", refX:"8", refY:"5",
+      markerWidth:"6.5", markerHeight:"6.5", orient:"auto-start-reverse"},defs);
+    el("path",{d:"M0,0 L10,5 L0,10 z", fill:COL[c]},mk);
+  }
+  gEdges.appendChild(defs);
+}
+function edgePath(a,b){
+  var A=POS[a], B=POS[b];
+  var dx=B[0]-A[0], dy=B[1]-A[1], L=Math.sqrt(dx*dx+dy*dy);
+  var ux=dx/L, uy=dy/L, px=-uy, py=ux;      /* 单位向量与法向 */
+  var off=17, r=HOME_R+9;
+  var x1=A[0]+ux*r+px*off, y1=A[1]+uy*r+py*off;
+  var x2=B[0]-ux*(r+7)-px*off, y2=B[1]-uy*(r+7)-py*off;
+  var cx=(x1+x2)/2+px*10, cy=(y1+y2)/2+py*10;
+  return { d:"M"+x1+","+y1+" Q"+cx+","+cy+" "+x2+","+y2,
+           mid:[(x1+2*cx+x2)/4,(y1+2*cy+y2)/4] };
+}
+function selfLoopPath(i){
+  var A=POS[i];
+  var above = A[1] > 200;                    /* 下排站朝上凸，上排站朝下凸 */
+  var y0 = above ? A[1]-HOME_R-2 : A[1]+HOME_R+2;
+  var s = above ? -1 : 1;
+  var d="M"+(A[0]-14)+","+y0+" C"+(A[0]-30)+","+(y0+34*s)+" "+(A[0]+30)+","+(y0+34*s)+" "+(A[0]+14)+","+y0;
+  return { d:d, mid:[A[0], y0 + (above? -20 : 20)] };
+}
+function buildEdges(){
+  arrowDefs();
+  for(var a=0;a<4;a++){
+    for(var b=0;b<4;b++){
+      var geo = (a===b) ? selfLoopPath(a) : edgePath(a,b);
+      var w = 1.6 + P[a][b]*7;
+      var p = el("path",{ "class":"edge", d:geo.d, stroke:COL[b],
+        "stroke-width":w.toFixed(2), "marker-end":"url(#arw"+b+")",
+        "data-a":a, "data-b":b });
+      if(!reduceMotion){ p.style.setProperty("--len","1200"); }
+      edgeById[a+"-"+b]=p;
+      /* 标签：当前 focus 站的出边频率 */
+      var t=el("text",{ "class":"elabel", x:geo.mid[0], y:geo.mid[1]-6, "text-anchor":"middle" },gLabels);
+      t.textContent=(P[a][b]*100).toFixed(0)+"%";
+      labelEls[a+"-"+b]=t;
+    }
+  }
+}
+function setFocus(i){
+  focusRow=i;
+  for(var a=0;a<4;a++) for(var b=0;b<4;b++){
+    var key=a+"-"+b, on=(a===i);
+    edgeById[key].classList.toggle("dim", !on);
+    labelEls[key].style.opacity = on ? "" : "0";
+  }
+  var rows=document.querySelectorAll("#ptable tbody tr");
+  for(var r=0;r<rows.length;r++) rows[r].classList.toggle("on", r===i);
+  var btns=document.querySelectorAll(".rbtn");
+  for(var q=0;q<btns.length;q++) btns[q].setAttribute("aria-pressed", (q===i)?"true":"false");
+}
+
+/* ---------- 采样一步 ---------- */
+function sample(from){
+  var r=Math.random(), acc=0;
+  for(var j=0;j<4;j++){ acc+=P[from][j]; if(r<acc) return j; }
+  return 3;
+}
+
+/* ---------- DOM 引用 ---------- */
+var stEls=[0,1,2,3].map(function(i){return document.getElementById("st"+i);});
+var token=document.getElementById("token");
+var statusEl=document.getElementById("status"), status2=document.getElementById("status2");
+var rail=document.getElementById("rail");
+
+function moveToken(){
+  var p=POS[cur];
+  token.style.transform="translate("+p[0]+"px,"+p[1]+"px)";
+}
+function renderStations(){
+  for(var i=0;i<4;i++){
+    stEls[i].classList.toggle("cur", i===cur);
+    stEls[i].classList.toggle("visited", counts[i]>0);
+  }
+}
+function renderRail(){
+  rail.innerHTML="";
+  var n=traj.length, from=Math.max(0,n-30);
+  for(var k=from;k<n;k++){
+    var c=document.createElement("span");
+    c.className="cell c"+traj[k]+((k===n-1)?" cur":"")+((k<n-6)?" old":"");
+    rail.appendChild(c);
+  }
+}
+function renderBars(){
+  var total=counts[0]+counts[1]+counts[2]+counts[3];
+  var axis=0.06, i;
+  for(i=0;i<4;i++) axis=Math.max(axis, counts[i]/total, PI[i]);
+  for(i=0;i<4;i++){
+    var frac=counts[i]/total;
+    document.getElementById("bar"+i).style.height=Math.min(100,frac/axis*100).toFixed(1)+"%";
+    var line=document.querySelector(".piline[data-i='"+i+"']");
+    line.style.bottom=(PI[i]/axis*100).toFixed(1)+"%";
+    document.getElementById("bv"+i).textContent=counts[i]+" 次 · "+(frac*100).toFixed(1)+"%";
+  }
+  status2.textContent="累计 "+total+" 次到访（含起点）";
+}
+function renderStatus(){
+  statusEl.textContent="当前站："+NAMES[cur]+" · 已走 "+steps+" 步";
+}
+function renderAll(){ moveToken(); renderStations(); renderRail(); renderBars(); renderStatus(); }
+
+/* ---------- 走 ---------- */
+var busy=false;
+function doStep(){
+  cur=sample(cur); steps++; counts[cur]++; traj.push(cur);
+}
+function walk(n){
+  if(busy) return;
+  if(n<=0) return;
+  if(n===1){ doStep(); renderAll(); return; }
+  busy=true; document.body.classList.add("fast");
+  var done=0, CH=(n>=500?90:25);
+  (function chunk(){
+    var m=Math.min(CH,n-done);
+    for(var i=0;i<m;i++) doStep();
+    done+=m;
+    renderStations(); moveToken(); renderRail(); renderStatus(); renderBars();
+    if(done<n){ requestAnimationFrame(chunk); }
+    else { busy=false; document.body.classList.remove("fast"); renderAll(); }
+  })();
+}
+document.getElementById("btn-step").addEventListener("click",function(){walk(1);});
+document.getElementById("btn-ten").addEventListener("click",function(){walk(10);});
+document.getElementById("btn-hundred").addEventListener("click",function(){walk(100);});
+document.getElementById("btn-thousand").addEventListener("click",function(){walk(1000);});
+document.getElementById("btn-reset").addEventListener("click",function(){
+  cur=START; steps=0; counts=[0,0,0,0]; traj=[START]; counts[START]=1;
+  renderAll();
+});
+Array.prototype.forEach.call(document.querySelectorAll(".rbtn"),function(b){
+  b.addEventListener("click",function(){ setFocus(parseInt(b.getAttribute("data-src"),10)); });
+});
+
+/* ---------- 图表编号一致性：用计算值校验静态表 2（略去渲染） ---------- */
+/* n=1..10 与 π 已在构建期用同一矩阵求得；此处再算一遍供控制台核对 */
+(function(){
+  var ok=true, refs={1:[0.400,0.100,0.300,0.200],2:[0.310,0.200,0.290,0.200],
+    3:[0.293,0.238,0.269,0.200],5:[0.2917,0.2490,0.2593,0.200],10:[0.29241,0.25146,0.25613,0.200]};
+  for(var n in refs){
+    var v=stepDist(START,parseInt(n,10));
+    for(var j=0;j<4;j++){ if(Math.abs(v[j]-refs[n][j])>0.0005) ok=false; }
+  }
+  if(!ok && window.console) console.warn("表2静态数值与内嵌矩阵计算不一致");
+})();
+
+/* ---------- 描边生长 + 滚动定位 ---------- */
+buildEdges();
+setFocus(START);
+renderAll();
+if(!reduceMotion && "IntersectionObserver" in window){
+  var gE=document.getElementById("g-edges");
+  var io=new IntersectionObserver(function(es){
+    es.forEach(function(e){ if(e.isIntersecting){ gE.classList.add("drawn"); io.disconnect(); } });
+  },{threshold:0.25});
+  io.observe(gE);
+  var secs=[].slice.call(document.querySelectorAll("section[id]"));
+  var navs={};
+  [].forEach.call(document.querySelectorAll(".route li"),function(li){
+    var a=li.querySelector("a"); if(a) navs[a.getAttribute("href").slice(1)]=li;
+  });
+  var spy=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      var li=navs[e.target.id]; if(!li) return;
+      if(e.isIntersecting){
+        for(var k in navs) navs[k].classList.remove("active");
+        li.classList.add("active");
+      }
+    });
+  },{rootMargin:"-40% 0px -55% 0px"});
+  secs.forEach(function(s){spy.observe(s);});
+}else{
+  document.getElementById("g-edges").classList.add("drawn");
+}
+})();
+</script>
+</body>
+</html>

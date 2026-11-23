@@ -1,0 +1,7 @@
+{
+  "CHK-02": {
+    "files": ["index.html"],
+    "reason": "单文件交付没有构建层：13 处 hex 全部集中在 index.html 顶部 :root 的 tokens 块并已写入 contract，:root 之外零字面色值；检查器按字面计数无法区分 token 定义与散落用法。若引入构建流程、拆分 tokens 文件或出现 :root 外的字面色值，此豁免立即失效",
+    "evidence": "index.html:15-27：13 处 hex 全部在 :root 内，与 contract.tokens.colors 的 13 个色值一一对应；:root 之外 0 处字面色值"
+  }
+}

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>马尔可夫链 · 交互式科普</title>
+<style>
+  :root{
+    --ink:#1d2433; --muted:#5b6472; --bg:#f6f7fb; --card:#ffffff;
+    --accent:#4f46e5; --accent2:#7c3aed; --line:#e5e8f0;
+    --sun:#e8a020; --rain:#3f7fc1; --rose:#d1345b;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0; color:var(--ink); background:var(--bg); line-height:1.8;
+    font-family:"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif;
+  }
+  .wrap{max-width:1000px;margin:0 auto;padding:0 20px}
+  /* ---------- 头部 ---------- */
+  .hero{background:linear-gradient(120deg,#1e1b4b,#4c1d95 45%,#7c3aed);color:#fff;padding:60px 0 52px}
+  .kicker{letter-spacing:.25em;font-size:12px;color:#c7d2fe;margin:0 0 10px}
+  .hero h1{font-size:46px;margin:0 0 12px;letter-spacing:.02em}
+  .hero .sub{font-size:18px;color:#e0e7ff;margin:0 0 18px;max-width:660px}
+  .tags{margin-top:6px}
+  .tags span{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.28);
+    padding:3px 12px;border-radius:999px;font-size:13px;margin:4px 6px 0 0}
+  /* ---------- 顶部导航 ---------- */
+  .topnav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.93);backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line)}
+  .topnav .wrap{display:flex;flex-wrap:wrap;gap:4px;padding:8px 20px}
+  .topnav a{padding:5px 12px;border-radius:8px;color:var(--muted);text-decoration:none;font-size:14px}
+  .topnav a:hover{background:#eef0ff;color:var(--accent)}
+  /* ---------- 分节 ---------- */
+  section{padding:38px 0 4px;scroll-margin-top:64px}
+  h2{font-size:26px;margin:0 0 8px;display:flex;align-items:center;gap:10px}
+  h2 .num{flex:none;width:30px;height:30px;border-radius:9px;color:#fff;font-size:15px;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));display:inline-flex;align-items:center;justify-content:center}
+  h3{font-size:16px;margin:18px 0 6px}
+  p{margin:8px 0}
+  .lead{font-size:17px;color:#39415a}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:20px 22px;
+    box-shadow:0 8px 24px rgba(29,36,51,.06);margin-top:14px}
+  .callout{border-left:4px solid var(--accent);background:#eef0ff;padding:12px 16px;border-radius:0 12px 12px 0;margin:14px 0}
+  .formula{font-family:Georgia,"Times New Roman",serif;font-size:19px;background:#faf9ff;
+    border:1px dashed #c9c3f2;padding:14px 18px;border-radius:12px;text-align:center;margin:14px 0}
+  .formula i{font-style:italic}
+  .op,.eq{padding:0 6px;color:var(--accent)}
+  .hint{color:var(--muted);font-size:13px}
+  figure{margin:16px 0 4px;text-align:center}
+  figcaption{font-size:13px;color:var(--muted);margin-top:6px}
+  /* ---------- 表格 ---------- */
+  table{border-collapse:collapse;margin:10px auto}
+  .ptable th,.ptable td{padding:6px 14px;border-bottom:1px solid var(--line);text-align:center;font-size:15px}
+  .ptable th{color:var(--muted);font-weight:600;background:#fafbfe}
+  .mtx{display:flex;align-items:stretch;gap:6px;justify-content:center;margin:14px 0}
+  .mtx .brk{width:10px;border:2.5px solid var(--ink)}
+  .mtx .brk.l{border-right:none;border-radius:4px 0 0 4px}
+  .mtx .brk.r{border-left:none;border-radius:0 4px 4px 0}
+  /* ---------- 控件 ---------- */
+  .tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .tabs button{border:1px solid var(--line);background:#f4f5fa;color:var(--muted);padding:7px 14px;
+    border-radius:999px;font-size:14px;cursor:pointer;font-family:inherit}
+  .tabs button.active{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;border-color:transparent}
+  .ctl{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:10px 0}
+  .ctl label{font-size:14px}
+  .ctl output{font-weight:700;color:var(--accent);font-variant-numeric:tabular-nums}
+  input[type=range]{accent-color:var(--accent);width:200px}
+  select{font-family:inherit;font-size:14px;padding:6px 10px;border:1px solid var(--line);border-radius:8px;background:#fff}
+  .btn{border:none;background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;
+    padding:9px 18px;border-radius:10px;font-size:15px;cursor:pointer;font-family:inherit}
+  .btn:hover{filter:brightness(1.08)}
+  .btn.ghost{background:#eef0ff;color:var(--accent);border:1px solid #d9dcff}
+  .hidden{display:none}
+  /* ---------- 模拟输出 ---------- */
+  .chipbar{display:flex;flex-wrap:wrap;gap:2px;min-height:24px;margin:8px 0;padding:6px;
+    background:#fafbfe;border:1px solid var(--line);border-radius:10px}
+  .chip{width:11px;height:20px;border-radius:3px;flex:none}
+  .barrow{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .barname{width:58px;font-size:14px;text-align:right;flex:none}
+  .bartrack{position:relative;flex:1;height:20px;background:#edeff5;border-radius:6px}
+  .barfill{height:100%;border-radius:6px;transition:width .4s ease;min-width:2px}
+  .pimark{position:absolute;top:-4px;bottom:-4px;border-left:2px dashed var(--rose);left:0}
+  .barval{width:70px;font-size:13px;font-variant-numeric:tabular-nums;flex:none;color:var(--muted)}
+  .legend{font-size:13px;color:var(--muted)}
+  .legend .sw{display:inline-block;width:22px;height:10px;border-radius:3px;background:var(--accent);vertical-align:middle;margin:0 4px}
+  .legend .ln{display:inline-block;width:0;height:12px;border-left:2px dashed var(--rose);vertical-align:middle;margin:0 4px}
+  /* ---------- 卡片 ---------- */
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px;margin-top:14px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px 18px;
+    box-shadow:0 6px 18px rgba(29,36,51,.05)}
+  .card h3{margin:0 0 6px;font-size:16px}
+  .card p{margin:0;font-size:14px;color:#3c455c}
+  ul.props{margin:8px 0;padding-left:22px}
+  ul.props li{margin:7px 0}
+  footer{background:#171b2b;color:#9aa3b8;padding:26px 0;margin-top:52px;font-size:13.5px;text-align:center}
+  footer .em{color:#e0e7ff}
+  /* ---------- 入场动画 ---------- */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .55s ease,transform .55s ease}
+  .reveal.vis{opacity:1;transform:none}
+  @media (prefers-reduced-motion: reduce){ .reveal{opacity:1;transform:none;transition:none} .barfill{transition:none} }
+  @media (max-width:640px){
+    .hero h1{font-size:34px}
+    .barname{width:42px}
+    .formula{font-size:16px}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="kicker">INTERACTIVE · 概率论入门</p>
+    <h1>马尔可夫链</h1>
+    <p class="sub">从「明天的天气」到搜索引擎排序——一页看懂这个只有短期记忆、却无处不在的随机过程。</p>
+    <div class="tags"><span>无记忆性</span><span>转移矩阵</span><span>平稳分布</span><span>交互模拟</span><span>PageRank</span></div>
+  </div>
+</header>
+
+<nav class="topnav">
+  <div class="wrap">
+    <a href="#intro">引言</a><a href="#diagram">转移图</a><a href="#matrix">转移矩阵</a>
+    <a href="#lab">模拟实验室</a><a href="#stationary">平稳分布</a><a href="#beyond">深入一点</a><a href="#apps">应用</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+  <!-- 1 引言 -->
+  <section id="intro" class="reveal">
+    <h2><span class="num">1</span>什么是马尔可夫链?</h2>
+    <p class="lead">假设一个只会看「今天」来预报「明天」的天气模型:今天晴,则明天 70% 晴、30% 雨;今天雨,则明天 60% 放晴、40% 继续下雨。明天的天气随机,但随机规律<b>只由今天决定</b>——与上周、上个月统统无关。</p>
+    <p>把这套逻辑一般化:一个系统在不同「<b>状态</b>」之间随机跳动,每一步跳到哪个状态,只依赖<b>当前所在的状态</b>和一张固定的「<b>转移概率</b>」表。这样产生的随机状态序列 X₀, X₁, X₂, … 就叫<strong>马尔可夫链</strong>(Markov chain)。它由俄国数学家 A. 马尔可夫于 1906 年提出,是最早被研究的随机过程之一。</p>
+    <div class="callout">
+      <strong>马尔可夫性质(无记忆性)</strong>——给定现在,未来与过去无关:
+      <div class="formula">
+        P( X<sub>n+1</sub> = j <span class="op">|</span> X<sub>n</sub> = i, …, X<sub>0</sub> = i<sub>0</sub> ) <span class="eq">=</span> P( X<sub>n+1</sub> = j <span class="op">|</span> X<sub>n</sub> = i )
+      </div>
+      换句话说:系统对历史「失忆」,只记得现在。这一条强假设看似太简化,却足以刻画大量真实系统,并换来极强的可计算性。
+    </div>
+  </section>
+
+  <!-- 2 状态转移图 -->
+  <section id="diagram" class="reveal">
+    <h2><span class="num">2</span>状态转移图:一张会说话的图</h2>
+    <p>每个状态画成一个圆圈,箭头表示可能的转移,箭头上的数字是转移概率。从任一状态出发的所有出箭头概率之和必为 1。</p>
+    <figure>
+      <svg viewBox="0 0 560 250" role="img" aria-label="晴雨两状态转移图" style="max-width:560px;width:100%;height:auto">
+        <defs>
+          <marker id="ah" viewBox="0 0 10 10" refX="8.5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" fill="#667085"></path>
+          </marker>
+        </defs>
+        <!-- 晴 自环 -->
+        <path d="M112,100 C86,42 194,42 168,100" fill="none" stroke="#667085" stroke-width="2" marker-end="url(#ah)"></path>
+        <text id="lblSelfSun" x="140" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#b37716"
+              paint-order="stroke" stroke="#fff" stroke-width="4">0.70</text>
+        <!-- 雨 自环 -->
+        <path d="M392,100 C366,42 474,42 448,100" fill="none" stroke="#667085" stroke-width="2" marker-end="url(#ah)"></path>
+        <text id="lblSelfRain" x="420" y="58" text-anchor="middle" font-size="15" font-weight="700" fill="#2e6ca6"
+              paint-order="stroke" stroke="#fff" stroke-width="4">0.40</text>
+        <!-- 晴 → 雨 -->
+        <path d="M186,116 C252,58 308,58 374,116" fill="none" stroke="#667085" stroke-width="2" marker-end="url(#ah)"></path>
+        <text id="lblSR" x="280" y="62" text-anchor="middle" font-size="15" font-weight="700" fill="#39415a"
+              paint-order="stroke" stroke="#fff" stroke-width="4">0.30</text>
+        <!-- 雨 → 晴 -->
+        <path d="M374,146 C308,204 252,204 186,146" fill="none" stroke="#667085" stroke-width="2" marker-end="url(#ah)"></path>
+        <text id="lblRS" x="280" y="216" text-anchor="middle" font-size="15" font-weight="700" fill="#39415a"
+              paint-order="stroke" stroke="#fff" stroke-width="4">0.60</text>
+        <!-- 状态节点 -->
+        <circle cx="140" cy="130" r="44" fill="#fdf3d7" stroke="#e8a020" stroke-width="3"></circle>
+        <text x="140" y="139" text-anchor="middle" font-size="24" font-weight="700" fill="#8a5a00">晴</text>
+        <circle cx="420" cy="130" r="44" fill="#e8f1fb" stroke="#3f7fc1" stroke-width="3"></circle>
+        <text x="420" y="139" text-anchor="middle" font-size="24" font-weight="700" fill="#1d4e7e">雨</text>
+      </svg>
+      <figcaption>两状态天气链:数值会随下方实验室的滑块实时联动。</figcaption>
+    </figure>
+  </section>
+
+  <!-- 3 转移矩阵 -->
+  <section id="matrix" class="reveal">
+    <h2><span class="num">3</span>转移矩阵:把图装进表格</h2>
+    <p>把转移概率排成方阵 <i>P</i>:第 <i>i</i> 行第 <i>j</i> 列的元素记作 P<sub>ij</sub> = P(X<sub>n+1</sub>=j | X<sub>n</sub>=i),即「从状态 i 一步跳到状态 j」的概率。<b>每一行求和恒等于 1</b>(这样的矩阵称为行随机矩阵)。</p>
+    <div class="mtx">
+      <div class="brk l"></div>
+      <table class="ptable">
+        <tr><th></th><th>到 晴</th><th>到 雨</th></tr>
+        <tr><th>从 晴</th><td id="m00">0.70</td><td id="m01">0.30</td></tr>
+        <tr><th>从 雨</th><td id="m10">0.60</td><td id="m11">0.40</td></tr>
+      </table>
+      <div class="brk r"></div>
+    </div>
+    <p>若把当前分布写成行向量 <i>p</i><sub>n</sub>(各分量 = 处于各状态的概率),则下一步分布只需一次矩阵乘法:</p>
+    <div class="formula"><i>p</i><sub>n+1</sub> <span class="eq">=</span> <i>p</i><sub>n</sub> <i>P</i></div>
+    <p>以默认值为例:从「一定晴」出发,<i>p</i><sub>0</sub> = [1, 0] → <i>p</i><sub>1</sub> = [0.70, 0.30] → <i>p</i><sub>2</sub> = [0.67, 0.33] → …… 一步步逼近某个固定比例——这正是下一节的伏笔。</p>
+  </section>
+
+  <!-- 4 模拟实验室 -->
+  <section id="lab" class="reveal">
+    <h2><span class="num">4</span>模拟实验室:眼见为实</h2>
+    <p>设定概率,让计算机替我们掷骰子。单次路径变幻莫测,但<b>访问频率</b>会稳定地逼近理论值——这就是大数定律在马尔可夫链上的样子。</p>
+    <div class="panel">
+      <div class="tabs" id="tabs">
+        <button type="button" class="active" data-model="weather">☀ 天气模型(2 状态)</button>
+        <button type="button" data-model="web">🌐 网页跳转(3 状态)</button>
+      </div>
+
+      <div id="panel2">
+        <div class="ctl">
+          <label for="pRain">P(晴 → 雨)</label>
+          <input type="range" id="pRain" min="0.05" max="0.95" step="0.01" value="0.30">
+          <output id="valA">0.30</output>
+        </div>
+        <div class="ctl">
+          <label for="pSun">P(雨 → 晴)</label>
+          <input type="range" id="pSun" min="0.05" max="0.95" step="0.01" value="0.60">
+          <output id="valB">0.60</output>
+        </div>
+        <p class="hint">拖动滑块,上方转移图与转移矩阵会同步更新;自环概率自动补足为 1 减去出边概率。</p>
+      </div>
+
+      <div id="panel3" class="hidden">
+        <p>三个网页之间的跳转概率(预设示例,对角线 10% 表示原地刷新):</p>
+        <table class="ptable">
+          <tr><th>从 \ 到</th><th>A 页</th><th>B 页</th><th>C 页</th></tr>
+          <tr><th>A 页</th><td>0.10</td><td>0.60</td><td>0.30</td></tr>
+          <tr><th>B 页</th><td>0.20</td><td>0.10</td><td>0.70</td></tr>
+          <tr><th>C 页</th><td>0.50</td><td>0.40</td><td>0.10</td></tr>
+        </table>
+        <p class="hint">三个页面的长期访问比例约为 28% / 35% / 37%——被「随机冲浪者」频繁光顾的页面更「重要」,这正是 PageRank 的雏形。</p>
+      </div>
+
+      <div class="ctl">
+        <label for="stepsSel">模拟步数</label>
+        <select id="stepsSel">
+          <option value="100">100 步</option>
+          <option value="1000">1,000 步</option>
+          <option value="10000" selected>10,000 步</option>
+        </select>
+        <button type="button" class="btn" id="runBtn">🎲 开始模拟</button>
+        <span class="hint" id="simMeta">每次点击都是一次全新的随机实验。</span>
+      </div>
+
+      <h3>样本路径(最近 120 步的落点)</h3>
+      <div id="chips" class="chipbar"></div>
+
+      <h3>频率 vs 理论</h3>
+      <p class="legend"><span class="sw"></span>模拟访问频率 <span class="ln"></span>理论平稳分布 π</p>
+      <div id="simBars"></div>
+      <table id="simTable" class="ptable"></table>
+    </div>
+  </section>
+
+  <!-- 5 平稳分布 -->
+  <section id="stationary" class="reveal">
+    <h2><span class="num">5</span>平稳分布:随机中的必然</h2>
+    <p>反复右乘转移矩阵:<i>p</i><sub>n</sub> = <i>p</i><sub>0</sub><i>P</i><sup>n</sup>。对许多链而言,无论从哪里出发,分布都会收敛到同一个极限 <b>π</b>,它满足不动点方程:</p>
+    <div class="formula"><i>π</i> <span class="eq">=</span> <i>π</i> <i>P</i>,&nbsp;&nbsp; Σ<i>π</i><sub>i</sub> <span class="eq">=</span> 1,&nbsp;&nbsp; <i>π</i><sub>i</sub> ≥ 0</div>
+    <p>两状态链有漂亮的闭式解(设 a = P(晴→雨),b = P(雨→晴)):</p>
+    <div class="formula"><i>π</i><sub>晴</sub> <span class="eq">=</span> b ⁄ (a+b),&nbsp;&nbsp; <i>π</i><sub>雨</sub> <span class="eq">=</span> a ⁄ (a+b)</div>
+    <p>当前滑块设定下:<b>π ≈ (晴 <span id="piSun">0.667</span>,雨 <span id="piRain">0.333</span>)</b>。π 还有个直观读法:<b>状态 i 平均每隔 1/π<sub>i</sub> 步被访问一次</b>——晴大约每 1.5 天出现一次,与直觉相符。</p>
+
+    <div class="panel">
+      <h3 style="margin-top:0">收敛观测台:p₀ Pⁿ 一步一步走向 π</h3>
+      <div class="ctl">
+        <button type="button" class="btn ghost" id="conv1">迭代 +1 步</button>
+        <button type="button" class="btn ghost" id="conv10">迭代 +10 步</button>
+        <button type="button" class="btn" id="convPlay">▶ 自动播放</button>
+        <button type="button" class="btn ghost" id="convResetBtn">重置</button>
+        <span class="hint">当前 n = <b id="convN">0</b>(初始 p₀ = [1, 0],从「晴」出发;改滑块会自动重置)</span>
+      </div>
+      <div id="convBars"></div>
+      <p class="hint">虚线为目标 π。可以观察到误差大约每一步都按固定比例缩小——收敛速度由第二大特征值 |λ₂| 决定。</p>
+    </div>
+  </section>
+
+  <!-- 6 深入 -->
+  <section id="beyond" class="reveal">
+    <h2><span class="num">6</span>深入一点:什么时候会收敛?</h2>
+    <p>「p<sub>n</sub> → π」并非天经地义,它需要两个条件,反例同样富有启发性:</p>
+    <ul class="props">
+      <li><strong>不可约</strong>:任何状态都能(经若干步)到达任何其他状态。反例:若 P(雨→晴)=0,一旦下雨便永远下雨,初始条件决定了命运,唯一的 π 也随之失去意义。</li>
+      <li><strong>非周期</strong>:状态不该只在固定节拍被访问。反例:A→B、B→A 确定交替的「乒乓链」周期为 2,p<sub>n</sub> 在两个分布间永远震荡,不收敛——但<b>时间平均</b>仍趋于 π。只要某状态有自环(留在原地的概率 &gt; 0),周期性即被打破。</li>
+      <li><strong>吸收态</strong>:一旦进入就永不离开的状态(自环概率为 1)。此时链不收敛到内部分布,而是「终止」在吸收态上。</li>
+    </ul>
+    <div class="panel">
+      <h3 style="margin-top:0">经典例子:赌徒破产</h3>
+      <p>赌徒揣 1 元上桌,每局等概率赢/输 1 元,本钱到 <b>0 元</b>(破产)或 <b>3 元</b>(收手)即离场。0 与 3 是吸收态:</p>
+      <table class="ptable">
+        <tr><th>从 \ 到</th><th>0 元</th><th>1 元</th><th>2 元</th><th>3 元</th></tr>
+        <tr><th>0 元</th><td><b>1</b></td><td>0</td><td>0</td><td>0</td></tr>
+        <tr><th>1 元</th><td>0.5</td><td>0</td><td>0.5</td><td>0</td></tr>
+        <tr><th>2 元</th><td>0</td><td>0.5</td><td>0</td><td>0.5</td></tr>
+        <tr><th>3 元</th><td>0</td><td>0</td><td>0</td><td><b>1</b></td></tr>
+      </table>
+      <p>解一元一次方程可得:从 1 元出发,最终<b>破产概率 2/3,翻倍收手概率仅 1/3</b>,平均 2 局之内见分晓。即使在公平的赌局里,资金劣势方也大概率先出局——吸收链把「久赌必输」写进了数学。</p>
+    </div>
+  </section>
+
+  <!-- 7 应用 -->
+  <section id="apps" class="reveal">
+    <h2><span class="num">7</span>它无处不在:六个真实应用</h2>
+    <div class="grid">
+      <div class="card"><h3>🔗 PageRank</h3><p>把「点击链接」当作状态转移,随机冲浪者的长期访问比例就是网页权重。谷歌的起点正是对亿万状态马尔可夫链求平稳分布。</p></div>
+      <div class="card"><h3>🎲 MCMC 采样</h3><p>Metropolis–Hastings 等算法精心构造一条以目标分布为平稳分布的链,跑得越久样本越像从复杂分布中直接抽取——贝叶斯统计与统计物理的发动机。</p></div>
+      <div class="card"><h3>🎙 隐马尔可夫模型</h3><p>语音识别、词性标注:可观测的声音与文字背后,藏着一条隐状态链。维特比算法在链上搜索最可能的隐藏路径。</p></div>
+      <div class="card"><h3>🧬 基因组学</h3><p>CpG 岛识别、启动子预测用马尔可夫链刻画核苷酸间的依赖;序列比对打分也建立在状态转移概率之上。</p></div>
+      <div class="card"><h3>🏦 金融与信用</h3><p>市场在牛 / 熊 / 震荡间转移;信用评级的「迁移矩阵」(一年内从 AA 级跳到各等级的概率)是风险管理的基础工具。</p></div>
+      <div class="card"><h3>🚶 随机游走</h3><p>排队系统的顾客到达与离开(生灭过程)、布朗运动的离散版本、棋盘上的醉汉——马尔可夫链是它们共同的骨架。</p></div>
+    </div>
+
+    <div class="panel">
+      <h3 style="margin-top:0">彩蛋:一阶字符马尔可夫「写作机」</h3>
+      <p>用一段关于马尔可夫链的短文做语料,统计每个字后面出现各字的频率,然后从随机一个字开始,每次只看当前字、按频率抽下一个字——这正是一条字符级马尔可夫链。</p>
+      <p class="hint">一阶记忆太短,产出难免颠三倒四;真实文本生成模型把「状态」换成更长的上文(相当于高阶链或神经网络),思路同源。</p>
+      <div class="ctl"><button type="button" class="btn" id="genBtn">✍ 生成一段</button></div>
+      <p id="genOut" aria-live="polite" style="background:#fafbfe;border:1px dashed var(--line);border-radius:10px;padding:12px 16px;min-height:3em"></p>
+    </div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>概率不会记住过去,只回答现在。<span class="em">「知道此刻,便知未来分布。」</span></p>
+    <p>本页为自包含单文件 HTML:全部样式与脚本内联,零外部请求,可离线保存随时打开。</p>
+  </div>
+</footer>
+
+<script>
+'use strict';
+var $ = function(id){ return document.getElementById(id); };
+function mulVec(p, P){
+  var q = new Array(p.length).fill(0);
+  for(var i = 0; i < p.length; i++){
+    for(var j = 0; j < P[i].length; j++){ q[j] += p[i] * P[i][j]; }
+  }
+  return q;
+}
+function fmt(x, d){ return x.toFixed(d === undefined ? 2 : d); }
+
+/* ---------- 滑块与全局联动 ---------- */
+var slA = $('pRain'), slB = $('pSun');
+function weatherP(){
+  var a = parseFloat(slA.value), b = parseFloat(slB.value);
+  return [[1 - a, a], [b, 1 - b]];
+}
+function piOf(){
+  var a = parseFloat(slA.value), b = parseFloat(slB.value), s = a + b;
+  return [b / s, a / s];
+}
+function updateModelUI(){
+  var a = parseFloat(slA.value), b = parseFloat(slB.value), pi = piOf();
+  $('valA').textContent = fmt(a); $('valB').textContent = fmt(b);
+  $('lblSelfSun').textContent = fmt(1 - a); $('lblSR').textContent = fmt(a);
+  $('lblRS').textContent = fmt(b); $('lblSelfRain').textContent = fmt(1 - b);
+  $('m00').textContent = fmt(1 - a); $('m01').textContent = fmt(a);
+  $('m10').textContent = fmt(b);  $('m11').textContent = fmt(1 - b);
+  $('piSun').textContent = fmt(pi[0], 3); $('piRain').textContent = fmt(pi[1], 3);
+  convReset();
+}
+slA.addEventListener('input', updateModelUI);
+slB.addEventListener('input', updateModelUI);
+
+/* ---------- 模拟实验室 ---------- */
+var MODE = 'weather';
+var WEBP = [[0.10, 0.60, 0.30], [0.20, 0.10, 0.70], [0.50, 0.40, 0.10]];
+function currentModel(){
+  if(MODE === 'weather'){
+    return { states: [{name:'晴', color:'#e8a020'}, {name:'雨', color:'#3f7fc1'}], P: weatherP() };
+  }
+  return { states: [{name:'A 页', color:'#6d5bd0'}, {name:'B 页', color:'#2a9d8f'}, {name:'C 页', color:'#e76f51'}], P: WEBP };
+}
+function stationary(P){
+  var n = P.length, p = new Array(n).fill(0); p[0] = 1;
+  for(var t = 0; t < 800; t++){ p = mulVec(p, P); }
+  return p;
+}
+function runSim(){
+  var M = currentModel(), n = parseInt($('stepsSel').value, 10);
+  var counts = new Array(M.states.length).fill(0);
+  var path = [], x = 0;
+  for(var t = 0; t < n; t++){
+    counts[x]++;
+    var r = Math.random(), acc = 0, nx = x;
+    for(var j = 0; j < M.P[x].length; j++){
+      acc += M.P[x][j];
+      if(r < acc){ nx = j; break; }
+    }
+    x = nx; path.push(x);
+  }
+  var tail = path.slice(-120), chips = '';
+  for(var i = 0; i < tail.length; i++){
+    chips += '<span class="chip" style="background:' + M.states[tail[i]].color +
+             '" title="第 ' + (n - tail.length + i + 1) + ' 步:' + M.states[tail[i]].name + '"></span>';
+  }
+  $('chips').innerHTML = chips;
+
+  var pi = stationary(M.P), bars = '', rows = '';
+  for(var k = 0; k < M.states.length; k++){
+    var emp = counts[k] / n;
+    bars += '<div class="barrow"><span class="barname">' + M.states[k].name + '</span>' +
+            '<div class="bartrack"><div class="barfill" style="width:' + (emp * 100).toFixed(1) +
+            '%;background:' + M.states[k].color + '"></div>' +
+            '<div class="pimark" style="left:' + (pi[k] * 100).toFixed(1) + '%"></div></div>' +
+            '<span class="barval">' + (emp * 100).toFixed(1) + '%</span></div>';
+    rows += '<tr><td>' + M.states[k].name + '</td><td>' + (emp * 100).toFixed(2) + '%</td><td>' +
+            (pi[k] * 100).toFixed(2) + '%</td><td>' + (1 / pi[k]).toFixed(1) + ' 步</td></tr>';
+  }
+  $('simBars').innerHTML = bars;
+  $('simTable').innerHTML = '<tr><th>状态</th><th>模拟频率</th><th>理论 π</th><th>平均回访间隔 1/π</th></tr>' + rows;
+  $('simMeta').textContent = '共模拟 ' + n.toLocaleString() + ' 步(从「' + M.states[0].name + '」出发)。再点一次结果会不同,但频率几乎不变。';
+}
+$('runBtn').addEventListener('click', runSim);
+
+var tabs = document.querySelectorAll('#tabs button');
+tabs.forEach(function(btn){
+  btn.addEventListener('click', function(){
+    MODE = btn.getAttribute('data-model');
+    tabs.forEach(function(b){ b.classList.toggle('active', b === btn); });
+    $('panel2').classList.toggle('hidden', MODE !== 'weather');
+    $('panel3').classList.toggle('hidden', MODE !== 'web');
+    $('chips').innerHTML = ''; $('simBars').innerHTML = ''; $('simTable').innerHTML = '';
+    $('simMeta').textContent = '已切换模型,点击「开始模拟」查看结果。';
+  });
+});
+
+/* ---------- 收敛观测台 ---------- */
+var convP = [1, 0], convN = 0, timer = null;
+function convStop(){
+  if(timer){ clearInterval(timer); timer = null; }
+  $('convPlay').textContent = '▶ 自动播放';
+}
+function convReset(){
+  convP = [1, 0]; convN = 0; convStop(); renderConv();
+}
+function renderConv(){
+  $('convN').textContent = convN;
+  var pi = piOf();
+  var data = [
+    {name:'晴', v: convP[0], t: pi[0], color:'#e8a020'},
+    {name:'雨', v: convP[1], t: pi[1], color:'#3f7fc1'}
+  ];
+  var html = '';
+  for(var i = 0; i < 2; i++){
+    var d = data[i];
+    html += '<div class="barrow"><span class="barname">' + d.name + '</span>' +
+            '<div class="bartrack"><div class="barfill" style="width:' + (d.v * 100).toFixed(2) +
+            '%;background:' + d.color + '"></div>' +
+            '<div class="pimark" style="left:' + (d.t * 100).toFixed(2) + '%"></div></div>' +
+            '<span class="barval">' + d.v.toFixed(4) + '</span></div>';
+  }
+  $('convBars').innerHTML = html;
+}
+function convAdvance(k){
+  var P = weatherP();
+  for(var i = 0; i < k; i++){ convP = mulVec(convP, P); }
+  convN += k;
+  renderConv();
+  var pi = piOf();
+  if(timer && (convN >= 80 || (Math.abs(convP[0] - pi[0]) < 0.0005 && Math.abs(convP[1] - pi[1]) < 0.0005))){
+    convStop();
+    $('convN').textContent = convN + '(已收敛)';
+  }
+}
+$('conv1').addEventListener('click', function(){ convAdvance(1); });
+$('conv10').addEventListener('click', function(){ convAdvance(10); });
+$('convResetBtn').addEventListener('click', convReset);
+$('convPlay').addEventListener('click', function(){
+  if(timer){ convStop(); }
+  else{
+    this.textContent = '⏸ 暂停';
+    timer = setInterval(function(){ convAdvance(1); }, 350);
+  }
+});
+
+/* ---------- 一阶字符马尔可夫写作机 ---------- */
+var SAMPLE = '马尔可夫链是一种描述随机过程的数学模型,它最早由俄国数学家马尔可夫提出,用来研究状态之间的转移规律。' +
+  '马尔可夫链的核心性质是无记忆性,也就是说,系统下一时刻所处的状态,只依赖于当前状态,而与更早的历史无关。' +
+  '我们可以用转移矩阵来描述状态之间的概率,也可以用状态转移图直观地画出这些概率。' +
+  '当转移不断进行,很多马尔可夫链会收敛到一个平稳分布,无论初始状态如何。' +
+  '平稳分布在网页排序、语音识别、统计采样等领域有广泛的应用。' +
+  '通过反复模拟,我们可以用频率来逼近概率,这正是大数定律的一个生动体现。';
+$('genBtn').addEventListener('click', function(){
+  var map = {}, i, c, d;
+  for(i = 0; i < SAMPLE.length - 1; i++){
+    c = SAMPLE.charAt(i); d = SAMPLE.charAt(i + 1);
+    (map[c] = map[c] || []).push(d);
+  }
+  c = SAMPLE.charAt(Math.floor(Math.random() * SAMPLE.length));
+  var out = c;
+  for(i = 0; i < 90; i++){
+    var arr = map[c];
+    if(!arr){ break; }
+    c = arr[Math.floor(Math.random() * arr.length)];
+    out += c;
+  }
+  $('genOut').textContent = out;
+});
+
+/* ---------- 入场动画 ---------- */
+var io = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){
+    if(e.isIntersecting){ e.target.classList.add('vis'); io.unobserve(e.target); }
+  });
+}, { threshold: 0.1 });
+document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+
+/* ---------- 初始化 ---------- */
+updateModelUI();
+</script>
+</body>
+</html>
