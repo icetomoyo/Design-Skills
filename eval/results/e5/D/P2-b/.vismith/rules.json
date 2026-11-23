@@ -1,7 +1,0 @@
-{
-  "CHK-02": {
-    "files": ["index.html"],
-    "reason": "交付约束是单文件自包含：全部样式必须内联在 index.html，没有独立的 tokens/theme 文件可以承载色值。11 处硬编码色全部集中在 :root 的 token 定义处（surface、surface-2、raised、line、line-strong、ink、ink-2、ink-3、accent、tint、on-accent），与 contract.tokens.colors 一一对应；页面其余位置一律使用 var()，等价于规则要求的使用主题变量。",
-    "evidence": "node vismith/scripts/checks.mjs index.html --contract .vismith/contract.json 的 CHK-02 hardcoded-color 计数为 11，逐行核对均落在第 5-17 行的 :root 块内，正文与组件样式中没有出现裸色值"
-  }
-}

@@ -1,9 +1,0 @@
-{
-  "CHK-02": {
-    "files": [
-      "index.html"
-    ],
-    "reason": "单文件自包含交付约束：无独立 token 文件可引用，16 处 hex 全部且仅在 :root 的 14 个设计令牌定义内，组件与内联 SVG 一律经 var() 取值；仅豁免 hardcoded-color 子规则，magic-spacing 仍需守卫",
-    "evidence": "index.html 的 :root 块（第 11–30 行）；全文件 var(-- 引用数远大于 hex 数，选择器内无裸色值"
-  }
-}

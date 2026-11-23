@@ -1,4 +1,27 @@
-ï»¿.agent/
+.agent/
 node_modules/
 *.log
 .artifact-render*/
+
+# --- ÆÀ²âÉú³É²úÎï£¨±¾µØ±£Áô£¬²»Èë¿â£©---
+eval/results/e1/
+eval/results/e2/*
+eval/results/e4/*
+eval/results/e5/*
+eval/results/e4-graded/
+eval/results/e5-graded/
+eval/dist/install-test/
+eval/dist/*.skill
+# ÎÄ±¾Ö¤¾İ±£Áô£¨ÆÀÉó/ÖÙ²Ã/Ó³Éä/slop Êı¾İ£©
+!eval/results/e2/grading-1.md
+!eval/results/e2/grading-2.md
+!eval/results/e2/arbitration-S2-seedB-a11y.md
+!eval/results/e4/grading-1.md
+!eval/results/e4/grading-2.md
+!eval/results/e4/arbitration-S5.md
+!eval/results/e4/MAP.json
+!eval/results/e5/grading-1.md
+!eval/results/e5/grading-2.md
+!eval/results/e5/arbitration.md
+!eval/results/e5/MAP.json
+!eval/results/e5/slop-machine.json

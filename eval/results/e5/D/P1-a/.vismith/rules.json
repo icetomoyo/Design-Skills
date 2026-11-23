@@ -1,7 +1,0 @@
-{
-  "CHK-02": {
-    "files": ["eval/results/e5/D/P1-a/index.html"],
-    "reason": "自包含单文件交付要求全部设计 token 以字面 hex 内联在 :root（无构建无外部样式表），色值与 contract.tokens.colors 同名一一登记，属实现载体而非设计偏离",
-    "evidence": "contract.json tokens.colors 共登记 15 个色值；index.html :root 中同名变量逐一对应，无契约外新色"
-  }
-}
