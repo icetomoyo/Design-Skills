@@ -38,3 +38,11 @@
 | data-intensive | 表格 密度 性能 | 行内编辑 | CHK-03/07, 溢出 |
 
 路由结论示例（写入回复开头）：[vismith] mode=refine category=admin-console intent=operate
+
+## 5. 无 Node 指导模式
+触发：`node -v` 拿不到 ≥18，且用户选择不安装。五步照常走，依赖脚本的步骤换成等价的人工做法：
+- **Contract**：对照 assets/contract.schema.json 与 assets/templates/contract.template.json 手写 .vismith/contract.json，provenance.note 写明"手写，未经脚本校验"。
+- **Recall**：按文件名与各条目 frontmatter 的 category / product_types 挑选 assets/knowledge/ 相关条目直接读取；§4 路由表的检索词就是文件名线索，scope_note 仍要核对。
+- **Verify**：按 references/critique.md 的清单逐项走查改动文件。对比度等需要数值的项，用宿主可用的其他工具实算；算不了的标"未验证"，留给装好 Node 后重跑 checks.mjs。
+- **Remember**：照常写 .vismith/decisions.log.md 与 reviews/（纯文件写入）。
+完成判据：交付说明按 SKILL.md 铁律 5 逐项列明未执行的脚本步骤；用户不装 Node 的决定已记入 decisions.log.md。
