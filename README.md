@@ -31,7 +31,7 @@
 
 仓库已在 GitHub（icetomoyo/Design-Skills）；CLI 自动发现子目录中的 vismith。`--agent` 从其 79 个目标中选（claude-code/codex/cursor/opencode/windsurf/universal…；非交互必带 `-y`）。实测：克隆→发现→安装 68 文件，SKILL.md 与源逐字节一致（仅 LF→CRLF 规范化）。详见 `eval/dist/remote-install-test.md`。
 
-或直接复制 vismith/ 目录到宿主的 skills 目录。零 npm 运行时依赖，Node >= 18。
+或直接复制 vismith/ 目录到宿主的 skills 目录。零 npm 运行时依赖，Node >= 18；没有 Node 时技能会先询问是否安装，不安装则降级为纯指导模式（不运行检查脚本，交付时声明）。
 
 ## 快速使用（宿主内）
 
@@ -57,10 +57,14 @@
 
 ## 许可与致谢
 
-本仓库 Apache-2.0。知识库包含来自以下项目的改写内容（详见 vismith/assets/knowledge/SOURCES.md）：
+源码公开，但不是开源软件。本仓库采用 [KodaX-AI Fair Core License (KAI-FCL) 1.1](LICENSE)：个人学习、非商业使用免费，商业或组织内使用需要 KodaX-AI 书面授权；此前随 Apache-2.0 文本分发的副本仍按 Apache-2.0 使用。
 
-- [unslop](https://github.com/heydamir/unslop)（Damir Sokolovsky，CC BY 4.0）——症状清单/数值体系/RTL 规则
-- ui-ux-pro-max / impeccable 的机制研究（Phase 1 报告见 docs/research/；其文本未复制）
+知识库包含来自以下项目的改写内容，这些条目仍按各自的原许可（逐条登记见 vismith/assets/knowledge/SOURCES.md，许可原文见 [NOTICE](NOTICE)）：
+
+- [unslop](https://github.com/heydamir/unslop)（Damir Sokolovsky，CC BY 4.0）——症状清单、数值体系、RTL 规则
+- [ui-ux-pro-max-skill](https://github.com/nextlevelbuilder/ui-ux-pro-max-skill)（Next Level Builder，MIT）——UX 准则、图表、性能和技术栈惯例
+- [hallmark](https://github.com/Nutlope/hallmark)（Hallmark contributors，MIT）——证据纪律、job 解剖、门禁分级等
+- [impeccable](https://github.com/pbakaus/impeccable)（Paul Bakaus，Apache-2.0）的机制研究（报告见 docs/research/；其文本未复制）
 
 ## 状态（v0.1）
 
